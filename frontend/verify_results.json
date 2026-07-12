@@ -1,0 +1,5512 @@
+{
+  "Admin": [
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    }
+  ],
+  "Management": [
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    }
+  ],
+  "PM": [
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    }
+  ],
+  "Team Lead": [
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    }
+  ],
+  "Employee": [
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "empty-dropdown",
+      "msg": "Empty dropdown on Dashboard",
+      "page": "Dashboard"
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "empty-dropdown",
+      "msg": "Empty dropdown on Employees",
+      "page": "Employees"
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "empty-dropdown",
+      "msg": "Empty dropdown on Clients",
+      "page": "Clients"
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "empty-dropdown",
+      "msg": "Empty dropdown on Projects",
+      "page": "Projects"
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "empty-dropdown",
+      "msg": "Empty dropdown on Modules",
+      "page": "Modules"
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "empty-dropdown",
+      "msg": "Empty dropdown on Task Types",
+      "page": "Task Types"
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "empty-dropdown",
+      "msg": "Empty dropdown on Holidays",
+      "page": "Holidays"
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "empty-dropdown",
+      "msg": "Empty dropdown on Resources",
+      "page": "Resources"
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "empty-dropdown",
+      "msg": "Empty dropdown on Allocations",
+      "page": "Allocations"
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "empty-dropdown",
+      "msg": "Empty dropdown on Tasks",
+      "page": "Tasks"
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "empty-dropdown",
+      "msg": "Empty dropdown on Timesheets",
+      "page": "Timesheets"
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "empty-dropdown",
+      "msg": "Empty dropdown on Leaves",
+      "page": "Leaves"
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "empty-dropdown",
+      "msg": "Empty dropdown on Approvals",
+      "page": "Approvals"
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "empty-dropdown",
+      "msg": "Empty dropdown on Reports",
+      "page": "Reports"
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/allocations",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/tasks",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/timesheets",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/projects",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/clients",
+      "status": 304
+    },
+    {
+      "type": "api",
+      "url": "http://localhost:5002/api/employees",
+      "status": 304
+    },
+    {
+      "type": "empty-dropdown",
+      "msg": "Empty dropdown on Administration",
+      "page": "Administration"
+    }
+  ]
+}

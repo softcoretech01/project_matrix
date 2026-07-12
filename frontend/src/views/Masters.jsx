@@ -1,13 +1,15 @@
 // src/views/Masters.jsx
 import React, { useState, useEffect } from 'react';
 import { useAuth, API_BASE_URL } from '../context/AuthContext';
+import { formatDate } from '../utils/date';
 
 export default function Masters({ subKey }) {
   const { user } = useAuth();
   const [list, setList] = useState([]);
+  const [taskTypes, setTaskTypes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  
+
   // Auxiliary databases for dropdowns
   const [employees, setEmployees] = useState([]);
   const [clients, setClients] = useState([]);
@@ -18,52 +20,77 @@ export default function Masters({ subKey }) {
   // Modal State
   const [modal, setModal] = useState({ isOpen: false, id: null, fields: {} });
 
-  const fetchData = async () => {
+  const fetchData = async (currentSubKey, signal) => {
     setLoading(true);
     try {
       // Load target list
-      const res = await fetch(`${API_BASE_URL}/${subKey}`);
+      const res = await fetch(`${API_BASE_URL}/${currentSubKey}`, { headers: { 'x-user-id': user.id }, signal });
+      if (!res.ok) throw new Error(`Request failed: ${res.status}`);
       let dataList = await res.json();
-      
-      // Load helper lists
-      const [empRes, cliRes, projRes, modRes] = await Promise.all([
-        fetch(`${API_BASE_URL}/employees`),
-        fetch(`${API_BASE_URL}/clients`),
-        fetch(`${API_BASE_URL}/projects`),
-        fetch(`${API_BASE_URL}/modules`)
+      if (!Array.isArray(dataList)) dataList = [];
+
+      // Load helper lists in parallel
+      const [empRes, cliRes, projRes, modRes, taskTypeRes] = await Promise.all([
+        fetch(`${API_BASE_URL}/employees`, { headers: { 'x-user-id': user.id }, signal }),
+        fetch(`${API_BASE_URL}/clients`, { headers: { 'x-user-id': user.id }, signal }),
+        fetch(`${API_BASE_URL}/projects`, { headers: { 'x-user-id': user.id }, signal }),
+        fetch(`${API_BASE_URL}/modules`, { headers: { 'x-user-id': user.id }, signal }),
+        fetch(`${API_BASE_URL}/task-types`, { headers: { 'x-user-id': user.id }, signal })
       ]);
+
+      if (!empRes.ok) throw new Error(`Request failed: employees ${empRes.status}`);
+      if (!cliRes.ok) throw new Error(`Request failed: clients ${cliRes.status}`);
+      if (!projRes.ok) throw new Error(`Request failed: projects ${projRes.status}`);
+      if (!modRes.ok) throw new Error(`Request failed: modules ${modRes.status}`);
+      if (!taskTypeRes.ok) throw new Error(`Request failed: task-types ${taskTypeRes.status}`);
+
       const emps = await empRes.json();
       const clis = await cliRes.json();
       const projs = await projRes.json();
       const mods = await modRes.json();
+      const ttypes = await taskTypeRes.json();
 
-      setEmployees(emps);
-      setClients(clis);
-      setProjects(projs);
-      setModules(mods);
+      setEmployees(Array.isArray(emps) ? emps : []);
+      setClients(Array.isArray(clis) ? clis : []);
+      setProjects(Array.isArray(projs) ? projs : []);
+      setModules(Array.isArray(mods) ? mods : []);
+      setTaskTypes(Array.isArray(ttypes) ? ttypes : []);
 
       // PM role restriction on projects
-      if (subKey === 'projects' && user.role === 'PM') {
+      if (currentSubKey === 'projects' && user.role === 'PM') {
         dataList = dataList.filter(p => p.pmId === user.id);
       }
 
-      setList(dataList);
+      if (currentSubKey === 'task-types') {
+        setList(Array.isArray(ttypes) ? ttypes : []);
+      } else {
+        setList(dataList);
+      }
     } catch (e) {
-      console.error('Failed to load list:', e);
+      if (e.name !== 'AbortError') {
+        console.error('Masters fetch failed:', e.message);
+      }
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchData();
+    // Keep previous data visible during navigation — no list clear, no flicker.
+    // AbortController cancels any in-flight request from the previous subKey.
+    const controller = new AbortController();
+    fetchData(subKey, controller.signal);
+    return () => controller.abort();
   }, [subKey]);
 
   // DELETE
   const handleDelete = async (id, name) => {
     if (!window.confirm(`Are you sure you want to delete "${name}"?`)) return;
     try {
-      const res = await fetch(`${API_BASE_URL}/${subKey}/${id}`, { method: 'DELETE' });
+      const res = await fetch(`${API_BASE_URL}/${subKey}/${id}`, {
+        method: 'DELETE',
+        headers: { 'x-user-id': user.id }
+      });
       if (res.ok) {
         setList(prev => prev.filter(item => item.id !== id));
       } else {
@@ -91,6 +118,8 @@ export default function Masters({ subKey }) {
       initialFields = item ? { ...item } : { projectId: activeProjectFilter || projects[0]?.id || '', name: '', description: '', priority: 'Medium', status: 'Active' };
     } else if (subKey === 'holidays') {
       initialFields = item ? { ...item } : { date: '', name: '', type: 'Public' };
+    } else if (subKey === 'task-types') {
+      initialFields = item ? { ...item } : { code: 'TT' + String(taskTypes.length + 1).padStart(3, '0'), name: '', description: '', status: 'Active' };
     }
 
     setModal({
@@ -110,13 +139,13 @@ export default function Masters({ subKey }) {
     try {
       const res = await fetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'x-user-id': user.id },
         body: JSON.stringify(modal.fields)
       });
 
       if (res.ok) {
         setModal({ isOpen: false, id: null, fields: {} });
-        fetchData();
+        fetchData(subKey, new AbortController().signal);
       } else {
         const err = await res.json();
         alert(err.error || 'Failed to save record.');
@@ -126,27 +155,37 @@ export default function Masters({ subKey }) {
     }
   };
 
-  if (loading) {
-    return (
-      <div style={{ display: 'flex', justifyContent: 'center', padding: '100px' }}>
-        <div className="spin" style={{ width: '40px', height: '40px', border: '4px solid var(--border-color)', borderTopColor: 'var(--color-primary)', borderRadius: '50%' }} />
-      </div>
-    );
-  }
-
   // Filter list by search query and project selector
   let filteredList = list.filter(item => {
     const term = searchQuery.toLowerCase();
     const matchesSearch = Object.values(item).some(val => String(val).toLowerCase().includes(term));
-    
     if (subKey === 'modules' && activeProjectFilter) {
       return matchesSearch && item.projectId === activeProjectFilter;
     }
     return matchesSearch;
   });
 
+  if (subKey === 'task-types') {
+    filteredList.sort((a, b) => {
+      const numA = parseInt((a.code || '').replace(/\D/g, ''), 10) || 0;
+      const numB = parseInt((b.code || '').replace(/\D/g, ''), 10) || 0;
+      return numA - numB;
+    });
+  }
+
   return (
-    <div>
+    <div style={{ position: 'relative' }}>
+      {/* Loading overlay — sits on top of existing data, no flicker, no white flash */}
+      {loading && (
+        <div style={{
+          position: 'absolute', inset: 0, zIndex: 10,
+          display: 'flex', alignItems: 'flex-start', justifyContent: 'flex-end',
+          padding: '12px 16px', pointerEvents: 'none'
+        }}>
+          <div className="spin" style={{ width: '20px', height: '20px', border: '3px solid var(--border-color)', borderTopColor: 'var(--color-primary)', borderRadius: '50%' }} />
+        </div>
+      )}
+
       <div className="page-actions-bar">
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
           <div className="search-input-wrapper">
@@ -185,6 +224,7 @@ export default function Masters({ subKey }) {
       {subKey === 'projects' && renderProjectsTable(filteredList, clients, employees, openModal, handleDelete, user)}
       {subKey === 'modules' && renderModulesTable(filteredList, projects, openModal, handleDelete, user)}
       {subKey === 'holidays' && renderHolidaysTable(filteredList, handleDelete, openModal)}
+      {subKey === 'task-types' && renderTaskTypesTable(filteredList, openModal, handleDelete)}
 
       {/* REACT CRUD MODAL FRAME */}
       {modal.isOpen && (
@@ -201,6 +241,7 @@ export default function Masters({ subKey }) {
                 {subKey === 'projects' && renderProjectForm(modal.fields, setModal, clients, employees)}
                 {subKey === 'modules' && renderModuleForm(modal.fields, setModal, projects)}
                 {subKey === 'holidays' && renderHolidayForm(modal.fields, setModal)}
+                {subKey === 'task-types' && renderTaskTypeForm(modal.fields, setModal)}
               </div>
               <div className="modal-footer">
                 <button type="button" className="btn btn-secondary btn-sm" onClick={() => setModal({ isOpen: false, id: null, fields: {} })}>Cancel</button>
@@ -239,7 +280,7 @@ function renderEmployeesTable(list, onEdit, onDelete) {
               <td>{emp.email}</td>
               <td>{emp.role}</td>
               <td>${emp.costPerHour}/hr</td>
-              <td><span className={`badge badge-${emp.status.toLowerCase()}`}>{emp.status}</span></td>
+              <td><span className={`badge badge-${emp.status?.toLowerCase()}`}>{emp.status}</span></td>
               <td>
                 <button className="btn btn-secondary btn-sm" style={{ padding: '4px 8px', marginRight: '6px' }} onClick={() => onEdit(emp)}>✏️</button>
                 <button className="btn btn-danger btn-sm" style={{ padding: '4px 8px' }} onClick={() => onDelete(emp.id, emp.name)}>🗑️</button>
@@ -273,7 +314,7 @@ function renderClientsTable(list, onEdit, onDelete) {
               <td>{c.contactPerson}</td>
               <td>{c.email}</td>
               <td>{c.country}</td>
-              <td><span className={`badge badge-${c.status.toLowerCase()}`}>{c.status}</span></td>
+              <td><span className={`badge badge-${c.status?.toLowerCase()}`}>{c.status}</span></td>
               <td>
                 <button className="btn btn-secondary btn-sm" style={{ padding: '4px 8px', marginRight: '6px' }} onClick={() => onEdit(c)}>✏️</button>
                 <button className="btn btn-danger btn-sm" style={{ padding: '4px 8px' }} onClick={() => onDelete(c.id, c.name)}>🗑️</button>
@@ -311,8 +352,8 @@ function renderProjectsTable(list, clients, employees, onEdit, onDelete, user) {
                 <td>{p.name}</td>
                 <td>{client ? client.name : 'Unknown'}</td>
                 <td>{pm ? pm.name : 'Unassigned'}</td>
-                <td><small>{p.startDate} to {p.endDate}</small></td>
-                <td><span className={`badge badge-${p.status.toLowerCase()}`}>{p.status}</span></td>
+                <td><small>{formatDate(p.startDate)} to {formatDate(p.endDate)}</small></td>
+                <td><span className={`badge badge-${p.status?.toLowerCase()}`}>{p.status}</span></td>
                 {user.role === 'Admin' && (
                   <td>
                     <button className="btn btn-secondary btn-sm" style={{ padding: '4px 8px', marginRight: '6px' }} onClick={() => onEdit(p)}>✏️</button>
@@ -350,8 +391,8 @@ function renderModulesTable(list, projects, onEdit, onDelete, user) {
                 <td><strong>{p ? p.name : 'Unknown'}</strong></td>
                 <td>{m.name}</td>
                 <td>{m.description || 'No description'}</td>
-                <td><span className={`badge badge-${m.priority.toLowerCase()}`}>{m.priority}</span></td>
-                <td><span className={`badge badge-${m.status.toLowerCase()}`}>{m.status}</span></td>
+                <td><span className={`badge badge-${m.priority?.toLowerCase()}`}>{m.priority}</span></td>
+                <td><span className={`badge badge-${m.status?.toLowerCase()}`}>{m.status}</span></td>
                 <td>
                   <button className="btn btn-secondary btn-sm" style={{ padding: '4px 8px', marginRight: '6px' }} onClick={() => onEdit(m)}>✏️</button>
                   <button className="btn btn-danger btn-sm" style={{ padding: '4px 8px' }} onClick={() => onDelete(m.id, m.name)}>🗑️</button>
@@ -379,9 +420,9 @@ function renderHolidaysTable(list, onDelete, onEdit) {
             </tr>
           </thead>
           <tbody>
-            {list.sort((a,b)=>a.date.localeCompare(b.date)).map(h => (
+            {list.sort((a,b)=>(a.date || '').localeCompare(b.date || '')).map(h => (
               <tr key={h.id}>
-                <td><strong>{h.date}</strong></td>
+                <td><strong>{formatDate(h.date)}</strong></td>
                 <td>{h.name}</td>
                 <td><span className={`badge badge-${h.type === 'Public' ? 'completed' : 'draft'}`}>{h.type}</span></td>
                 <td>
@@ -415,7 +456,7 @@ function renderEmployeeForm(fields, setModal, employees) {
         <input type="text" className="form-control" value={fields.code || ''} onChange={e=>handleChange('code', e.target.value)} required />
       </div>
       <div className="form-group">
-        <label class="form-label">Full Name</label>
+        <label className="form-label">Full Name</label>
         <input type="text" className="form-control" value={fields.name || ''} onChange={e=>handleChange('name', e.target.value)} required />
       </div>
       <div className="form-group">
@@ -645,6 +686,68 @@ function renderHolidayForm(fields, setModal) {
         <select className="form-control" value={fields.type || 'Public'} onChange={e=>handleChange('type', e.target.value)}>
           <option value="Public">Public (Universal Rest)</option>
           <option value="Company">Company (Paid/Special Off)</option>
+        </select>
+      </div>
+    </div>
+  );
+}
+
+function renderTaskTypesTable(list, onEdit, onDelete) {
+  return (
+    <div className="table-responsive">
+      <table className="table">
+        <thead>
+          <tr>
+            <th>Code</th>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {list.map(t => (
+            <tr key={t.id}>
+              <td><strong>{t.code}</strong></td>
+              <td>{t.name}</td>
+              <td>{t.description || '-'}</td>
+              <td><span className={`badge badge-${(t.status || 'Active').toLowerCase()}`}>{t.status || 'Active'}</span></td>
+              <td>
+                <button className="btn btn-secondary btn-sm" style={{ padding: '4px 8px', marginRight: '6px' }} onClick={() => onEdit(t)}>✏️</button>
+                <button className="btn btn-danger btn-sm" style={{ padding: '4px 8px' }} onClick={() => onDelete(t.id, t.name)}>🗑️</button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function renderTaskTypeForm(fields, setModal) {
+  const handleChange = (key, val) => {
+    setModal(prev => ({ ...prev, fields: { ...prev.fields, [key]: val } }));
+  };
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      <div className="form-group">
+        <label className="form-label">Code</label>
+        <input type="text" className="form-control" value={fields.code || ''} onChange={e=>handleChange('code', e.target.value)} required />
+      </div>
+      <div className="form-group">
+        <label className="form-label">Task Type Name</label>
+        <input type="text" className="form-control" value={fields.name || ''} onChange={e=>handleChange('name', e.target.value)} required />
+      </div>
+      <div className="form-group">
+        <label className="form-label">Description</label>
+        <textarea className="form-control" style={{ resize: 'vertical' }} value={fields.description || ''} onChange={e=>handleChange('description', e.target.value)} />
+      </div>
+      <div className="form-group">
+        <label className="form-label">Status</label>
+        <select className="form-control" value={fields.status || 'Active'} onChange={e=>handleChange('status', e.target.value)}>
+          <option value="Active">Active</option>
+          <option value="Inactive">Inactive</option>
         </select>
       </div>
     </div>

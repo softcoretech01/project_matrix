@@ -1,6 +1,7 @@
 // src/views/Resources.jsx
 import React, { useState, useEffect } from 'react';
 import { useAuth, API_BASE_URL } from '../context/AuthContext';
+import { formatDate } from '../utils/date';
 
 export default function Resources({ subKey }) {
   const { user } = useAuth();
@@ -17,10 +18,13 @@ export default function Resources({ subKey }) {
     setLoading(true);
     try {
       const [allocRes, empRes, projRes] = await Promise.all([
-        fetch(`${API_BASE_URL}/allocations`),
-        fetch(`${API_BASE_URL}/employees`),
-        fetch(`${API_BASE_URL}/projects`)
+        fetch(`${API_BASE_URL}/allocations`, { headers: { 'x-user-id': user.id } }),
+        fetch(`${API_BASE_URL}/employees`, { headers: { 'x-user-id': user.id } }),
+        fetch(`${API_BASE_URL}/projects`, { headers: { 'x-user-id': user.id } })
       ]);
+      if (!allocRes.ok || !empRes.ok || !projRes.ok) {
+        throw new Error('One or more API requests failed.');
+      }
 
       const allocs = await allocRes.json();
       const emps = await empRes.json();
@@ -44,7 +48,7 @@ export default function Resources({ subKey }) {
   const handleDelete = async (id, empName, projName) => {
     if (!window.confirm(`Are you sure you want to delete allocation of "${empName}" on project "${projName}"?`)) return;
     try {
-      const res = await fetch(`${API_BASE_URL}/allocations/${id}`, { method: 'DELETE' });
+      const res = await fetch(`${API_BASE_URL}/allocations/${id}`, { method: 'DELETE', headers: { 'x-user-id': user.id } });
       if (res.ok) {
         setAllocations(prev => prev.filter(item => item.id !== id));
       } else {
@@ -92,7 +96,7 @@ export default function Resources({ subKey }) {
     try {
       const res = await fetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'x-user-id': user.id },
         body: JSON.stringify(fields)
       });
 
@@ -176,7 +180,7 @@ export default function Resources({ subKey }) {
                       {a.allocation}%
                     </span>
                   </td>
-                  <td><small>{a.startDate} to {a.endDate}</small></td>
+                  <td><small>{formatDate(a.startDate)} to {formatDate(a.endDate)}</small></td>
                   <td>{a.plannedHours} hrs</td>
                   <td>
                     <button className="btn btn-secondary btn-sm" style={{ padding: '4px 8px', marginRight: '6px' }} onClick={() => openModal(a)}>✏️</button>

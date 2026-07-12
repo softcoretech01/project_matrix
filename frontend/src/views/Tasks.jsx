@@ -1,5 +1,6 @@
 // src/views/Tasks.jsx
 import React, { useState, useEffect } from 'react';
+import { formatDate } from '../utils/date';
 import { useAuth, API_BASE_URL } from '../context/AuthContext';
 
 export default function Tasks({ subKey }) {
@@ -30,12 +31,15 @@ export default function Tasks({ subKey }) {
   const fetchData = async () => {
     try {
       const [taskRes, cliRes, projRes, modRes, empRes] = await Promise.all([
-        fetch(`${API_BASE_URL}/tasks`),
-        fetch(`${API_BASE_URL}/clients`),
-        fetch(`${API_BASE_URL}/projects`),
-        fetch(`${API_BASE_URL}/modules`),
-        fetch(`${API_BASE_URL}/employees`)
+        fetch(`${API_BASE_URL}/tasks`, { headers: { 'x-user-id': user.id } }),
+        fetch(`${API_BASE_URL}/clients`, { headers: { 'x-user-id': user.id } }),
+        fetch(`${API_BASE_URL}/projects`, { headers: { 'x-user-id': user.id } }),
+        fetch(`${API_BASE_URL}/modules`, { headers: { 'x-user-id': user.id } }),
+        fetch(`${API_BASE_URL}/employees`, { headers: { 'x-user-id': user.id } })
       ]);
+      if (!taskRes.ok || !cliRes.ok || !projRes.ok || !modRes.ok || !empRes.ok) {
+        throw new Error('One or more API requests failed.');
+      }
 
       const tList = await taskRes.json();
       const cList = await cliRes.json();
@@ -112,7 +116,7 @@ export default function Tasks({ subKey }) {
     try {
       const res = await fetch(`${API_BASE_URL}/tasks`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'x-user-id': user.id },
         body: JSON.stringify(newTask)
       });
 
@@ -161,7 +165,7 @@ export default function Tasks({ subKey }) {
     try {
       const res = await fetch(`${API_BASE_URL}/tasks/${taskId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'x-user-id': user.id },
         body: JSON.stringify({ ...targetTask, ...updatedFields })
       });
 
@@ -189,7 +193,7 @@ export default function Tasks({ subKey }) {
     try {
       const res = await fetch(`${API_BASE_URL}/tasks/${task.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'x-user-id': user.id },
         body: JSON.stringify(updatedTask)
       });
 
@@ -335,7 +339,7 @@ export default function Tasks({ subKey }) {
                   <td><strong>{t.id}</strong></td>
                   <td>{t.name}</td>
                   <td><span className={`badge badge-${t.priority.toLowerCase()}`}>{t.priority}</span></td>
-                  <td>{t.endDate}</td>
+                  <td>{formatDate(t.endDate)}</td>
                   <td>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>{t.progress}%</span>
@@ -463,7 +467,7 @@ export default function Tasks({ subKey }) {
                         <div className="kanban-card-title">{t.name}</div>
                         <div className="kanban-card-meta">
                           <span className={`badge badge-${t.priority.toLowerCase()}`}>{t.priority}</span>
-                          <span>Due: {t.endDate.substring(5)}</span>
+                          <span>Due: {formatDate(t.endDate)}</span>
                         </div>
                         <div className="kanban-card-footer">
                           <span className="kanban-card-assignee">👤 {assignee ? assignee.name.split(' ')[0] : 'Unassigned'}</span>

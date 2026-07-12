@@ -1,6 +1,7 @@
 // src/views/Leaves.jsx
 import React, { useState, useEffect } from 'react';
 import { useAuth, API_BASE_URL } from '../context/AuthContext';
+import { formatDate } from '../utils/date';
 
 export default function Leaves({ subKey }) {
   const { user } = useAuth();
@@ -21,9 +22,12 @@ export default function Leaves({ subKey }) {
     setLoading(true);
     try {
       const [leaveRes, empRes] = await Promise.all([
-        fetch(`${API_BASE_URL}/leaves`),
-        fetch(`${API_BASE_URL}/employees`)
+        fetch(`${API_BASE_URL}/leaves`, { headers: { 'x-user-id': user.id } }),
+        fetch(`${API_BASE_URL}/employees`, { headers: { 'x-user-id': user.id } })
       ]);
+      if (!leaveRes.ok || !empRes.ok) {
+        throw new Error('One or more API requests failed.');
+      }
       const lList = await leaveRes.json();
       const eList = await empRes.json();
 
@@ -67,7 +71,7 @@ export default function Leaves({ subKey }) {
     try {
       const res = await fetch(`${API_BASE_URL}/leaves`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'x-user-id': user.id },
         body: JSON.stringify(payload)
       });
 
@@ -99,7 +103,7 @@ export default function Leaves({ subKey }) {
     try {
       const res = await fetch(`${API_BASE_URL}/leaves/${id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'x-user-id': user.id },
         body: JSON.stringify(payload)
       });
 
@@ -194,7 +198,7 @@ export default function Leaves({ subKey }) {
                     <tr><td colSpan="4" className="text-center text-muted">No leave applications logged.</td></tr>
                   ) : leaves.map(l => (
                     <tr key={l.id}>
-                      <td><small>{l.startDate} to {l.endDate}</small></td>
+                      <td><small>{formatDate(l.startDate)} to {formatDate(l.endDate)}</small></td>
                       <td>{l.type}</td>
                       <td><span className={`badge badge-${l.status.toLowerCase()}`}>{l.status}</span></td>
                       <td><small className="text-secondary">{l.comments || 'N/A'}</small></td>
@@ -242,7 +246,7 @@ export default function Leaves({ subKey }) {
                       <strong>{emp ? emp.name : 'Unknown'}</strong>
                       <div className="text-muted" style={{ fontSize: '0.75rem' }}>{emp?.designation}</div>
                     </td>
-                    <td><small>{l.startDate} to {l.endDate}</small></td>
+                    <td><small>{formatDate(l.startDate)} to {formatDate(l.endDate)}</small></td>
                     <td><strong>{l.type}</strong></td>
                     <td>{l.comments}</td>
                     <td>

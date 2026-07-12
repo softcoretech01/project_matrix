@@ -1,6 +1,7 @@
 // src/views/Approvals.jsx
 import React, { useState, useEffect } from 'react';
 import { useAuth, API_BASE_URL } from '../context/AuthContext';
+import { formatDate } from '../utils/date';
 
 export default function Approvals({ subKey }) {
   const { user } = useAuth();
@@ -17,11 +18,15 @@ export default function Approvals({ subKey }) {
     setLoading(true);
     try {
       const [tsRes, taskRes, empRes, projRes] = await Promise.all([
-        fetch(`${API_BASE_URL}/timesheets`),
-        fetch(`${API_BASE_URL}/tasks`),
-        fetch(`${API_BASE_URL}/employees`),
-        fetch(`${API_BASE_URL}/projects`)
+        fetch(`${API_BASE_URL}/timesheets`, { headers: { 'x-user-id': user.id } }),
+        fetch(`${API_BASE_URL}/tasks`, { headers: { 'x-user-id': user.id } }),
+        fetch(`${API_BASE_URL}/employees`, { headers: { 'x-user-id': user.id } }),
+        fetch(`${API_BASE_URL}/projects`, { headers: { 'x-user-id': user.id } })
       ]);
+
+      if (!tsRes.ok || !taskRes.ok || !empRes.ok || !projRes.ok) {
+        throw new Error('One or more API requests failed.');
+      }
 
       const tss = await tsRes.json();
       const tsks = await taskRes.json();
@@ -65,7 +70,7 @@ export default function Approvals({ subKey }) {
     try {
       const res = await fetch(`${API_BASE_URL}/timesheets/${id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'x-user-id': user.id },
         body: JSON.stringify(payload)
       });
 
@@ -96,7 +101,7 @@ export default function Approvals({ subKey }) {
     try {
       const res = await fetch(`${API_BASE_URL}/tasks/${id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'x-user-id': user.id },
         body: JSON.stringify({ ...target, ...updatedFields })
       });
 
@@ -153,7 +158,7 @@ export default function Approvals({ subKey }) {
                       <strong>{emp ? emp.name : 'Unknown'}</strong>
                       <div className="text-muted" style={{ fontSize: '0.75rem' }}>{emp?.department}</div>
                     </td>
-                    <td>{ts.date}</td>
+                    <td>{formatDate(ts.date)}</td>
                     <td>{p ? p.name : 'Unknown'}</td>
                     <td><strong>{ts.hours} hrs</strong></td>
                     <td>{ts.description}</td>

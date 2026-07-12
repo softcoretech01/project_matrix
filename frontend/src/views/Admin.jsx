@@ -11,7 +11,10 @@ export default function Admin() {
   const fetchEmployees = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE_URL}/employees`);
+      const res = await fetch(`${API_BASE_URL}/employees`, {
+        headers: { 'x-user-id': user.id }
+      });
+      if (!res.ok) throw new Error(`API returned ${res.status}: ${res.statusText}`);
       const data = await res.json();
       setEmployees(data);
     } catch (e) {
@@ -37,7 +40,10 @@ export default function Admin() {
     try {
       const res = await fetch(`${API_BASE_URL}/employees/${id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-user-id': user.id 
+        },
         body: JSON.stringify(payload)
       });
 
@@ -56,7 +62,10 @@ export default function Admin() {
     if (!window.confirm('Reset database? This erases all changes and re-seeds MySQL.')) return;
     setResetting(true);
     try {
-      const res = await fetch(`${API_BASE_URL}/admin/reset-db`, { method: 'POST' });
+      const res = await fetch(`${API_BASE_URL}/admin/reset-db`, { 
+        method: 'POST',
+        headers: { 'x-user-id': user.id }
+      });
       if (res.ok) {
         alert('Database has been reset successfully!');
         fetchEmployees();

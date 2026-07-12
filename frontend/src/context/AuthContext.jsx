@@ -3,7 +3,7 @@ import React, { createContext, useState, useEffect, useContext } from 'react';
 
 const AuthContext = createContext();
 
-export const API_BASE_URL = 'http://localhost:5001/api';
+export const API_BASE_URL = 'http://localhost:5002/api';
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
@@ -34,7 +34,7 @@ export function AuthProvider({ children }) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password })
     });
-    
+
     if (!res.ok) {
       const err = await res.json();
       throw new Error(err.error || 'Login failed.');
@@ -57,29 +57,12 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('projectmatrix_session');
   };
 
-  const switchUser = async (id) => {
-    const res = await fetch(`${API_BASE_URL}/auth/switch`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id })
-    });
-
-    if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.error || 'Switch user failed.');
-    }
-
-    const userData = await res.json();
-    setUser(userData);
-    localStorage.setItem('projectmatrix_session', JSON.stringify(userData));
-    return userData;
-  };
 
   const changePassword = async (oldPassword, newPassword) => {
     // Check old password on client side or backend, we update directly
     const res = await fetch(`${API_BASE_URL}/auth/password`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'x-user-id': user.id },
       body: JSON.stringify({ employeeId: user.id, password: newPassword })
     });
 
@@ -99,7 +82,6 @@ export function AuthProvider({ children }) {
     loading,
     login,
     logout,
-    switchUser,
     changePassword,
     toggleTheme,
     getRememberedEmail: () => localStorage.getItem('projectmatrix_remembered_email') || ''

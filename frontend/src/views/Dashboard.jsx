@@ -28,29 +28,37 @@ export default function Dashboard({ navigateTo }) {
   const [loading, setLoading] = useState(true);
   const [resetting, setResetting] = useState(false);
 
-  const today = '2026-06-18'; // Mock current date from system metadata
+  const today = new Date().toISOString().split('T')[0];
 
   const fetchData = async () => {
     try {
+      const headers = { 'x-user-id': user.id };
       const [projRes, allocRes, taskRes, tsRes, empRes, cliRes] = await Promise.all([
-        fetch(`${API_BASE_URL}/projects`),
-        fetch(`${API_BASE_URL}/allocations`),
-        fetch(`${API_BASE_URL}/tasks`),
-        fetch(`${API_BASE_URL}/timesheets`),
-        fetch(`${API_BASE_URL}/employees`),
-        fetch(`${API_BASE_URL}/clients`)
+        fetch(`${API_BASE_URL}/projects`, { headers }),
+        fetch(`${API_BASE_URL}/allocations`, { headers }),
+        fetch(`${API_BASE_URL}/tasks`, { headers }),
+        fetch(`${API_BASE_URL}/timesheets`, { headers }),
+        fetch(`${API_BASE_URL}/employees`, { headers }),
+        fetch(`${API_BASE_URL}/clients`, { headers })
       ]);
 
       const [projects, allocations, tasks, timesheets, employees, clients] = await Promise.all([
-        projRes.json(),
-        allocRes.json(),
-        taskRes.json(),
-        tsRes.json(),
-        empRes.json(),
-        cliRes.json()
+        projRes.ok ? projRes.json() : [],
+        allocRes.ok ? allocRes.json() : [],
+        taskRes.ok ? taskRes.json() : [],
+        tsRes.ok ? tsRes.json() : [],
+        empRes.ok ? empRes.json() : [],
+        cliRes.ok ? cliRes.json() : []
       ]);
 
-      setData({ projects, allocations, tasks, timesheets, employees, clients });
+      setData({
+        projects: Array.isArray(projects) ? projects : [],
+        allocations: Array.isArray(allocations) ? allocations : [],
+        tasks: Array.isArray(tasks) ? tasks : [],
+        timesheets: Array.isArray(timesheets) ? timesheets : [],
+        employees: Array.isArray(employees) ? employees : [],
+        clients: Array.isArray(clients) ? clients : []
+      });
     } catch (e) {
       console.error('Failed to load dashboard data:', e);
     } finally {
@@ -159,17 +167,19 @@ function renderPMDashboard(data, user, today, navigateTo) {
   const activeProjectsCount = myProjects.filter(p => p.status === 'Active').length;
   const avgProgress = myTasks.length === 0 ? 0 : Math.round(myTasks.reduce((sum, t) => sum + t.progress, 0) / myTasks.length);
 
-  // Task Chart calculations
-  const statusCounts = { 'Open': 0, 'Assigned': 0, 'In Progress': 0, 'Review': 0, 'Completed': 0, 'Closed': 0 };
+  const statusCounts = { 'Completed': 0, 'In Progress': 0, 'Pending': 0, 'On Hold': 0 };
   myTasks.forEach(t => {
-    if (statusCounts[t.status] !== undefined) statusCounts[t.status]++;
+    let s = t.status;
+    if (s === 'Open' || s === 'Assigned') s = 'Pending';
+    else if (s === 'Review' || s === 'Closed') s = 'On Hold';
+    if (statusCounts[s] !== undefined) statusCounts[s]++;
   });
 
   const chartData = {
     labels: Object.keys(statusCounts),
     datasets: [{
       data: Object.values(statusCounts),
-      backgroundColor: ['#38bdf8', '#6366f1', '#fbbf24', '#a78bfa', '#34d399', '#64748b'],
+      backgroundColor: ['#34d399', '#38bdf8', '#fbbf24', '#64748b'],
       borderWidth: 1
     }]
   };
@@ -276,7 +286,17 @@ function renderManagementDashboard(data, today, navigateTo) {
   const totalEmployees = data.employees.filter(e => e.role === 'Employee' || e.role === 'Team Lead').length;
   const availableHoursTotal = totalEmployees * 40; // Weekly available hours
 
-  const currentWeekDays = ['2026-06-15', '2026-06-16', '2026-06-17', '2026-06-18', '2026-06-19'];
+  const currentWeekDays = (() => {
+    const curr = new Date();
+    const first = curr.getDate() - curr.getDay() + 1;
+    const days = [];
+    for (let i = 0; i < 5; i++) {
+      const d = new Date(curr.getTime());
+      d.setDate(first + i);
+      days.push(d.toISOString().split('T')[0]);
+    }
+    return days;
+  })();
   const weekHoursLogged = data.timesheets
     .filter(ts => currentWeekDays.includes(ts.date))
     .reduce((s, ts) => s + parseFloat(ts.hours), 0);
@@ -284,11 +304,18 @@ function renderManagementDashboard(data, today, navigateTo) {
   const utilizationRate = availableHoursTotal === 0 ? 0 : Math.round((weekHoursLogged / availableHoursTotal) * 100);
   const activeClients = data.clients.filter(c => c.status === 'Active').length;
 
+  const tsStatusCounts = { 'Submitted': 0, 'Approved': 0, 'Pending': 0, 'Rejected': 0 };
+  data.timesheets.forEach(ts => {
+    let s = ts.status;
+    if (s === 'Draft') s = 'Pending';
+    if (tsStatusCounts[s] !== undefined) tsStatusCounts[s]++;
+  });
+
   const billingChartData = {
-    labels: ['Billable Work', 'Non-Billable Work'],
+    labels: Object.keys(tsStatusCounts),
     datasets: [{
-      data: [billableHours, nonBillableHours],
-      backgroundColor: ['#10b981', '#f43f5e'],
+      data: Object.values(tsStatusCounts),
+      backgroundColor: ['#38bdf8', '#10b981', '#fbbf24', '#f43f5e'],
       borderWidth: 1
     }]
   };
@@ -383,7 +410,17 @@ function renderEmployeeDashboard(data, user, today, navigateTo) {
   const myTimesheets = data.timesheets.filter(ts => ts.employeeId === user.id);
   
   const todayHours = myTimesheets.filter(ts => ts.date === today).reduce((s, ts) => s + parseFloat(ts.hours), 0);
-  const currentWeekDays = ['2026-06-15', '2026-06-16', '2026-06-17', '2026-06-18', '2026-06-19'];
+  const currentWeekDays = (() => {
+    const curr = new Date();
+    const first = curr.getDate() - curr.getDay() + 1;
+    const days = [];
+    for (let i = 0; i < 5; i++) {
+      const d = new Date(curr.getTime());
+      d.setDate(first + i);
+      days.push(d.toISOString().split('T')[0]);
+    }
+    return days;
+  })();
   const weeklyHours = myTimesheets.filter(ts => currentWeekDays.includes(ts.date)).reduce((s, ts) => s + parseFloat(ts.hours), 0);
   const pendingCount = myTimesheets.filter(ts => ts.status === 'Draft' || ts.status === 'Rejected').length;
 
@@ -392,11 +429,26 @@ function renderEmployeeDashboard(data, user, today, navigateTo) {
   });
 
   const chartThemeColor = getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim() || '#6366f1';
+  
+  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const monthlyData = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+  myTimesheets.forEach(ts => {
+    const d = new Date(ts.date);
+    const m = d.getMonth();
+    if (!isNaN(m)) {
+      monthlyData[m] += parseFloat(ts.hours) || 0;
+    }
+  });
+  
+  const currentMonth = new Date().getMonth();
+  const displayLabels = monthNames.slice(0, Math.max(6, currentMonth + 1));
+  const displayData = monthlyData.slice(0, Math.max(6, currentMonth + 1));
+
   const weeklyChartData = {
-    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
+    labels: displayLabels,
     datasets: [{
-      label: 'Hours Logged',
-      data: loggedDaysHours,
+      label: 'Monthly Productivity',
+      data: displayData,
       backgroundColor: chartThemeColor,
       borderRadius: 6
     }]

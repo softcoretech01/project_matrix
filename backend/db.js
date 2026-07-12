@@ -154,10 +154,12 @@ class DBService {
       this.saveMockData(data);
       return emp;
     }
+    const newId = emp.id || ('E' + Date.now().toString().slice(-6));
     const [result] = await this.pool.execute(
       'INSERT INTO employees (id, code, name, email, mobile, designation, department, managerId, costPerHour, role, status, password) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-      [emp.id, emp.code, emp.name, emp.email, emp.mobile, emp.designation, emp.department, emp.managerId || null, emp.costPerHour, emp.role, emp.status, emp.password]
+      [newId, emp.code, emp.name, emp.email, emp.mobile, emp.designation, emp.department, emp.managerId || null, emp.costPerHour, emp.role, emp.status, emp.password]
     );
+    emp.id = newId;
     return emp;
   }
 
@@ -351,6 +353,17 @@ class DBService {
     if (this.isFallback) return this.getMockData().taskTypes;
     const [rows] = await this.pool.execute('SELECT * FROM task_types');
     return rows;
+  }
+
+  async deleteTaskType(id) {
+    if (this.isFallback) {
+      const data = this.getMockData();
+      data.taskTypes = data.taskTypes.filter(t => t.id !== id);
+      this.saveMockData(data);
+      return true;
+    }
+    await this.pool.execute('DELETE FROM task_types WHERE id = ?', [id]);
+    return true;
   }
 
   // Holidays

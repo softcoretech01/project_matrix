@@ -1,9 +1,11 @@
 // src/views/Reports.jsx
 import React, { useState, useEffect } from 'react';
+import { formatDate } from '../utils/date';
 import { useAuth, API_BASE_URL } from '../context/AuthContext';
 import { Bar, Doughnut } from 'react-chartjs-2';
 
 export default function Reports() {
+  const { user } = useAuth();
   const [activeReport, setActiveReport] = useState('utilization');
   const [reportData, setReportData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -12,7 +14,8 @@ export default function Reports() {
   const fetchReport = async (reportType) => {
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE_URL}/reports/${reportType}`);
+      const res = await fetch(`${API_BASE_URL}/reports/${reportType}`, { headers: { 'x-user-id': user.id } });
+      if (!res.ok) throw new Error(`API returned ${res.status}: ${res.statusText}`);
       const data = await res.json();
       setReportData(data);
     } catch (e) {
@@ -75,7 +78,7 @@ export default function Reports() {
     }
 
     if (activeReport === 'planned-vs-actual') {
-      const labels = reportData.map(r => r.taskName.substring(0, 15) + '...');
+      const labels = reportData.map(r => (r.taskName || '').substring(0, 15) + '...');
       const ests = reportData.map(r => r.estimated);
       const acts = reportData.map(r => r.actual);
       return (
@@ -174,7 +177,7 @@ export default function Reports() {
 // ==================== INDIVIDUAL REPORT RENDER FUNCTIONS ====================
 
 function renderUtilizationTable(data, search) {
-  const filtered = data.filter(r => r.employeeName.toLowerCase().includes(search.toLowerCase()));
+  const filtered = data.filter(r => (r.employeeName || '').toLowerCase().includes((search || '').toLowerCase()));
   return (
     <table className="table">
       <thead>
@@ -206,7 +209,7 @@ function renderUtilizationTable(data, search) {
 }
 
 function renderProjectEffortTable(data, search) {
-  const filtered = data.filter(r => r.projectName.toLowerCase().includes(search.toLowerCase()));
+  const filtered = data.filter(r => (r.projectName || '').toLowerCase().includes((search || '').toLowerCase()));
   return (
     <table className="table">
       <thead>
@@ -225,7 +228,7 @@ function renderProjectEffortTable(data, search) {
             <td><strong>{r.totalHoursSpent} hrs</strong></td>
             <td>
               <ul style={{ paddingLeft: '16px', fontSize: '0.8rem' }}>
-                {r.modules.map((m, idx) => (
+                {(r.modules || []).map((m, idx) => (
                   <li key={idx} className="text-secondary">{m.moduleName}: {m.hoursSpent} hrs</li>
                 ))}
               </ul>
@@ -238,7 +241,7 @@ function renderProjectEffortTable(data, search) {
 }
 
 function renderPlannedVsActualTable(data, search) {
-  const filtered = data.filter(r => r.taskName.toLowerCase().includes(search.toLowerCase()));
+  const filtered = data.filter(r => (r.taskName || '').toLowerCase().includes((search || '').toLowerCase()));
   return (
     <table className="table">
       <thead>
@@ -271,7 +274,7 @@ function renderPlannedVsActualTable(data, search) {
 }
 
 function renderResourceAllocationTable(data, search) {
-  const filtered = data.filter(r => r.employeeName.toLowerCase().includes(search.toLowerCase()));
+  const filtered = data.filter(r => (r.employeeName || '').toLowerCase().includes((search || '').toLowerCase()));
   return (
     <table className="table">
       <thead>
@@ -288,7 +291,7 @@ function renderResourceAllocationTable(data, search) {
             <td><strong>{r.employeeName}</strong></td>
             <td>{r.designation}</td>
             <td>
-              {r.allocations.map((a, idx) => (
+              {(r.allocations || []).map((a, idx) => (
                 <div key={idx} className="text-secondary" style={{ fontSize: '0.8rem' }}>
                   {a.projectCode}: {a.allocationPct}%
                 </div>
@@ -307,7 +310,7 @@ function renderResourceAllocationTable(data, search) {
 }
 
 function renderMissingTimesheetTable(data, search) {
-  const filtered = data.filter(r => r.employeeName.toLowerCase().includes(search.toLowerCase()));
+  const filtered = data.filter(r => (r.employeeName || '').toLowerCase().includes((search || '').toLowerCase()));
   return (
     <table className="table">
       <thead>
@@ -329,10 +332,8 @@ function renderMissingTimesheetTable(data, search) {
             <td>{r.department}</td>
             <td><span className="badge badge-inactive">{r.missingCount} days</span></td>
             <td>
-              {r.missingDays.map((d, idx) => (
-                <div key={idx} style={{ fontSize: '0.8rem' }} className="text-danger">
-                  {d.date}: Logged {d.loggedHours}h / 8h
-                </div>
+              {(r.missingDays || []).map((d, idx) => (
+                <div key={idx} style={{ fontSize: '0.8rem' }} className="text-danger">{formatDate(d.date)}: Logged {d.loggedHours}h / 8h</div>
               ))}
             </td>
           </tr>
@@ -343,7 +344,7 @@ function renderMissingTimesheetTable(data, search) {
 }
 
 function renderProductivityTable(data, search) {
-  const filtered = data.filter(r => r.employeeName.toLowerCase().includes(search.toLowerCase()));
+  const filtered = data.filter(r => (r.employeeName || '').toLowerCase().includes((search || '').toLowerCase()));
   return (
     <table className="table">
       <thead>

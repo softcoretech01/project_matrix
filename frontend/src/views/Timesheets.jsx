@@ -35,13 +35,14 @@ export default function Timesheets({ subKey }) {
   const fetchData = async () => {
     setLoading(true);
     try {
+      const headers = { 'x-user-id': user.id };
       const [tsRes, allocRes, projRes, modRes, taskRes, holRes] = await Promise.all([
-        fetch(`${API_BASE_URL}/timesheets`),
-        fetch(`${API_BASE_URL}/allocations`),
-        fetch(`${API_BASE_URL}/projects`),
-        fetch(`${API_BASE_URL}/modules`),
-        fetch(`${API_BASE_URL}/tasks`),
-        fetch(`${API_BASE_URL}/holidays`)
+        fetch(`${API_BASE_URL}/timesheets`, { headers }),
+        fetch(`${API_BASE_URL}/allocations`, { headers }),
+        fetch(`${API_BASE_URL}/projects`, { headers }),
+        fetch(`${API_BASE_URL}/modules`, { headers }),
+        fetch(`${API_BASE_URL}/tasks`, { headers }),
+        fetch(`${API_BASE_URL}/holidays`, { headers })
       ]);
 
       const tss = await tsRes.json();
@@ -191,7 +192,7 @@ export default function Timesheets({ subKey }) {
     try {
       const res = await fetch(`${API_BASE_URL}/timesheets`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'x-user-id': user.id },
         body: JSON.stringify(payload)
       });
 
@@ -277,7 +278,7 @@ export default function Timesheets({ subKey }) {
     
     try {
       // Delete from server
-      await Promise.all(idsToDelete.map(id => fetch(`${API_BASE_URL}/timesheets/${id}`, { method: 'DELETE' })));
+      await Promise.all(idsToDelete.map(id => fetch(`${API_BASE_URL}/timesheets/${id}`, { method: 'DELETE', headers: { 'x-user-id': user.id } })));
       setWeeklyRows(prev => prev.filter((_, i) => i !== index));
       fetchData();
     } catch (e) {
@@ -326,20 +327,20 @@ export default function Timesheets({ subKey }) {
               // Update
               await fetch(`${API_BASE_URL}/timesheets/${tsId}`, {
                 method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json', 'x-user-id': user.id },
                 body: JSON.stringify(payload)
               });
             } else {
               // Insert
               await fetch(`${API_BASE_URL}/timesheets`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json', 'x-user-id': user.id },
                 body: JSON.stringify(payload)
               });
             }
           } else if (tsId) {
             // Hours reset to 0, delete existing timesheet
-            await fetch(`${API_BASE_URL}/timesheets/${tsId}`, { method: 'DELETE' });
+            await fetch(`${API_BASE_URL}/timesheets/${tsId}`, { method: 'DELETE', headers: { 'x-user-id': user.id } });
           }
         }
       }
