@@ -37,7 +37,7 @@ router.get('/', authenticate, authorizeRoles('Admin', 'PM', 'Team Lead', 'Employ
 });
 
 // POST /
-router.post('/', authenticate, authorizeRoles('Admin', 'PM', 'Team Lead', 'Employee'), async (req, res) => {
+router.post('/', authenticate, authorizeRoles('Admin', 'PM'), async (req, res) => {
   try {
     if (req.user.role === 'PM') {
       const projects = await DB.getProjects();
@@ -111,7 +111,7 @@ router.put('/:id', authenticate, authorizeRoles('Admin', 'PM', 'Team Lead', 'Emp
 });
 
 // DELETE /:id
-router.delete('/:id', authenticate, authorizeRoles('Admin', 'PM', 'Team Lead', 'Employee'), async (req, res) => {
+router.delete('/:id', authenticate, authorizeRoles('Admin', 'PM', 'Team Lead'), async (req, res) => {
   try {
     const tasksList = await DB.getTasks();
     const task = tasksList.find(t => t.id === req.params.id);

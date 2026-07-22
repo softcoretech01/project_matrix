@@ -279,11 +279,13 @@ function renderEmployeesTable(list, onEdit, onDelete) {
               <td>{emp.name}</td>
               <td>{emp.email}</td>
               <td>{emp.role}</td>
-              <td>${emp.costPerHour}/hr</td>
+              <td>{emp.costPerHour}/hr</td>
               <td><span className={`badge badge-${emp.status?.toLowerCase()}`}>{emp.status}</span></td>
               <td>
                 <button className="btn btn-secondary btn-sm" style={{ padding: '4px 8px', marginRight: '6px' }} onClick={() => onEdit(emp)}>✏️</button>
-                <button className="btn btn-danger btn-sm" style={{ padding: '4px 8px' }} onClick={() => onDelete(emp.id, emp.name)}>🗑️</button>
+                {emp.email !== 'admin@projectmatrix.com' && (
+                  <button className="btn btn-danger btn-sm" style={{ padding: '4px 8px' }} onClick={() => onDelete(emp.id, emp.name)}>🗑️</button>
+                )}
               </td>
             </tr>
           ))}
@@ -489,7 +491,7 @@ function renderEmployeeForm(fields, setModal, employees) {
         </select>
       </div>
       <div className="form-group">
-        <label className="form-label">Cost per Hour ($)</label>
+        <label className="form-label">Cost per Hour</label>
         <input type="number" className="form-control" value={fields.costPerHour || 0} onChange={e=>handleChange('costPerHour', parseFloat(e.target.value) || 0)} required />
       </div>
       <div className="form-group">
@@ -602,7 +604,7 @@ function renderProjectForm(fields, setModal, clients, employees) {
           <input type="number" className="form-control" value={fields.estimatedHours || 0} onChange={e=>handleChange('estimatedHours', parseInt(e.target.value) || 0)} required />
         </div>
         <div className="form-group">
-          <label className="form-label">Budget ($)</label>
+          <label className="form-label">Budget</label>
           <input type="number" className="form-control" value={fields.budget || 0} onChange={e=>handleChange('budget', parseFloat(e.target.value) || 0)} required />
         </div>
       </div>

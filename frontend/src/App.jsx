@@ -25,23 +25,28 @@ const menuStructure = [
   { section: 'Planning & Tasks', roles: ['Admin', 'PM', 'Team Lead', 'Employee'] },
   { key: 'resources-allocate', label: 'Project Allocation', icon: '➕', roles: ['Admin', 'PM'], viewKey: 'resources', sub: 'allocations' },
   { key: 'resources-planner', label: 'Resource Planner', icon: '📅', roles: ['Admin', 'PM'], viewKey: 'resources', sub: 'planner' },
-  { key: 'tasks-create', label: 'Create Tasks', icon: '📝', roles: ['Admin', 'PM'], viewKey: 'tasks', sub: 'create' },
-  { key: 'tasks-my', label: 'My Tasks', icon: '☑️', roles: ['Admin', 'Team Lead', 'Employee'], viewKey: 'tasks', sub: 'my' },
-  { key: 'tasks-board', label: 'Task Kanban Board', icon: '📋', roles: ['Admin', 'PM', 'Team Lead', 'Employee'], viewKey: 'tasks', sub: 'board' },
+  { key: 'tasks-create', label: 'Create Tasks', icon: '📝', roles: ['PM'], viewKey: 'tasks', sub: 'create' },
+  { key: 'tasks-my', label: 'My Tasks', icon: '☑️', roles: ['PM', 'Team Lead', 'Employee'], viewKey: 'tasks', sub: 'my' },
+  { key: 'tasks-board', label: 'Task Kanban Board', icon: '📋', roles: ['PM', 'Team Lead', 'Employee'], viewKey: 'tasks', sub: 'board' },
 
-  { section: 'Timesheets & Leaves', roles: ['Admin', 'Employee', 'PM', 'Team Lead'] },
-  { key: 'timesheets-daily', label: 'Daily Timesheet', icon: '🕒', roles: ['Admin', 'Employee'], viewKey: 'timesheets', sub: 'daily' },
-  { key: 'timesheets-weekly', label: 'Weekly Timesheet', icon: '📅', roles: ['Admin', 'Employee'], viewKey: 'timesheets', sub: 'weekly' },
-  { key: 'timesheets-history', label: 'Timesheet History', icon: '📜', roles: ['Admin', 'Employee'], viewKey: 'timesheets', sub: 'history' },
-  { key: 'leaves-apply', label: 'Apply Leave', icon: '✈️', roles: ['Admin', 'Employee'], viewKey: 'leaves', sub: 'apply' },
+  { section: 'Monitoring', roles: ['Admin'] },
+  { key: 'monitoring-tasks', label: 'Task Summary', icon: '📊', roles: ['Admin'], viewKey: 'tasks', sub: 'summary' },
+  { key: 'monitoring-leaves', label: 'Leave Summary', icon: '✈️', roles: ['Admin'], viewKey: 'leaves', sub: 'summary' },
+  { key: 'monitoring-timesheets', label: 'Timesheet Summary', icon: '🕒', roles: ['Admin'], viewKey: 'timesheets', sub: 'summary' },
 
-  { section: 'Approvals & Controls', roles: ['Admin', 'PM', 'Team Lead'] },
-  { key: 'approvals-timesheets', label: 'Timesheet Approvals', icon: '✅', roles: ['Admin', 'PM', 'Team Lead'], viewKey: 'approvals', sub: 'timesheets' },
-  { key: 'approvals-tasks', label: 'Task review & Closure', icon: '📦', roles: ['Admin', 'PM', 'Team Lead'], viewKey: 'approvals', sub: 'tasks' },
-  { key: 'leaves-approve', label: 'Leave Approvals', icon: '📜', roles: ['Admin', 'PM', 'Team Lead'], viewKey: 'leaves', sub: 'approve' },
+  { section: 'Timesheets & Leaves', roles: ['Employee', 'PM', 'Team Lead'] },
+  { key: 'timesheets-daily', label: 'Daily Timesheet', icon: '🕒', roles: ['Employee', 'PM', 'Team Lead'], viewKey: 'timesheets', sub: 'daily' },
+  { key: 'timesheets-weekly', label: 'Weekly Timesheet', icon: '📅', roles: ['Employee', 'PM', 'Team Lead'], viewKey: 'timesheets', sub: 'weekly' },
+  { key: 'timesheets-history', label: 'Timesheet History', icon: '📜', roles: ['Employee', 'PM', 'Team Lead'], viewKey: 'timesheets', sub: 'history' },
+  { key: 'leaves-apply', label: 'Apply Leave', icon: '✈️', roles: ['Employee', 'PM', 'Team Lead'], viewKey: 'leaves', sub: 'apply' },
 
-  { section: 'Reports & Settings', roles: ['Admin', 'Management', 'PM', 'Team Lead'] },
-  { key: 'reports', label: 'Management Reports', icon: '📊', roles: ['Admin', 'Management', 'PM', 'Team Lead'], viewKey: 'reports', sub: '' },
+  { section: 'Approvals & Controls', roles: ['PM', 'Team Lead'] },
+  { key: 'approvals-timesheets', label: 'Timesheet Approvals', icon: '✅', roles: ['PM', 'Team Lead'], viewKey: 'approvals', sub: 'timesheets' },
+  { key: 'approvals-tasks', label: 'Task review & Closure', icon: '📦', roles: ['PM', 'Team Lead'], viewKey: 'approvals', sub: 'tasks' },
+  { key: 'leaves-approve', label: 'Leave Approvals', icon: '📜', roles: ['PM', 'Team Lead'], viewKey: 'leaves', sub: 'approve' },
+
+  { section: 'Reports & Settings', roles: ['Admin', 'Management', 'PM'] },
+  { key: 'reports', label: 'Management Reports', icon: '📊', roles: ['Admin', 'Management', 'PM'], viewKey: 'reports', sub: '' },
   { key: 'admin-roles', label: 'Role Manager', icon: '🛡️', roles: ['Admin'], viewKey: 'admin', sub: 'roles' }
 ];
 

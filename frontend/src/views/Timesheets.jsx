@@ -1,6 +1,7 @@
 // src/views/Timesheets.jsx
 import React, { useState, useEffect } from 'react';
 import { useAuth, API_BASE_URL } from '../context/AuthContext';
+import { formatDate } from '../utils/date';
 
 export default function Timesheets({ subKey }) {
   const { user } = useAuth();
@@ -12,6 +13,7 @@ export default function Timesheets({ subKey }) {
   const [modules, setModules] = useState([]);
   const [tasks, setTasks] = useState([]);
   const [holidays, setHolidays] = useState([]);
+  const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // Daily Form State
@@ -29,20 +31,26 @@ export default function Timesheets({ subKey }) {
 
   // Filters for History
   const [filterProject, setFilterProject] = useState('');
-  const [filterStatus, setFilterStatus] = useState('');
+  const [filterStatus, setStatusFilter] = useState('');
   const [filterMonth, setFilterMonth] = useState('2026-06');
+
+  // Summary View Filters
+  const [searchQuery, setSearchQuery] = useState('');
+  // const [statusFilter, setStatusFilter] = useState(''); // Resuing filterStatus
+  // const [projectFilter, setProjectFilter] = useState(''); // Reusing filterProject
 
   const fetchData = async () => {
     setLoading(true);
     try {
       const headers = { 'x-user-id': user.id };
-      const [tsRes, allocRes, projRes, modRes, taskRes, holRes] = await Promise.all([
+      const [tsRes, allocRes, projRes, modRes, taskRes, holRes, empRes] = await Promise.all([
         fetch(`${API_BASE_URL}/timesheets`, { headers }),
         fetch(`${API_BASE_URL}/allocations`, { headers }),
         fetch(`${API_BASE_URL}/projects`, { headers }),
         fetch(`${API_BASE_URL}/modules`, { headers }),
         fetch(`${API_BASE_URL}/tasks`, { headers }),
-        fetch(`${API_BASE_URL}/holidays`, { headers })
+        fetch(`${API_BASE_URL}/holidays`, { headers }),
+        fetch(`${API_BASE_URL}/employees`, { headers })
       ]);
 
       const tss = await tsRes.json();
@@ -51,8 +59,14 @@ export default function Timesheets({ subKey }) {
       const mods = await modRes.json();
       const tsks = await taskRes.json();
       const hols = await holRes.json();
+      const emps = empRes.ok ? await empRes.json() : [];
 
-      setTimesheets(tss.filter(t => t.employeeId === user.id));
+      if (subKey === 'summary') {
+        setTimesheets(tss);
+      } else {
+        setTimesheets(tss.filter(t => t.employeeId === user.id));
+      }
+      setEmployees(emps);
       setAllocations(allocs.filter(a => a.employeeId === user.id));
       setProjects(projs);
       setModules(mods);
@@ -352,6 +366,26 @@ export default function Timesheets({ subKey }) {
     }
   };
 
+  const handleHistorySubmit = async (tsId) => {
+    try {
+      const target = timesheets.find(t => t.id === tsId);
+      const payload = { ...target, status: 'Submitted', submittedDate: new Date().toISOString().split('T')[0] };
+      const res = await fetch(`${API_BASE_URL}/timesheets/${tsId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'x-user-id': user.id },
+        body: JSON.stringify(payload)
+      });
+      if (res.ok) {
+        alert('Timesheet submitted successfully!');
+        fetchData();
+      } else {
+        alert('Failed to submit timesheet.');
+      }
+    } catch (err) {
+      alert('Error submitting timesheet: ' + err.message);
+    }
+  };
+
   if (loading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', padding: '100px' }}>
@@ -579,7 +613,7 @@ export default function Timesheets({ subKey }) {
               {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
             </select>
 
-            <select className="form-control" style={{ maxWidth: '160px' }} value={filterStatus} onChange={e=>setFilterStatus(e.target.value)}>
+            <select className="form-control" style={{ maxWidth: '160px' }} value={filterStatus} onChange={e=>setStatusFilter(e.target.value)}>
               <option value="">All Statuses</option>
               <option value="Draft">Draft</option>
               <option value="Submitted">Submitted</option>
@@ -608,6 +642,7 @@ export default function Timesheets({ subKey }) {
                 <th>Task Summary</th>
                 <th>Approval Status</th>
                 <th>Comments</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -618,13 +653,97 @@ export default function Timesheets({ subKey }) {
                 const t = tasks.find(tsk => tsk.id === ts.taskId);
                 return (
                   <tr key={ts.id}>
-                    <td><strong>{ts.date}</strong></td>
+                    <td><strong>{formatDate(ts.date)}</strong></td>
                     <td>{p ? p.name : 'Unknown'}</td>
                     <td>{t ? t.name : 'Unknown'}</td>
                     <td>{ts.hours} hrs</td>
                     <td>{ts.description}</td>
                     <td><span className={`badge badge-${ts.status.toLowerCase()}`}>{ts.status}</span></td>
                     <td><small className="text-secondary">{ts.comments || 'No feedback yet'}</small></td>
+                    <td>
+                      {ts.status === 'Draft' && (
+                        <button className="btn btn-primary btn-sm" onClick={() => handleHistorySubmit(ts.id)}>Submit</button>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    );
+  }
+
+  // --- SUB VIEW 4: ADMIN SUMMARY (READ ONLY) ---
+  if (subKey === 'summary') {
+    const filteredSummary = timesheets.filter(ts => {
+      const emp = employees.find(e => e.id === ts.employeeId);
+      const empName = emp ? emp.name.toLowerCase() : '';
+      const matchSearch = empName.includes(searchQuery.toLowerCase());
+      const matchStatus = filterStatus ? ts.status === filterStatus : true;
+      const matchProject = filterProject ? ts.projectId === filterProject : true;
+      return matchSearch && matchStatus && matchProject;
+    });
+
+    return (
+      <div>
+        <div style={{ marginBottom: '20px', padding: '16px', background: 'var(--bg-surface)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)' }}>
+          <h3>Timesheet Summary Dashboard</h3>
+          <p className="text-secondary" style={{ fontSize: '0.85rem', marginTop: '4px' }}>Global monitoring of all timesheets. Read-only view.</p>
+        </div>
+
+        <div className="card" style={{ marginBottom: '20px' }}>
+          <div className="grid-cols-2" style={{ gap: '10px' }}>
+            <div>
+              <input type="text" className="form-control" placeholder="Search by employee name..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
+            </div>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <select className="form-control" value={filterProject} onChange={e => setFilterProject(e.target.value)}>
+                <option value="">All Projects</option>
+                {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+              </select>
+              <select className="form-control" value={filterStatus} onChange={e => setStatusFilter(e.target.value)}>
+                <option value="">All Statuses</option>
+                <option value="Draft">Draft</option>
+                <option value="Submitted">Submitted</option>
+                <option value="Approved">Approved</option>
+                <option value="Rejected">Rejected</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div className="table-responsive">
+          <table className="table">
+            <thead>
+              <tr>
+                <th>Employee</th>
+                <th>Log Date</th>
+                <th>Project Name</th>
+                <th>Task Target</th>
+                <th>Hours Logged</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredSummary.length === 0 ? (
+                <tr><td colSpan="6" className="text-center text-muted">No matching timesheets found.</td></tr>
+              ) : filteredSummary.map(ts => {
+                const emp = employees.find(e => e.id === ts.employeeId);
+                const p = projects.find(proj => proj.id === ts.projectId);
+                const t = tasks.find(tsk => tsk.id === ts.taskId);
+                return (
+                  <tr key={ts.id}>
+                    <td>
+                      <strong>{emp ? emp.name : 'Unknown'}</strong>
+                      <div className="text-muted" style={{ fontSize: '0.75rem' }}>{emp?.designation}</div>
+                    </td>
+                    <td><strong>{formatDate(ts.date)}</strong></td>
+                    <td>{p ? p.name : 'Unknown'}</td>
+                    <td>{t ? t.name : 'Unknown'}</td>
+                    <td>{ts.hours} hrs</td>
+                    <td><span className={`badge badge-${ts.status.toLowerCase()}`}>{ts.status}</span></td>
                   </tr>
                 );
               })}

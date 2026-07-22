@@ -37,7 +37,7 @@ router.get('/', authenticate, authorizeRoles('Admin', 'PM', 'Team Lead', 'Employ
 });
 
 // POST /
-router.post('/', authenticate, authorizeRoles('Admin', 'PM', 'Team Lead', 'Employee'), async (req, res) => {
+router.post('/', authenticate, authorizeRoles('PM', 'Team Lead', 'Employee'), async (req, res) => {
   try {
     // Non-admins can only submit their own timesheets
     if (req.user.role !== 'Admin' && req.body.employeeId !== req.user.id) {
@@ -51,7 +51,7 @@ router.post('/', authenticate, authorizeRoles('Admin', 'PM', 'Team Lead', 'Emplo
 });
 
 // PUT /:id
-router.put('/:id', authenticate, authorizeRoles('Admin', 'PM', 'Team Lead', 'Employee'), async (req, res) => {
+router.put('/:id', authenticate, authorizeRoles('PM', 'Team Lead', 'Employee'), async (req, res) => {
   try {
     const list = await DB.getTimesheets();
     const timesheet = list.find(t => t.id === req.params.id);

@@ -13,7 +13,7 @@ const handleError = (res, err) => {
 
 
 // GET /
-router.get('/', authenticate, authorizeRoles('Admin', 'PM', 'Team Lead', 'Employee', 'Management'), async (req, res) => {
+router.get('/', authenticate, authorizeRoles('Admin', 'PM', 'Team Lead', 'Management'), async (req, res) => {
   try {
     const list = await DB.getClients();
     let filtered = list;

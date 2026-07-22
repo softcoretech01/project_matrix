@@ -18,6 +18,10 @@ export default function Leaves({ subKey }) {
   // Manager comments
   const [managerComments, setManagerComments] = useState({});
 
+  // Summary View Filters
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+
   const fetchData = async () => {
     setLoading(true);
     try {
@@ -33,13 +37,7 @@ export default function Leaves({ subKey }) {
 
       setEmployees(eList);
       
-      if (user.role === 'PM') {
-        // PM sees pending leaves
-        setLeaves(lList);
-      } else {
-        // Employee sees only their leaves
-        setLeaves(lList.filter(l => l.employeeId === user.id));
-      }
+      setLeaves(lList);
     } catch (e) {
       console.error('Failed to load leaves list:', e);
     } finally {
@@ -128,9 +126,10 @@ export default function Leaves({ subKey }) {
 
   // --- SUB VIEW 1: APPLY LEAVE (EMPLOYEE VIEW) ---
   if (subKey === 'apply') {
+    const myLeaves = leaves.filter(l => l.employeeId === user.id);
     // Mock balances
-    const casualUsed = leaves.filter(l => l.type === 'Casual' && l.status === 'Approved').length * 2; // approximation
-    const sickUsed = leaves.filter(l => l.type === 'Sick' && l.status === 'Approved').length * 2;
+    const casualUsed = myLeaves.filter(l => l.type === 'Casual' && l.status === 'Approved').length * 2; // approximation
+    const sickUsed = myLeaves.filter(l => l.type === 'Sick' && l.status === 'Approved').length * 2;
 
     return (
       <div>
@@ -194,9 +193,9 @@ export default function Leaves({ subKey }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {leaves.length === 0 ? (
+                  {myLeaves.length === 0 ? (
                     <tr><td colSpan="4" className="text-center text-muted">No leave applications logged.</td></tr>
-                  ) : leaves.map(l => (
+                  ) : myLeaves.map(l => (
                     <tr key={l.id}>
                       <td><small>{formatDate(l.startDate)} to {formatDate(l.endDate)}</small></td>
                       <td>{l.type}</td>
@@ -275,6 +274,93 @@ export default function Leaves({ subKey }) {
                         Reject
                       </button>
                     </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    );
+  }
+
+  // --- SUB VIEW 3: ADMIN SUMMARY (READ ONLY) ---
+  if (subKey === 'summary') {
+    const filteredLeaves = leaves.filter(l => {
+      const emp = employees.find(e => e.id === l.employeeId);
+      const empName = emp ? emp.name.toLowerCase() : '';
+      const matchSearch = empName.includes(searchQuery.toLowerCase());
+      const matchStatus = statusFilter ? l.status === statusFilter : true;
+      return matchSearch && matchStatus;
+    });
+
+    const exportToCSV = () => {
+      let csvContent = "data:text/csv;charset=utf-8,";
+      csvContent += "Employee,Type,Start Date,End Date,Status,Comments\n";
+      filteredLeaves.forEach(l => {
+        const emp = employees.find(e => e.id === l.employeeId);
+        const empName = emp ? emp.name : 'Unknown';
+        csvContent += `"${empName}","${l.type}","${l.startDate}","${l.endDate}","${l.status}","${(l.comments || '').replace(/"/g, '""')}"\n`;
+      });
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", "leave_summary.csv");
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    };
+
+    return (
+      <div>
+        <div style={{ marginBottom: '20px', padding: '16px', background: 'var(--bg-surface)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)' }}>
+          <h3>Leave Summary Dashboard</h3>
+          <p className="text-secondary" style={{ fontSize: '0.85rem', marginTop: '4px' }}>Global monitoring of all leave requests. Read-only view.</p>
+        </div>
+
+        <div className="card" style={{ marginBottom: '20px' }}>
+          <div className="grid-cols-2" style={{ gap: '10px' }}>
+            <div>
+              <input type="text" className="form-control" placeholder="Search by employee name..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
+            </div>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <select className="form-control" value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
+                <option value="">All Statuses</option>
+                <option value="Pending">Pending</option>
+                <option value="Approved">Approved</option>
+                <option value="Rejected">Rejected</option>
+              </select>
+              <button className="btn btn-secondary" onClick={exportToCSV}>Export CSV</button>
+            </div>
+          </div>
+        </div>
+
+        <div className="table-responsive">
+          <table className="table">
+            <thead>
+              <tr>
+                <th>Employee</th>
+                <th>Timeline Requested</th>
+                <th>Leave Type</th>
+                <th>Status</th>
+                <th>Comments</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredLeaves.length === 0 ? (
+                <tr><td colSpan="5" className="text-center text-muted">No leave requests found.</td></tr>
+              ) : filteredLeaves.map(l => {
+                const emp = employees.find(e => e.id === l.employeeId);
+                return (
+                  <tr key={l.id}>
+                    <td>
+                      <strong>{emp ? emp.name : 'Unknown'}</strong>
+                      <div className="text-muted" style={{ fontSize: '0.75rem' }}>{emp?.designation}</div>
+                    </td>
+                    <td><small>{formatDate(l.startDate)} to {formatDate(l.endDate)}</small></td>
+                    <td><strong>{l.type}</strong></td>
+                    <td><span className={`badge badge-${l.status.toLowerCase()}`}>{l.status}</span></td>
+                    <td>{l.comments}</td>
                   </tr>
                 );
               })}

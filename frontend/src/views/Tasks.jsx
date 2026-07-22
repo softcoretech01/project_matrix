@@ -28,6 +28,11 @@ export default function Tasks({ subKey }) {
   // Progress modal state
   const [progressModal, setProgressModal] = useState({ isOpen: false, task: null, progress: 0, remarks: '', status: '' });
 
+  // Summary View Filters
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [projectFilter, setProjectFilter] = useState('');
+
   const fetchData = async () => {
     try {
       const [taskRes, cliRes, projRes, modRes, empRes] = await Promise.all([
@@ -480,6 +485,88 @@ export default function Tasks({ subKey }) {
               </div>
             );
           })}
+        </div>
+      </div>
+    );
+  }
+
+  // --- SUB VIEW 4: ADMIN SUMMARY (READ ONLY) ---
+  if (subKey === 'summary') {
+    const filteredTasks = tasks.filter(t => {
+      const matchSearch = t.name.toLowerCase().includes(searchQuery.toLowerCase()) || t.id.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchStatus = statusFilter ? t.status === statusFilter : true;
+      const matchProject = projectFilter ? t.projectId === projectFilter : true;
+      return matchSearch && matchStatus && matchProject;
+    });
+
+    return (
+      <div>
+        <div style={{ marginBottom: '20px', padding: '16px', background: 'var(--bg-surface)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)' }}>
+          <h3>Task Summary Dashboard</h3>
+          <p className="text-secondary" style={{ fontSize: '0.85rem', marginTop: '4px' }}>Global monitoring of all tasks. Read-only view.</p>
+        </div>
+
+        <div className="card" style={{ marginBottom: '20px' }}>
+          <div className="grid-cols-2" style={{ gap: '10px' }}>
+            <div>
+              <input type="text" className="form-control" placeholder="Search task ID or name..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
+            </div>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <select className="form-control" value={projectFilter} onChange={e => setProjectFilter(e.target.value)}>
+                <option value="">All Projects</option>
+                {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+              </select>
+              <select className="form-control" value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
+                <option value="">All Statuses</option>
+                <option value="Open">Open</option>
+                <option value="Assigned">Assigned</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Review">Review</option>
+                <option value="Completed">Completed</option>
+                <option value="Closed">Closed</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div className="table-responsive">
+          <table className="table">
+            <thead>
+              <tr>
+                <th>Task ID</th>
+                <th>Project</th>
+                <th>Task Name</th>
+                <th>Assigned To</th>
+                <th>Due Date</th>
+                <th>Progress</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredTasks.length === 0 ? (
+                <tr><td colSpan="7" className="text-center text-muted">No tasks found.</td></tr>
+              ) : filteredTasks.map(t => {
+                const proj = projects.find(p => p.id === t.projectId);
+                const emp = employees.find(e => e.id === t.assignedTo);
+                return (
+                  <tr key={t.id}>
+                    <td><strong>{t.id}</strong></td>
+                    <td>{proj ? proj.name : t.projectId}</td>
+                    <td>{t.name}</td>
+                    <td>{emp ? emp.name : 'Unassigned'}</td>
+                    <td>{formatDate(t.endDate)}</td>
+                    <td>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>{t.progress}%</span>
+                        <progress value={t.progress} max="100" style={{ accentColor: 'var(--color-primary)', width: '60px' }} />
+                      </div>
+                    </td>
+                    <td><span className={`badge badge-${t.status.toLowerCase().replace(' ', '-')}`}>{t.status}</span></td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       </div>
     );

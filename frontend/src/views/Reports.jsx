@@ -1,5 +1,5 @@
 // src/views/Reports.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { formatDate } from '../utils/date';
 import { useAuth, API_BASE_URL } from '../context/AuthContext';
 import { Bar, Doughnut } from 'react-chartjs-2';
@@ -35,16 +35,23 @@ export default function Reports() {
 
   // List of reports available
   const reportTypes = [
-    { key: 'utilization', label: 'Employee Utilization', icon: '👤' },
-    { key: 'project-effort', label: 'Project Effort Breakdown', icon: '📁' },
-    { key: 'planned-vs-actual', label: 'Planned vs Actual Task Effort', icon: '⏳' },
-    { key: 'resource-allocation', label: 'Resource Allocations Load', icon: '📊' },
-    { key: 'missing-timesheet', label: 'Missing Timesheets Scans', icon: '⚠️' },
-    { key: 'productivity', label: 'Team Productivity Indexes', icon: '🏆' }
+    { key: 'utilization', label: 'Resource Utilization Report', icon: '👤' },
+    { key: 'project-effort', label: 'Project Report', icon: '📁' },
+    { key: 'planned-vs-actual', label: 'Task Report', icon: '⏳' },
+    { key: 'resource-allocation', label: 'Resource Allocations', icon: '📊' },
+    { key: 'missing-timesheet', label: 'Timesheet Report', icon: '⚠️' },
+    { key: 'productivity', label: 'Employee Report', icon: '🏆' }
   ];
 
   // Render Charts depending on Active Report
-  const renderReportChart = () => {
+  const reportChart = useMemo(() => {
+    const commonOptions = {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: false,
+      events: [] // Disables all interactions (hover, click, resize)
+    };
+
     if (activeReport === 'utilization') {
       const labels = reportData.map(r => r.employeeName);
       const utils = reportData.map(r => r.utilization);
@@ -55,8 +62,7 @@ export default function Reports() {
             datasets: [{ label: 'Utilization %', data: utils, backgroundColor: '#6366f1', borderRadius: 4 }]
           }}
           options={{
-            responsive: true,
-            maintainAspectRatio: false,
+            ...commonOptions,
             scales: { y: { beginAtZero: true, max: 120 } }
           }}
         />
@@ -72,7 +78,7 @@ export default function Reports() {
             labels,
             datasets: [{ data: hours, backgroundColor: ['#10b981', '#f43f5e', '#3b82f6', '#f59e0b'] }]
           }}
-          options={{ responsive: true, maintainAspectRatio: false }}
+          options={commonOptions}
         />
       );
     }
@@ -90,7 +96,7 @@ export default function Reports() {
               { label: 'Logged Hours', data: acts, backgroundColor: '#10b981', borderRadius: 4 }
             ]
           }}
-          options={{ responsive: true, maintainAspectRatio: false }}
+          options={commonOptions}
         />
       );
     }
@@ -104,13 +110,13 @@ export default function Reports() {
             labels,
             datasets: [{ label: 'Completed Tasks count', data: completed, backgroundColor: '#10b981', borderRadius: 4 }]
           }}
-          options={{ responsive: true, maintainAspectRatio: false }}
+          options={commonOptions}
         />
       );
     }
 
     return <p className="text-center text-muted">No visual chart available for this report type.</p>;
-  };
+  }, [activeReport, reportData]);
 
   return (
     <div>
@@ -164,8 +170,8 @@ export default function Reports() {
           {/* Visual chart card */}
           <div className="card" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
             <h3>Visual Chart representation</h3>
-            <div className="chart-container mt-4" style={{ flex: 1, minHeight: '260px' }}>
-              {renderReportChart()}
+            <div className="chart-container mt-4" style={{ position: 'relative', width: '100%', height: '350px' }}>
+              {reportChart}
             </div>
           </div>
         </div>

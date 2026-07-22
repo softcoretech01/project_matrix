@@ -6,7 +6,6 @@ export default function Admin() {
   const { user } = useAuth();
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [resetting, setResetting] = useState(false);
 
   const fetchEmployees = async () => {
     setLoading(true);
@@ -58,26 +57,7 @@ export default function Admin() {
     }
   };
 
-  const handleResetDB = async () => {
-    if (!window.confirm('Reset database? This erases all changes and re-seeds MySQL.')) return;
-    setResetting(true);
-    try {
-      const res = await fetch(`${API_BASE_URL}/admin/reset-db`, { 
-        method: 'POST',
-        headers: { 'x-user-id': user.id }
-      });
-      if (res.ok) {
-        alert('Database has been reset successfully!');
-        fetchEmployees();
-      } else {
-        alert('Failed to reset database.');
-      }
-    } catch (e) {
-      alert('Error resetting database: ' + e.message);
-    } finally {
-      setResetting(false);
-    }
-  };
+
 
   if (loading) {
     return (
@@ -89,7 +69,7 @@ export default function Admin() {
 
   return (
     <div>
-      <div className="grid-cols-3" style={{ gridTemplateColumns: '2fr 1fr', gap: '24px' }}>
+      <div>
         {/* Role list */}
         <div className="card">
           <h3>User & Role Management</h3>
@@ -134,21 +114,6 @@ export default function Admin() {
               </tbody>
             </table>
           </div>
-        </div>
-
-        {/* Database Actions */}
-        <div className="card" style={{ height: 'fit-content' }}>
-          <h3>Database Operations Desk</h3>
-          <p className="text-secondary mt-4">Reset the entire database back to default seed records. This works for both MySQL and the local JSON file fallback.</p>
-          
-          <button
-            className="btn btn-danger mt-4"
-            style={{ width: '100%' }}
-            onClick={handleResetDB}
-            disabled={resetting}
-          >
-            {resetting ? 'Resetting DB...' : 'Reset System Database'}
-          </button>
         </div>
       </div>
     </div>

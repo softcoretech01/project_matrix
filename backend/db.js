@@ -157,7 +157,7 @@ class DBService {
     const newId = emp.id || ('E' + Date.now().toString().slice(-6));
     const [result] = await this.pool.execute(
       'INSERT INTO employees (id, code, name, email, mobile, designation, department, managerId, costPerHour, role, status, password) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-      [newId, emp.code, emp.name, emp.email, emp.mobile, emp.designation, emp.department, emp.managerId || null, emp.costPerHour, emp.role, emp.status, emp.password]
+      [newId, emp.code, emp.name, emp.email, emp.mobile ?? null, emp.designation ?? null, emp.department ?? null, emp.managerId || null, emp.costPerHour ?? 0, emp.role ?? 'Employee', emp.status ?? 'Active', emp.password ?? 'password123']
     );
     emp.id = newId;
     return emp;
@@ -176,7 +176,7 @@ class DBService {
     }
     await this.pool.execute(
       'UPDATE employees SET code = ?, name = ?, email = ?, mobile = ?, designation = ?, department = ?, managerId = ?, costPerHour = ?, role = ?, status = ?, password = ? WHERE id = ?',
-      [emp.code, emp.name, emp.email, emp.mobile, emp.designation, emp.department, emp.managerId || null, emp.costPerHour, emp.role, emp.status, emp.password, id]
+      [emp.code, emp.name, emp.email, emp.mobile ?? null, emp.designation ?? null, emp.department ?? null, emp.managerId || null, emp.costPerHour ?? 0, emp.role ?? 'Employee', emp.status ?? 'Active', emp.password ?? 'password123', id]
     );
     return { id, ...emp };
   }
@@ -208,10 +208,12 @@ class DBService {
       this.saveMockData(data);
       return cli;
     }
+    const newId = cli.id || ('C' + Date.now().toString().slice(-6));
     await this.pool.execute(
       'INSERT INTO clients (id, name, contactPerson, email, phone, country, status) VALUES (?, ?, ?, ?, ?, ?, ?)',
-      [cli.id, cli.name, cli.contactPerson, cli.email, cli.phone, cli.country, cli.status]
+      [newId, cli.name, cli.contactPerson, cli.email, cli.phone ?? null, cli.country, cli.status]
     );
+    cli.id = newId;
     return cli;
   }
 
@@ -228,7 +230,7 @@ class DBService {
     }
     await this.pool.execute(
       'UPDATE clients SET name = ?, contactPerson = ?, email = ?, phone = ?, country = ?, status = ? WHERE id = ?',
-      [cli.name, cli.contactPerson, cli.email, cli.phone, cli.country, cli.status, id]
+      [cli.name, cli.contactPerson, cli.email, cli.phone ?? null, cli.country, cli.status, id]
     );
     return { id, ...cli };
   }
@@ -260,10 +262,12 @@ class DBService {
       this.saveMockData(data);
       return p;
     }
+    const newId = p.id || ('P' + Date.now().toString().slice(-6));
     await this.pool.execute(
       'INSERT INTO projects (id, code, name, clientId, pmId, startDate, endDate, estimatedHours, budget, billable, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-      [p.id, p.code, p.name, p.clientId, p.pmId, p.startDate, p.endDate, p.estimatedHours, p.budget, p.billable ? 1 : 0, p.status]
+      [newId, p.code, p.name, p.clientId, p.pmId, p.startDate, p.endDate, p.estimatedHours, p.budget, p.billable ? 1 : 0, p.status]
     );
+    p.id = newId;
     return p;
   }
 
@@ -312,10 +316,12 @@ class DBService {
       this.saveMockData(data);
       return m;
     }
+    const newId = m.id || ('M' + Date.now().toString().slice(-6));
     await this.pool.execute(
       'INSERT INTO modules (id, projectId, name, description, priority, status) VALUES (?, ?, ?, ?, ?, ?)',
-      [m.id, m.projectId, m.name, m.description, m.priority, m.status]
+      [newId, m.projectId, m.name, m.description ?? null, m.priority, m.status]
     );
+    m.id = newId;
     return m;
   }
 
@@ -332,7 +338,7 @@ class DBService {
     }
     await this.pool.execute(
       'UPDATE modules SET projectId = ?, name = ?, description = ?, priority = ?, status = ? WHERE id = ?',
-      [m.projectId, m.name, m.description, m.priority, m.status, id]
+      [m.projectId, m.name, m.description ?? null, m.priority, m.status, id]
     );
     return { id, ...m };
   }
@@ -366,6 +372,42 @@ class DBService {
     return true;
   }
 
+  async insertTaskType(tt) {
+    if (this.isFallback) {
+      const data = this.getMockData();
+      const count = data.taskTypes.length + 1;
+      tt.id = `TT${String(count).padStart(3, '0')}`;
+      data.taskTypes.push(tt);
+      this.saveMockData(data);
+      return tt;
+    }
+    const newId = tt.id || ('TT' + Date.now().toString().slice(-6));
+    await this.pool.execute(
+      'INSERT INTO task_types (id, code, name, description, status) VALUES (?, ?, ?, ?, ?)',
+      [newId, tt.code, tt.name, tt.description ?? null, tt.status || 'Active']
+    );
+    tt.id = newId;
+    return tt;
+  }
+
+  async updateTaskType(id, tt) {
+    if (this.isFallback) {
+      const data = this.getMockData();
+      const index = data.taskTypes.findIndex(x => x.id === id);
+      if (index !== -1) {
+        data.taskTypes[index] = { ...data.taskTypes[index], ...tt };
+        this.saveMockData(data);
+        return data.taskTypes[index];
+      }
+      return null;
+    }
+    await this.pool.execute(
+      'UPDATE task_types SET code = ?, name = ?, description = ?, status = ? WHERE id = ?',
+      [tt.code, tt.name, tt.description ?? null, tt.status || 'Active', id]
+    );
+    return { id, ...tt };
+  }
+
   // Holidays
   async getHolidays() {
     if (this.isFallback) return this.getMockData().holidays;
@@ -376,17 +418,33 @@ class DBService {
   async insertHoliday(h) {
     if (this.isFallback) {
       const data = this.getMockData();
-      h.id = data.holidays.length + 1;
+      const count = data.holidays.length + 1;
+      h.id = count;
       data.holidays.push(h);
       this.saveMockData(data);
       return h;
     }
-    const [result] = await this.pool.execute(
-      'INSERT INTO holidays (date, name, type) VALUES (?, ?, ?)',
-      [h.date, h.name, h.type]
-    );
+    const [result] = await this.pool.execute('INSERT INTO holidays (date, name, type) VALUES (?, ?, ?)', [h.date, h.name, h.type]);
     h.id = result.insertId;
     return h;
+  }
+
+  async updateHoliday(id, h) {
+    if (this.isFallback) {
+      const data = this.getMockData();
+      const index = data.holidays.findIndex(x => x.id === parseInt(id));
+      if (index !== -1) {
+        data.holidays[index] = { ...data.holidays[index], ...h };
+        this.saveMockData(data);
+        return data.holidays[index];
+      }
+      return null;
+    }
+    await this.pool.execute(
+      'UPDATE holidays SET date = ?, name = ?, type = ? WHERE id = ?',
+      [h.date, h.name, h.type, id]
+    );
+    return { id, ...h };
   }
 
   async deleteHoliday(id) {
@@ -416,10 +474,12 @@ class DBService {
       this.saveMockData(data);
       return a;
     }
+    const newId = a.id || ('A' + Date.now().toString().slice(-6));
     await this.pool.execute(
       'INSERT INTO allocations (id, employeeId, projectId, role, allocation, startDate, endDate, plannedHours) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-      [a.id, a.employeeId, a.projectId, a.role, a.allocation, a.startDate, a.endDate, a.plannedHours]
+      [newId, a.employeeId, a.projectId, a.role, a.allocation, a.startDate, a.endDate, a.plannedHours]
     );
+    a.id = newId;
     return a;
   }
 
@@ -469,10 +529,12 @@ class DBService {
       this.saveMockData(data);
       return t;
     }
+    const newId = t.id || ('T' + Date.now().toString().slice(-6));
     await this.pool.execute(
       'INSERT INTO tasks (id, name, description, projectId, moduleId, priority, estimatedHours, startDate, endDate, assignedTo, reviewerId, status, progress, loggedHours) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0.00)',
-      [t.id, t.name, t.description, t.projectId, t.moduleId, t.priority, t.estimatedHours, t.startDate, t.endDate, t.assignedTo, t.reviewerId, t.status, t.progress]
+      [newId, t.name, t.description ?? null, t.projectId, t.moduleId, t.priority, t.estimatedHours, t.startDate, t.endDate, t.assignedTo, t.reviewerId, t.status, t.progress]
     );
+    t.id = newId;
     return t;
   }
 
@@ -489,7 +551,7 @@ class DBService {
     }
     await this.pool.execute(
       'UPDATE tasks SET name = ?, description = ?, projectId = ?, moduleId = ?, priority = ?, estimatedHours = ?, startDate = ?, endDate = ?, assignedTo = ?, reviewerId = ?, status = ?, progress = ?, loggedHours = ? WHERE id = ?',
-      [t.name, t.description, t.projectId, t.moduleId, t.priority, t.estimatedHours, t.startDate, t.endDate, t.assignedTo, t.reviewerId, t.status, t.progress, t.loggedHours, id]
+      [t.name, t.description ?? null, t.projectId, t.moduleId, t.priority, t.estimatedHours, t.startDate, t.endDate, t.assignedTo, t.reviewerId, t.status, t.progress, t.loggedHours, id]
     );
     return { id, ...t };
   }
@@ -522,10 +584,12 @@ class DBService {
       this.recalculateTaskHoursMock(ts.taskId);
       return ts;
     }
+    const newId = ts.id || ('TS' + Date.now().toString().slice(-6));
     await this.pool.execute(
       'INSERT INTO timesheets (id, date, employeeId, projectId, moduleId, taskId, hours, description, status, comments, submittedDate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-      [ts.id, ts.date, ts.employeeId, ts.projectId, ts.moduleId, ts.taskId, ts.hours, ts.description, ts.status, ts.comments || null, ts.submittedDate || null]
+      [newId, ts.date, ts.employeeId, ts.projectId, ts.moduleId, ts.taskId, ts.hours, ts.description ?? '', ts.status ?? 'Draft', ts.comments || null, ts.submittedDate || null]
     );
+    ts.id = newId;
     await this.recalculateTaskHoursSQL(ts.taskId);
     return ts;
   }
@@ -544,7 +608,7 @@ class DBService {
     }
     await this.pool.execute(
       'UPDATE timesheets SET date = ?, employeeId = ?, projectId = ?, moduleId = ?, taskId = ?, hours = ?, description = ?, status = ?, comments = ?, submittedDate = ? WHERE id = ?',
-      [ts.date, ts.employeeId, ts.projectId, ts.moduleId, ts.taskId, ts.hours, ts.description, ts.status, ts.comments || null, ts.submittedDate || null, id]
+      [ts.date, ts.employeeId, ts.projectId, ts.moduleId, ts.taskId, ts.hours, ts.description ?? '', ts.status ?? 'Draft', ts.comments || null, ts.submittedDate || null, id]
     );
     
     // Fetch timesheet to get its task ID for recalculation
@@ -611,10 +675,12 @@ class DBService {
       this.saveMockData(data);
       return l;
     }
+    const newId = l.id || ('L' + Date.now().toString().slice(-6));
     await this.pool.execute(
       'INSERT INTO leaves (id, employeeId, startDate, endDate, type, status, comments) VALUES (?, ?, ?, ?, ?, ?, ?)',
-      [l.id, l.employeeId, l.startDate, l.endDate, l.type, l.status, l.comments || null]
+      [newId, l.employeeId, l.startDate, l.endDate, l.type ?? 'Casual', l.status ?? 'Pending', l.comments ?? null]
     );
+    l.id = newId;
     return l;
   }
 
@@ -631,7 +697,7 @@ class DBService {
     }
     await this.pool.execute(
       'UPDATE leaves SET employeeId = ?, startDate = ?, endDate = ?, type = ?, status = ?, comments = ? WHERE id = ?',
-      [l.employeeId, l.startDate, l.endDate, l.type, l.status, l.comments || null, id]
+      [l.employeeId, l.startDate, l.endDate, l.type ?? 'Casual', l.status ?? 'Pending', l.comments ?? null, id]
     );
     return { id, ...l };
   }
@@ -660,9 +726,15 @@ class DBService {
         .map(st => st.trim())
         .filter(st => st.length > 0);
 
-      // Run database initialization commands
-      for (const statement of statements) {
-        await this.pool.execute(statement);
+      const connection = await this.pool.getConnection();
+      try {
+        await connection.query('SET FOREIGN_KEY_CHECKS = 0');
+        for (const statement of statements) {
+          await connection.query(statement);
+        }
+        await connection.query('SET FOREIGN_KEY_CHECKS = 1');
+      } finally {
+        connection.release();
       }
       return true;
     } catch (err) {

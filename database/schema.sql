@@ -71,7 +71,10 @@ CREATE TABLE `modules` (
 DROP TABLE IF EXISTS `task_types`;
 CREATE TABLE `task_types` (
   `id` VARCHAR(10) NOT NULL,
+  `code` VARCHAR(20) NOT NULL,
   `name` VARCHAR(50) NOT NULL,
+  `description` TEXT,
+  `status` ENUM('Active', 'Inactive') NOT NULL DEFAULT 'Active',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -173,19 +176,17 @@ INSERT INTO `clients` (`id`, `name`, `contactPerson`, `email`, `phone`, `country
 
 
 
-INSERT INTO `task_types` (`id`, `name`) VALUES
-('TT1', 'Development'),
-('TT2', 'Bug Fix'),
-('TT3', 'Testing'),
-('TT4', 'Support'),
-('TT5', 'Meeting'),
-('TT6', 'Documentation'),
-('TT7', 'Training');
+INSERT INTO `task_types` (`id`, `code`, `name`, `description`, `status`) VALUES
+('TT1', 'TT-DEV', 'Development', 'Software development tasks', 'Active'),
+('TT2', 'TT-TEST', 'Testing', 'QA and testing tasks', 'Active'),
+('TT3', 'TT-DESIGN', 'Design', 'UI/UX design tasks', 'Active'),
+('TT4', 'TT-DOC', 'Documentation', 'Writing and reviewing docs', 'Active'),
+('TT5', 'TT-MEET', 'Meeting', 'Client or team meetings', 'Active'),
+('TT6', 'TT-SUPPORT', 'Support', 'Customer support', 'Active'),
+('TT7', 'TT-IDLE', 'Idle', 'No billable work', 'Active');
 
 INSERT INTO `holidays` (`date`, `name`, `type`) VALUES
 ('2026-01-01', 'New Year\'s Day', 'Public'),
 ('2026-07-04', 'Independence Day', 'Public'),
 ('2026-11-26', 'Thanksgiving Day', 'Company'),
 ('2026-12-25', 'Christmas Day', 'Public');
-
-

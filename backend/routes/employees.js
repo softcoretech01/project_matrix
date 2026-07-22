@@ -13,7 +13,7 @@ const handleError = (res, err) => {
 };
 
 // GET / - list employees (requires authentication)
-router.get('/', authenticate, authorizeRoles('Admin', 'PM', 'Team Lead', 'Employee', 'Management'), async (req, res) => {
+router.get('/', authenticate, authorizeRoles('Admin', 'PM', 'Team Lead', 'Management'), async (req, res) => {
   try {
     const list = await DB.getEmployees();
     let filtered = list;
@@ -52,6 +52,12 @@ router.post('/', authenticate, authorizeRoles('Admin'), async (req, res) => {
 // PUT /:id
 router.put('/:id', authenticate, authorizeRoles('Admin'), async (req, res) => {
   try {
+    const list = await DB.getEmployees();
+    const emp = list.find(e => e.id === req.params.id);
+    if (emp && emp.email === 'admin@projectmatrix.com') {
+      if (req.body.role && req.body.role !== 'Admin') return res.status(403).json({ error: 'Default Administrator must remain an Admin.' });
+      if (req.body.status && req.body.status !== 'Active') return res.status(403).json({ error: 'Default Administrator must remain Active.' });
+    }
     const record = await DB.updateEmployee(req.params.id, req.body);
     if (!record) return res.status(404).json({ error: 'Employee not found' });
     res.json(record);
@@ -63,6 +69,11 @@ router.put('/:id', authenticate, authorizeRoles('Admin'), async (req, res) => {
 // DELETE /:id
 router.delete('/:id', authenticate, authorizeRoles('Admin'), async (req, res) => {
   try {
+    const list = await DB.getEmployees();
+    const emp = list.find(e => e.id === req.params.id);
+    if (emp && emp.email === 'admin@projectmatrix.com') {
+      return res.status(403).json({ error: 'Default Administrator cannot be deleted.' });
+    }
     await DB.deleteEmployee(req.params.id);
     res.json({ message: 'Employee deleted' });
   } catch (err) {

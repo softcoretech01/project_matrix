@@ -1,6 +1,7 @@
 // src/views/Dashboard.jsx
 import React, { useState, useEffect } from 'react';
 import { useAuth, API_BASE_URL } from '../context/AuthContext';
+import { formatDate } from '../utils/date';
 import { Bar, Doughnut, Pie } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -23,32 +24,34 @@ export default function Dashboard({ navigateTo }) {
     tasks: [],
     timesheets: [],
     employees: [],
-    clients: []
+    clients: [],
+    leaves: []
   });
   const [loading, setLoading] = useState(true);
-  const [resetting, setResetting] = useState(false);
 
   const today = new Date().toISOString().split('T')[0];
 
   const fetchData = async () => {
     try {
       const headers = { 'x-user-id': user.id };
-      const [projRes, allocRes, taskRes, tsRes, empRes, cliRes] = await Promise.all([
+      const [projRes, allocRes, taskRes, tsRes, empRes, cliRes, leaveRes] = await Promise.all([
         fetch(`${API_BASE_URL}/projects`, { headers }),
         fetch(`${API_BASE_URL}/allocations`, { headers }),
         fetch(`${API_BASE_URL}/tasks`, { headers }),
         fetch(`${API_BASE_URL}/timesheets`, { headers }),
         fetch(`${API_BASE_URL}/employees`, { headers }),
-        fetch(`${API_BASE_URL}/clients`, { headers })
+        fetch(`${API_BASE_URL}/clients`, { headers }),
+        fetch(`${API_BASE_URL}/leaves`, { headers })
       ]);
 
-      const [projects, allocations, tasks, timesheets, employees, clients] = await Promise.all([
+      const [projects, allocations, tasks, timesheets, employees, clients, leaves] = await Promise.all([
         projRes.ok ? projRes.json() : [],
         allocRes.ok ? allocRes.json() : [],
         taskRes.ok ? taskRes.json() : [],
         tsRes.ok ? tsRes.json() : [],
         empRes.ok ? empRes.json() : [],
-        cliRes.ok ? cliRes.json() : []
+        cliRes.ok ? cliRes.json() : [],
+        leaveRes.ok ? leaveRes.json() : []
       ]);
 
       setData({
@@ -57,7 +60,8 @@ export default function Dashboard({ navigateTo }) {
         tasks: Array.isArray(tasks) ? tasks : [],
         timesheets: Array.isArray(timesheets) ? timesheets : [],
         employees: Array.isArray(employees) ? employees : [],
-        clients: Array.isArray(clients) ? clients : []
+        clients: Array.isArray(clients) ? clients : [],
+        leaves: Array.isArray(leaves) ? leaves : []
       });
     } catch (e) {
       console.error('Failed to load dashboard data:', e);
@@ -70,23 +74,6 @@ export default function Dashboard({ navigateTo }) {
     fetchData();
   }, []);
 
-  const handleResetDB = async () => {
-    if (!window.confirm('Reset database to seed defaults? This deletes all updates.')) return;
-    setResetting(true);
-    try {
-      const res = await fetch(`${API_BASE_URL}/admin/reset-db`, { method: 'POST' });
-      if (res.ok) {
-        alert('Database has been reset successfully!');
-        fetchData();
-      } else {
-        alert('Failed to reset database.');
-      }
-    } catch (e) {
-      alert('Error resetting database: ' + e.message);
-    } finally {
-      setResetting(false);
-    }
-  };
 
   if (loading) {
     return (
@@ -98,7 +85,7 @@ export default function Dashboard({ navigateTo }) {
 
   // Render view based on Role
   if (user.role === 'Admin') {
-    return renderAdminDashboard(data, handleResetDB, navigateTo, resetting);
+    return renderAdminDashboard(data, navigateTo);
   } else if (user.role === 'PM' || user.role === 'Team Lead') {
     return renderPMDashboard(data, user, today, navigateTo);
   } else if (user.role === 'Management') {
@@ -109,43 +96,234 @@ export default function Dashboard({ navigateTo }) {
 }
 
 // ----------------- ADMIN DASHBOARD -----------------
-function renderAdminDashboard(data, handleResetDB, navigateTo, resetting) {
+function renderAdminDashboard(data, navigateTo) {
+  // Company Overview KPIs
+  const totalEmployees = data.employees.length;
+  const activeEmployees = data.employees.filter(e => e.status === 'Active').length;
+  const totalClients = data.clients.length;
+  const totalProjects = data.projects.length;
+  const activeProjects = data.projects.filter(p => p.status === 'Active').length;
+
+  // Operations KPIs
+  const totalTasks = data.tasks.length;
+  const pendingTasks = data.tasks.filter(t => ['Open', 'Assigned', 'In Progress', 'Review'].includes(t.status)).length;
+  const completedTasks = data.tasks.filter(t => ['Completed', 'Closed'].includes(t.status)).length;
+  
+  const pendingTimesheets = data.timesheets.filter(ts => ts.status === 'Draft' || ts.status === 'Submitted').length;
+  
+  const pendingLeaves = data.leaves.filter(l => l.status === 'Pending').length;
+
+  // Resource Overview
+  const totalEmployeesCount = data.employees.filter(e => e.role === 'Employee' || e.role === 'Team Lead').length;
+  const availableHoursTotal = totalEmployeesCount * 40; // Weekly available hours
+  
+  const currentWeekDays = (() => {
+    const curr = new Date();
+    const first = curr.getDate() - curr.getDay() + 1;
+    const days = [];
+    for (let i = 0; i < 5; i++) {
+      const d = new Date(curr.getTime());
+      d.setDate(first + i);
+      days.push(d.toISOString().split('T')[0]);
+    }
+    return days;
+  })();
+  const weekHoursLogged = data.timesheets
+    .filter(ts => currentWeekDays.includes(ts.date))
+    .reduce((s, ts) => s + parseFloat(ts.hours), 0);
+  
+  const utilizationRate = availableHoursTotal === 0 ? 0 : Math.round((weekHoursLogged / availableHoursTotal) * 100);
+
+  // Chart Data
+  const deptCounts = {};
+  data.employees.forEach(e => {
+    deptCounts[e.department] = (deptCounts[e.department] || 0) + 1;
+  });
+  const employeeChart = {
+    labels: Object.keys(deptCounts),
+    datasets: [{
+      data: Object.values(deptCounts),
+      backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#64748b'],
+      borderWidth: 1
+    }]
+  };
+
+  const projectStatusCounts = {};
+  data.projects.forEach(p => {
+    projectStatusCounts[p.status] = (projectStatusCounts[p.status] || 0) + 1;
+  });
+  const projectChart = {
+    labels: Object.keys(projectStatusCounts),
+    datasets: [{
+      data: Object.values(projectStatusCounts),
+      backgroundColor: ['#10b981', '#64748b', '#f59e0b', '#f43f5e'],
+      borderWidth: 1
+    }]
+  };
+
+  const taskStatusCounts = {};
+  data.tasks.forEach(t => {
+    taskStatusCounts[t.status] = (taskStatusCounts[t.status] || 0) + 1;
+  });
+  const taskChart = {
+    labels: Object.keys(taskStatusCounts),
+    datasets: [{
+      data: Object.values(taskStatusCounts),
+      backgroundColor: ['#3b82f6', '#f59e0b', '#8b5cf6', '#10b981', '#64748b', '#ec4899'],
+      borderWidth: 1
+    }]
+  };
+
+  const leaveStatusCounts = {};
+  data.leaves.forEach(l => {
+    leaveStatusCounts[l.status] = (leaveStatusCounts[l.status] || 0) + 1;
+  });
+  const leaveChart = {
+    labels: Object.keys(leaveStatusCounts),
+    datasets: [{
+      label: 'Leaves',
+      data: Object.values(leaveStatusCounts),
+      backgroundColor: ['#f59e0b', '#10b981', '#ef4444'],
+      borderWidth: 1
+    }]
+  };
+
   return (
     <div>
       <div style={{ marginBottom: '24px', padding: '20px', background: 'rgba(99, 102, 241, 0.05)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)' }}>
         <h2>Administrator Desk</h2>
-        <p style={{ color: 'var(--text-secondary)', marginTop: '6px' }}>Configure master sheets (Employees, Clients, Projects, Modules, and Holidays) or reset default seed values.</p>
+        <p style={{ color: 'var(--text-secondary)', marginTop: '6px' }}>System Administration, Operations Overview, and Resource Monitoring.</p>
       </div>
 
-      <div className="kpi-grid">
+      <h3 style={{ marginBottom: '16px', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>Company Overview</h3>
+      <div className="kpi-grid" style={{ marginBottom: '32px' }}>
         <div className="kpi-card clickable-row" onClick={() => navigateTo('masters', 'employees')}>
           <div className="kpi-icon primary"><i data-lucide="users">👥</i></div>
           <div className="kpi-info">
-            <span className="kpi-label">Registered Staff</span>
-            <span className="kpi-value">{data.employees.length}</span>
+            <span className="kpi-label">Active Employees</span>
+            <span className="kpi-value">{activeEmployees} / {totalEmployees}</span>
           </div>
         </div>
         <div className="kpi-card clickable-row" onClick={() => navigateTo('masters', 'clients')}>
-          <div className="kpi-icon success"><i data-lucide="briefcase">💼</i></div>
+          <div className="kpi-icon info"><i data-lucide="briefcase">💼</i></div>
           <div className="kpi-info">
-            <span className="kpi-label">Client Companies</span>
-            <span className="kpi-value">{data.clients.length}</span>
+            <span className="kpi-label">Total Clients</span>
+            <span className="kpi-value">{totalClients}</span>
           </div>
         </div>
         <div className="kpi-card clickable-row" onClick={() => navigateTo('masters', 'projects')}>
-          <div className="kpi-icon info"><i data-lucide="folder">📁</i></div>
+          <div className="kpi-icon success"><i data-lucide="folder">📁</i></div>
           <div className="kpi-info">
-            <span className="kpi-label">Total Projects</span>
-            <span className="kpi-value">{data.projects.length}</span>
+            <span className="kpi-label">Active Projects</span>
+            <span className="kpi-value">{activeProjects} / {totalProjects}</span>
           </div>
         </div>
-        <div className="kpi-card">
-          <div className="kpi-icon danger"><i data-lucide="database">💾</i></div>
+        <div className="kpi-card clickable-row" onClick={() => navigateTo('resources', 'planner')}>
+          <div className="kpi-icon primary">📊</div>
           <div className="kpi-info">
-            <span className="kpi-label">Database Management</span>
-            <button className="btn btn-danger btn-sm mt-4" onClick={handleResetDB} disabled={resetting} style={{ padding: '4px 10px', fontSize: '0.75rem' }}>
-              {resetting ? 'Resetting...' : 'Reset Database'}
-            </button>
+            <span className="kpi-label">Resource Utilization</span>
+            <span className="kpi-value">{utilizationRate}%</span>
+          </div>
+        </div>
+      </div>
+
+      <h3 style={{ marginBottom: '16px', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>Operations</h3>
+      <div className="kpi-grid" style={{ marginBottom: '32px' }}>
+        <div className="kpi-card clickable-row" onClick={() => navigateTo('tasks', 'summary')}>
+          <div className="kpi-icon warning">📝</div>
+          <div className="kpi-info">
+            <span className="kpi-label">Pending Tasks</span>
+            <span className="kpi-value">{pendingTasks}</span>
+          </div>
+        </div>
+        <div className="kpi-card clickable-row" onClick={() => navigateTo('tasks', 'summary')}>
+          <div className="kpi-icon success">✅</div>
+          <div className="kpi-info">
+            <span className="kpi-label">Completed Tasks</span>
+            <span className="kpi-value">{completedTasks}</span>
+          </div>
+        </div>
+        <div className="kpi-card clickable-row" onClick={() => navigateTo('timesheets', 'summary')}>
+          <div className="kpi-icon warning">🕒</div>
+          <div className="kpi-info">
+            <span className="kpi-label">Pending Timesheets</span>
+            <span className="kpi-value">{pendingTimesheets}</span>
+          </div>
+        </div>
+        <div className="kpi-card clickable-row" onClick={() => navigateTo('leaves', 'summary')}>
+          <div className="kpi-icon warning">✈️</div>
+          <div className="kpi-info">
+            <span className="kpi-label">Pending Leaves</span>
+            <span className="kpi-value">{pendingLeaves}</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid-cols-2" style={{ marginBottom: '32px' }}>
+        <div className="card">
+          <div className="card-header-flex">
+            <h3>Employee Distribution</h3>
+          </div>
+          <div className="chart-container" style={{ position: 'relative', height: '220px' }}>
+            <Doughnut
+              data={employeeChart}
+              options={{
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { position: 'right', labels: { color: 'var(--text-secondary)' } } }
+              }}
+            />
+          </div>
+        </div>
+
+        <div className="card">
+          <div className="card-header-flex">
+            <h3>Project Status</h3>
+          </div>
+          <div className="chart-container" style={{ position: 'relative', height: '220px' }}>
+            <Pie
+              data={projectChart}
+              options={{
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { position: 'right', labels: { color: 'var(--text-secondary)' } } }
+              }}
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className="grid-cols-2" style={{ marginBottom: '32px' }}>
+        <div className="card">
+          <div className="card-header-flex">
+            <h3>Task Status</h3>
+          </div>
+          <div className="chart-container" style={{ position: 'relative', height: '220px' }}>
+            <Doughnut
+              data={taskChart}
+              options={{
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { position: 'right', labels: { color: 'var(--text-secondary)' } } }
+              }}
+            />
+          </div>
+        </div>
+
+        <div className="card">
+          <div className="card-header-flex">
+            <h3>Leave Status</h3>
+          </div>
+          <div className="chart-container" style={{ position: 'relative', height: '220px' }}>
+            <Bar
+              data={leaveChart}
+              options={{
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true } }
+              }}
+            />
           </div>
         </div>
       </div>
@@ -155,7 +333,7 @@ function renderAdminDashboard(data, handleResetDB, navigateTo, resetting) {
 
 // ----------------- PM & TEAM LEAD DASHBOARD -----------------
 function renderPMDashboard(data, user, today, navigateTo) {
-  const myProjects = user.role === 'Admin' ? data.projects : data.projects.filter(p => p.pmId === user.id);
+  const myProjects = data.projects;
   const myProjectIds = myProjects.map(p => p.id);
   
   const myAllocations = data.allocations.filter(a => myProjectIds.includes(a.projectId));
@@ -374,7 +552,7 @@ function renderManagementDashboard(data, today, navigateTo) {
                   return (
                     <tr key={p.id}>
                       <td><strong>{p.name}</strong></td>
-                      <td>${p.budget.toLocaleString()}</td>
+                      <td>{p.budget.toLocaleString()}</td>
                       <td className={spent > p.estimatedHours ? 'text-danger' : ''}>{spent} hrs / {p.estimatedHours}h</td>
                     </tr>
                   );
@@ -406,8 +584,8 @@ function renderManagementDashboard(data, today, navigateTo) {
 
 // ----------------- EMPLOYEE DASHBOARD -----------------
 function renderEmployeeDashboard(data, user, today, navigateTo) {
-  const activeTasks = data.tasks.filter(t => t.assignedTo === user.id && t.status !== 'Completed' && t.status !== 'Closed');
-  const myTimesheets = data.timesheets.filter(ts => ts.employeeId === user.id);
+  const activeTasks = data.tasks.filter(t => t.status !== 'Completed' && t.status !== 'Closed');
+  const myTimesheets = data.timesheets;
   
   const todayHours = myTimesheets.filter(ts => ts.date === today).reduce((s, ts) => s + parseFloat(ts.hours), 0);
   const currentWeekDays = (() => {
@@ -510,7 +688,7 @@ function renderEmployeeDashboard(data, user, today, navigateTo) {
                   <tr key={t.id}>
                     <td><strong>{t.id}</strong></td>
                     <td>{t.name}</td>
-                    <td>{t.endDate}</td>
+                    <td>{formatDate(t.endDate)}</td>
                     <td><span className={`badge badge-${t.status.toLowerCase().replace(' ', '-')}`}>{t.status}</span></td>
                   </tr>
                 ))}

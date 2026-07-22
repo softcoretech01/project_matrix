@@ -17,7 +17,13 @@ router.get('/', authenticate, authorizeRoles('Admin', 'PM', 'Team Lead', 'Employ
   try {
     const list = await DB.getLeaves();
     let filtered = list;
-    if (req.user.role === 'PM' || req.user.role === 'Team Lead') {
+    if (req.user.role === 'PM') {
+      const pmProjs = (await DB.getProjects()).filter(p => p.pmId === req.user.id).map(p => p.id);
+      const pmAllocs = (await DB.getAllocations()).filter(a => pmProjs.includes(a.projectId)).map(a => a.employeeId);
+      const directReports = (await DB.getEmployees()).filter(e => e.managerId === req.user.id).map(e => e.id);
+      const allowedEmps = [...new Set([...pmAllocs, ...directReports])];
+      filtered = list.filter(l => allowedEmps.includes(l.employeeId) || l.employeeId === req.user.id);
+    } else if (req.user.role === 'Team Lead') {
       const myTeam = (await DB.getEmployees()).filter(e => e.managerId === req.user.id).map(e => e.id);
       filtered = list.filter(l => myTeam.includes(l.employeeId) || l.employeeId === req.user.id);
     } else if (req.user.role === 'Employee') {
@@ -34,7 +40,7 @@ router.get('/', authenticate, authorizeRoles('Admin', 'PM', 'Team Lead', 'Employ
 });
 
 // POST /
-router.post('/', authenticate, authorizeRoles('Admin', 'PM', 'Team Lead', 'Employee'), async (req, res) => {
+router.post('/', authenticate, authorizeRoles('PM', 'Team Lead', 'Employee'), async (req, res) => {
   try {
     // Non-admins can only submit their own leaves
     if (req.user.role !== 'Admin' && req.body.employeeId !== req.user.id) {
@@ -56,9 +62,26 @@ router.put('/:id', authenticate, authorizeRoles('Admin', 'PM', 'Team Lead', 'Emp
 
     const user = req.user;
 
-    // Admin and PM can update anything
-    if (user.role === 'Admin' || user.role === 'PM') {
+    // Admin can update anything
+    if (user.role === 'Admin') {
       const record = await DB.updateLeave(req.params.id, req.body);
+      return res.json(record);
+    }
+
+    if (user.role === 'PM') {
+      const pmProjs = (await DB.getProjects()).filter(p => p.pmId === user.id).map(p => p.id);
+      const pmAllocs = (await DB.getAllocations()).filter(a => pmProjs.includes(a.projectId)).map(a => a.employeeId);
+      const directReports = (await DB.getEmployees()).filter(e => e.managerId === user.id).map(e => e.id);
+      const allowedEmps = [...new Set([...pmAllocs, ...directReports])];
+      if (!allowedEmps.includes(leave.employeeId)) {
+        return res.status(403).json({ error: 'Forbidden: You do not manage this employee.' });
+      }
+      const updatedLeave = {
+        ...leave,
+        status: req.body.status || leave.status,
+        comments: req.body.comments || leave.comments
+      };
+      const record = await DB.updateLeave(req.params.id, updatedLeave);
       return res.json(record);
     }
 
