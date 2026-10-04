@@ -1288,7 +1288,8 @@ button, input, select, textarea {
 }
 
 .kanban-column {
-  flex: 1 1 0;`n  min-width: 240px;
+  flex: 1 1 0;
+  min-width: 240px;
   display: flex;
   flex-direction: column;
   background: var(--bg-surface);
