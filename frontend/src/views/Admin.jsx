@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth, API_BASE_URL } from '../context/AuthContext';
 
-export default function Admin() {
+export default function Admin({ subKey }) {
   const { user } = useAuth();
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -67,6 +67,70 @@ export default function Admin() {
     );
   }
 
+  if (subKey === 'users') {
+    return (
+      <div className="card">
+        <div className="card-header-flex">
+          <div>
+            <h3>User Management</h3>
+            <p className="text-secondary mt-2 mb-4" style={{ fontSize: '0.85rem' }}>Add, edit, or deactivate users in the system.</p>
+          </div>
+          <button className="btn btn-primary btn-sm"><i className="ph ph-user-plus" style={{ marginRight: '6px' }}></i> Add User</button>
+        </div>
+        <div className="table-responsive">
+          <table className="table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Department</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {employees.map(emp => (
+                <tr key={`user-${emp.id}`}>
+                  <td><strong>{emp.name}</strong></td>
+                  <td>{emp.email}</td>
+                  <td>{emp.designation}</td>
+                  <td><span className="badge badge-active">Active</span></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    );
+  }
+
+  if (subKey === 'settings') {
+    return (
+      <div className="card" style={{ maxWidth: '600px' }}>
+        <h3>System Settings</h3>
+        <p className="text-secondary mt-2 mb-4" style={{ fontSize: '0.85rem' }}>Configure global application settings.</p>
+        
+        <div className="form-group">
+          <label className="form-label">Application Name</label>
+          <input type="text" className="form-control" defaultValue="Task Management" />
+        </div>
+        <div className="form-group">
+          <label className="form-label">Default Timezone</label>
+          <select className="form-control">
+            <option>UTC (Coordinated Universal Time)</option>
+            <option>EST (Eastern Standard Time)</option>
+            <option>PST (Pacific Standard Time)</option>
+          </select>
+        </div>
+        <div className="form-group checkbox-group" style={{ marginTop: '20px' }}>
+          <input type="checkbox" id="email-notifs" defaultChecked />
+          <label htmlFor="email-notifs" className="form-label">Enable Global Email Notifications</label>
+        </div>
+        
+        <button className="btn btn-primary" style={{ marginTop: '20px' }}>Save Settings</button>
+      </div>
+    );
+  }
+
   return (
     <div>
       <div>
@@ -87,7 +151,7 @@ export default function Admin() {
               </thead>
               <tbody>
                 {employees.map(emp => (
-                  <tr key={emp.id}>
+                  <tr key={`role-${emp.id}`}>
                     <td>
                       <strong>{emp.name}</strong>
                       <div className="text-muted" style={{ fontSize: '0.75rem' }}>{emp.code}</div>
