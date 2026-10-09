@@ -1,85 +1,69 @@
+# backend/app/main.py
 import os
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-from dotenv import load_dotenv
+from contextlib import asynccontextmanager
 
-# Adjust path if .env is at the root of the project
-load_dotenv(os.path.join(os.path.dirname(__file__), '../../.env'))
+from app.db.base import Base
+from app.db.session import engine, SessionLocal
+from app.db.seed import seed_database
 
-app = FastAPI(title="Task Management API")
+# Routers
+from app.routers import auth, employees, projects, modules, tasks, labels, admin, master, personal, reports
 
-# Add CORS Middleware to allow requests from the frontend
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # 1. Initialize SQLite / Database tables
+    Base.metadata.create_all(bind=engine)
+    # 2. Seed initial default demo data
+    db = SessionLocal()
+    try:
+        seed_database(db)
+    finally:
+        db.close()
+    yield
+
+app = FastAPI(
+    title="ProjectMatrix Task Management API",
+    version="2.5.0",
+    description="FastAPI Backend for Personal, Master, and Admin Portals",
+    lifespan=lifespan
+)
+
+# Configure CORS Middleware for complete frontend compatibility
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # For dev, allow all
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-class LoginRequest(BaseModel):
-    email: str
-    password: str
+# Mount all routers under /api prefix (Contract-first matching)
+app.include_router(auth.router, prefix="/api")
+app.include_router(employees.router, prefix="/api")
+app.include_router(projects.router, prefix="/api")
+app.include_router(modules.router, prefix="/api")
+app.include_router(tasks.router, prefix="/api")
+app.include_router(labels.router, prefix="/api")
+app.include_router(admin.router, prefix="/api")
+app.include_router(master.router, prefix="/api")
+app.include_router(personal.router, prefix="/api")
+app.include_router(reports.router, prefix="/api")
 
-@app.post("/api/auth/login")
-def login(req: LoginRequest):
-    # Mock authentication
-    if req.email == "admin@taskmanagement.com" and req.password == "admin123":
-        return {
-            "id": "1",
-            "name": "Admin User",
-            "email": req.email,
-            "role": "Admin",
-            "designation": "Administrator"
-        }
-    raise HTTPException(status_code=401, detail="Invalid email or password")
-
-@app.get("/api/tasks")
-def get_tasks():
-    return [
-        {
-            "id": "TSK-101",
-            "name": "Design Database Schema",
-            "priority": "High",
-            "status": "In Progress",
-            "progress": 50,
-            "assignedTo": "1",
-            "endDate": "2026-10-15"
-        },
-        {
-            "id": "TSK-102",
-            "name": "Setup FastAPI Backend",
-            "priority": "Medium",
-            "status": "Completed",
-            "progress": 100,
-            "assignedTo": "1",
-            "endDate": "2026-10-10"
-        }
-    ]
-
-@app.get("/api/projects")
-def get_projects():
-    return [
-        {
-            "id": "PRJ-01",
-            "name": "Task Management Portal MVP",
-            "status": "Active"
-        }
-    ]
-
-@app.get("/api/employees")
-def get_employees():
-    return [
-        {
-            "id": "1",
-            "name": "Admin User",
-            "email": "admin@taskmanagement.com",
-            "role": "Admin",
-            "designation": "Administrator"
-        }
-    ]
+# Also mount under root without /api for direct route access
+app.include_router(auth.router)
+app.include_router(employees.router)
+app.include_router(projects.router)
+app.include_router(modules.router)
+app.include_router(tasks.router)
+app.include_router(labels.router)
 
 @app.get("/")
 def read_root():
-    return {"message": "Welcome to Task Management API"}
+    return {
+        "status": "online",
+        "service": "ProjectMatrix Task Management Backend",
+        "portals": ["Personal", "Master", "Admin"],
+        "docs": "/docs"
+    }
