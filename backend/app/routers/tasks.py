@@ -70,7 +70,12 @@ def get_task(task_id: str, db: Session = Depends(get_db)):
 @router.post("", response_model=TaskOut)
 def create_task(task_in: TaskCreate, db: Session = Depends(get_db), current_user: Optional[User] = Depends(get_current_user)):
     count = db.query(Task).count()
-    new_id = f"TSK-{100 + count + 1}"
+    candidate_id = f"TSK-{100 + count + 1}"
+    idx = 1
+    while db.query(Task).filter(Task.id == candidate_id).first():
+        candidate_id = f"TSK-{100 + count + 1 + idx}"
+        idx += 1
+    new_id = candidate_id
 
     task = Task(
         id=new_id,

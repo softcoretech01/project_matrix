@@ -48,8 +48,16 @@ def get_project(project_id: str, db: Session = Depends(get_db)):
 @router.post("", response_model=ProjectOut)
 def create_project(proj_in: ProjectCreate, db: Session = Depends(get_db)):
     count = db.query(Project).count()
-    new_id = f"PRJ-{str(count + 1).zfill(2)}"
-    new_code = proj_in.code or f"PRJ-{str(count + 1).zfill(2)}"
+    candidate_id = f"PRJ-{str(count + 1).zfill(2)}"
+    idx = 1
+    while db.query(Project).filter(Project.id == candidate_id).first():
+        candidate_id = f"PRJ-{str(count + 1 + idx).zfill(2)}"
+        idx += 1
+
+    new_id = candidate_id
+    new_code = proj_in.code or new_id
+    if db.query(Project).filter(Project.code == new_code).first():
+        new_code = f"{new_code}-{idx}"
 
     project = Project(
         id=new_id,
