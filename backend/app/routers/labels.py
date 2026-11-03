@@ -1,55 +1,70 @@
 # backend/app/routers/labels.py
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from typing import List
-from app.db.session import get_db
-from app.models.label import Label
-from app.schemas.label import LabelCreate, LabelUpdate, LabelOut
+from pydantic import BaseModel
+from typing import Optional, List
+import random
 
-router = APIRouter(prefix="/labels", tags=["Labels / Task Types"])
+from backend.app.db.database import get_db
+from backend.app.models.models import Label
 
-@router.get("", response_model=List[LabelOut])
+router = APIRouter(prefix="/api/labels", tags=["labels"])
+
+class LabelCreate(BaseModel):
+    name: str
+    color: Optional[str] = "#6366f1"
+    status: Optional[str] = "Active"
+
+class LabelUpdate(BaseModel):
+    name: Optional[str] = None
+    color: Optional[str] = None
+    status: Optional[str] = None
+
+@router.get("")
 def get_labels(db: Session = Depends(get_db)):
-    return db.query(Label).all()
+    labels = db.query(Label).all()
+    return [l.to_dict() for l in labels]
 
-@router.post("", response_model=LabelOut)
-def create_label(lbl_in: LabelCreate, db: Session = Depends(get_db)):
-    count = db.query(Label).count()
-    new_id = f"LBL-{str(count + 1).zfill(2)}"
+@router.post("")
+def create_label(data: LabelCreate, db: Session = Depends(get_db)):
+    count = db.query(Label).count() + 1
+    new_id = f"LBL-{count:02d}"
+    while db.query(Label).filter(Label.id == new_id).first():
+        new_id = f"LBL-{random.randint(10, 99)}"
+
     label = Label(
         id=new_id,
-        name=lbl_in.name,
-        color=lbl_in.color or "#38bdf8",
-        status=lbl_in.status or "Active"
+        name=data.name,
+        color=data.color or "#6366f1",
+        status=data.status or "Active"
     )
     db.add(label)
     db.commit()
     db.refresh(label)
-    return label
+    return label.to_dict()
 
-@router.put("/{label_id}", response_model=LabelOut)
-def update_label(label_id: str, lbl_in: LabelUpdate, db: Session = Depends(get_db)):
-    lbl = db.query(Label).filter(Label.id == label_id).first()
-    if not lbl:
+@router.put("/{label_id}")
+def update_label(label_id: str, data: LabelUpdate, db: Session = Depends(get_db)):
+    label = db.query(Label).filter(Label.id == label_id).first()
+    if not label:
         raise HTTPException(status_code=404, detail="Label not found")
 
-    if lbl_in.name is not None:
-        lbl.name = lbl_in.name
-    if lbl_in.color is not None:
-        lbl.color = lbl_in.color
-    if lbl_in.status is not None:
-        lbl.status = lbl_in.status
+    if data.name is not None:
+        label.name = data.name
+    if data.color is not None:
+        label.color = data.color
+    if data.status is not None:
+        label.status = data.status
 
     db.commit()
-    db.refresh(lbl)
-    return lbl
+    db.refresh(label)
+    return label.to_dict()
 
 @router.delete("/{label_id}")
 def delete_label(label_id: str, db: Session = Depends(get_db)):
-    lbl = db.query(Label).filter(Label.id == label_id).first()
-    if not lbl:
+    label = db.query(Label).filter(Label.id == label_id).first()
+    if not label:
         raise HTTPException(status_code=404, detail="Label not found")
-    db.delete(lbl)
+    db.delete(label)
     db.commit()
-    return {"success": True, "message": "Label deleted"}
-
+    return {"success": True, "message": "Label deleted successfully"}

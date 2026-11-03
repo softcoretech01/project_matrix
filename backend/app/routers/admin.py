@@ -2,18 +2,16 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List, Dict, Any
-from app.db.session import get_db
-from app.models.user import User
-from app.models.project import Project
-from app.models.task import Task
-from app.schemas.employee import EmployeeOut, EmployeeUpdate
-from app.core.deps import require_roles
+
+from backend.app.db.database import get_db
+from backend.app.models.models import User, Project, Task
+from backend.app.db.init_db import init_db
 
 router = APIRouter(prefix="/admin", tags=["Admin Portal"])
 
-@router.get("/users", response_model=List[EmployeeOut])
+@router.get("/users")
 def list_admin_users(db: Session = Depends(get_db)):
-    return db.query(User).all()
+    return [u.to_dict() for u in db.query(User).all()]
 
 @router.put("/users/{user_id}/role")
 def update_user_role(user_id: str, payload: Dict[str, str], db: Session = Depends(get_db)):
@@ -25,7 +23,7 @@ def update_user_role(user_id: str, payload: Dict[str, str], db: Session = Depend
         raise HTTPException(status_code=400, detail="Role is required")
     user.role = new_role
     db.commit()
-    return {"success": True, "message": f"Role updated to {new_role}", "user": user}
+    return {"success": True, "message": f"Role updated to {new_role}", "user": user.to_dict()}
 
 @router.get("/roles")
 def get_roles_summary(db: Session = Depends(get_db)):
@@ -33,7 +31,7 @@ def get_roles_summary(db: Session = Depends(get_db)):
     distribution = {}
     for u in users:
         distribution[u.role] = distribution.get(u.role, 0) + 1
-    
+
     return {
         "roles": [
             {"id": "Admin", "name": "Administrator", "description": "Full access to all system settings, users, and masters", "usersCount": distribution.get("Admin", 0)},
@@ -58,7 +56,5 @@ def get_system_diagnostics(db: Session = Depends(get_db)):
 
 @router.post("/reset")
 def reset_database(db: Session = Depends(get_db)):
-    from app.db.seed import seed_database
-    seed_database(db)
+    init_db()
     return {"success": True, "message": "Database successfully reseeded with default demo data."}
-

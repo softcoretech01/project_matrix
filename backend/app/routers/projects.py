@@ -1,152 +1,144 @@
 # backend/app/routers/projects.py
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from typing import List, Optional
-from app.db.session import get_db
-from app.models.project import Project, ProjectMember
-from app.schemas.project import ProjectCreate, ProjectUpdate, ProjectOut, ProjectMemberAdd, ProjectMemberOut
-from app.core.deps import get_current_user
+from pydantic import BaseModel
+from typing import Optional, List
+import random
 
-router = APIRouter(prefix="/projects", tags=["Projects"])
+from backend.app.db.database import get_db
+from backend.app.models.models import Project, Task, Section, ProjectMember
 
-@router.get("", response_model=List[ProjectOut])
+router = APIRouter(prefix="/api/projects", tags=["projects"])
+
+class ProjectCreate(BaseModel):
+    name: str
+    code: Optional[str] = None
+    description: Optional[str] = ""
+    ownerId: Optional[str] = ""
+    status: Optional[str] = "Active"
+    reviewRequired: Optional[bool] = True
+    startDate: Optional[str] = None
+    endDate: Optional[str] = None
+
+class ProjectUpdate(BaseModel):
+    name: Optional[str] = None
+    code: Optional[str] = None
+    description: Optional[str] = None
+    ownerId: Optional[str] = None
+    status: Optional[str] = None
+    reviewRequired: Optional[bool] = None
+    startDate: Optional[str] = None
+    endDate: Optional[str] = None
+
+class ProjectMemberAdd(BaseModel):
+    employeeId: str
+    role: Optional[str] = "Member"
+
+@router.get("")
 def get_projects(db: Session = Depends(get_db)):
     projects = db.query(Project).all()
-    # Format field mappings for frontend compatibility
-    return [
-        ProjectOut(
-            id=p.id,
-            name=p.name,
-            code=p.code,
-            description=p.description,
-            ownerId=p.owner_id,
-            status=p.status,
-            reviewRequired=p.review_required,
-            startDate=p.start_date,
-            endDate=p.end_date
-        )
-        for p in projects
-    ]
+    results = []
+    for p in projects:
+        d = p.to_dict()
+        tasks = db.query(Task).filter(Task.project_id == p.id).all()
+        d["tasksCount"] = len(tasks)
+        d["completedTasksCount"] = sum(1 for t in tasks if t.status == "Completed")
+        results.append(d)
+    return results
 
-@router.get("/{project_id}", response_model=ProjectOut)
-def get_project(project_id: str, db: Session = Depends(get_db)):
-    p = db.query(Project).filter(Project.id == project_id).first()
-    if not p:
-        raise HTTPException(status_code=404, detail="Project not found")
-    return ProjectOut(
-        id=p.id,
-        name=p.name,
-        code=p.code,
-        description=p.description,
-        ownerId=p.owner_id,
-        status=p.status,
-        reviewRequired=p.review_required,
-        startDate=p.start_date,
-        endDate=p.end_date
-    )
+@router.post("")
+def create_project(data: ProjectCreate, db: Session = Depends(get_db)):
+    count = db.query(Project).count() + 1
+    new_id = f"PRJ-{count:02d}"
+    while db.query(Project).filter(Project.id == new_id).first():
+        new_id = f"PRJ-{random.randint(10, 99)}"
 
-@router.post("", response_model=ProjectOut)
-def create_project(proj_in: ProjectCreate, db: Session = Depends(get_db)):
-    count = db.query(Project).count()
-    candidate_id = f"PRJ-{str(count + 1).zfill(2)}"
-    idx = 1
-    while db.query(Project).filter(Project.id == candidate_id).first():
-        candidate_id = f"PRJ-{str(count + 1 + idx).zfill(2)}"
-        idx += 1
-
-    new_id = candidate_id
-    new_code = proj_in.code or new_id
-    if db.query(Project).filter(Project.code == new_code).first():
-        new_code = f"{new_code}-{idx}"
-
-    project = Project(
+    proj = Project(
         id=new_id,
-        code=new_code,
-        name=proj_in.name,
-        description=proj_in.description,
-        owner_id=proj_in.ownerId,
-        status=proj_in.status or "Active",
-        review_required=proj_in.reviewRequired if proj_in.reviewRequired is not None else True,
-        start_date=proj_in.startDate,
-        end_date=proj_in.endDate
+        code=data.code or new_id,
+        name=data.name,
+        description=data.description or "",
+        owner_id=data.ownerId or "",
+        status=data.status or "Active",
+        review_required=data.reviewRequired if data.reviewRequired is not None else True,
+        start_date=data.startDate or "",
+        end_date=data.endDate or ""
     )
-    db.add(project)
+    db.add(proj)
     db.commit()
-    db.refresh(project)
-    return ProjectOut(
-        id=project.id,
-        name=project.name,
-        code=project.code,
-        description=project.description,
-        ownerId=project.owner_id,
-        status=project.status,
-        reviewRequired=project.review_required,
-        startDate=project.start_date,
-        endDate=project.end_date
-    )
+    db.refresh(proj)
 
-@router.put("/{project_id}", response_model=ProjectOut)
-def update_project(project_id: str, proj_in: ProjectUpdate, db: Session = Depends(get_db)):
-    p = db.query(Project).filter(Project.id == project_id).first()
-    if not p:
+    d = proj.to_dict()
+    d["tasksCount"] = 0
+    d["completedTasksCount"] = 0
+    return d
+
+@router.get("/{project_id}")
+def get_project_detail(project_id: str, db: Session = Depends(get_db)):
+    proj = db.query(Project).filter(Project.id == project_id).first()
+    if not proj:
         raise HTTPException(status_code=404, detail="Project not found")
 
-    if proj_in.name is not None:
-        p.name = proj_in.name
-    if proj_in.description is not None:
-        p.description = proj_in.description
-    if proj_in.ownerId is not None:
-        p.owner_id = proj_in.ownerId
-    if proj_in.status is not None:
-        p.status = proj_in.status
-    if proj_in.reviewRequired is not None:
-        p.review_required = proj_in.reviewRequired
-    if proj_in.startDate is not None:
-        p.start_date = proj_in.startDate
-    if proj_in.endDate is not None:
-        p.end_date = proj_in.endDate
+    tasks = db.query(Task).filter(Task.project_id == project_id).all()
+    sections = db.query(Section).filter(Section.project_id == project_id).order_by(Section.sort_order.asc()).all()
+
+    d = proj.to_dict()
+    d["tasks"] = [t.to_dict() for t in tasks]
+    d["sections"] = [s.to_dict() for s in sections]
+    d["tasksCount"] = len(tasks)
+    d["completedTasksCount"] = sum(1 for t in tasks if t.status == "Completed")
+    return d
+
+@router.put("/{project_id}")
+def update_project(project_id: str, data: ProjectUpdate, db: Session = Depends(get_db)):
+    proj = db.query(Project).filter(Project.id == project_id).first()
+    if not proj:
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    if data.name is not None:
+        proj.name = data.name
+    if data.code is not None:
+        proj.code = data.code
+    if data.description is not None:
+        proj.description = data.description
+    if data.ownerId is not None:
+        proj.owner_id = data.ownerId
+    if data.status is not None:
+        proj.status = data.status
+    if data.reviewRequired is not None:
+        proj.review_required = data.reviewRequired
+    if data.startDate is not None:
+        proj.start_date = data.startDate
+    if data.endDate is not None:
+        proj.end_date = data.endDate
 
     db.commit()
-    db.refresh(p)
-    return ProjectOut(
-        id=p.id,
-        name=p.name,
-        code=p.code,
-        description=p.description,
-        ownerId=p.owner_id,
-        status=p.status,
-        reviewRequired=p.review_required,
-        startDate=p.start_date,
-        endDate=p.end_date
-    )
+    db.refresh(proj)
+    return proj.to_dict()
 
 @router.delete("/{project_id}")
 def delete_project(project_id: str, db: Session = Depends(get_db)):
-    p = db.query(Project).filter(Project.id == project_id).first()
-    if not p:
+    proj = db.query(Project).filter(Project.id == project_id).first()
+    if not proj:
         raise HTTPException(status_code=404, detail="Project not found")
-    db.delete(p)
+
+    db.delete(proj)
     db.commit()
-    return {"success": True, "message": "Project deleted"}
+    return {"success": True, "message": "Project deleted successfully"}
 
 # Project Members Endpoints
-@router.get("/{project_id}/members", response_model=List[ProjectMemberOut])
+@router.get("/{project_id}/members")
 def get_project_members(project_id: str, db: Session = Depends(get_db)):
     members = db.query(ProjectMember).filter(ProjectMember.project_id == project_id).all()
-    return [
-        ProjectMemberOut(
-            id=m.id,
-            projectId=m.project_id,
-            employeeId=m.employee_id,
-            role=m.role
-        )
-        for m in members
-    ]
+    return [m.to_dict() for m in members]
 
-@router.post("/{project_id}/members", response_model=ProjectMemberOut)
+@router.post("/{project_id}/members")
 def add_project_member(project_id: str, member_in: ProjectMemberAdd, db: Session = Depends(get_db)):
-    count = db.query(ProjectMember).count()
-    new_id = f"MEM-{str(count + 1).zfill(2)}"
+    count = db.query(ProjectMember).count() + 1
+    new_id = f"MEM-{count:02d}"
+    while db.query(ProjectMember).filter(ProjectMember.id == new_id).first():
+        new_id = f"MEM-{random.randint(10, 99)}"
+
     member = ProjectMember(
         id=new_id,
         project_id=project_id,
@@ -156,10 +148,4 @@ def add_project_member(project_id: str, member_in: ProjectMemberAdd, db: Session
     db.add(member)
     db.commit()
     db.refresh(member)
-    return ProjectMemberOut(
-        id=member.id,
-        projectId=member.project_id,
-        employeeId=member.employee_id,
-        role=member.role
-    )
-
+    return member.to_dict()

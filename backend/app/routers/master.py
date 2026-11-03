@@ -1,19 +1,33 @@
 # backend/app/routers/master.py
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from typing import List
-from app.db.session import get_db
-from app.models.master import Client, Department, Designation
-from app.schemas.master import ClientCreate, ClientOut, DepartmentCreate, DepartmentOut, DesignationCreate, DesignationOut
+from typing import List, Optional
+from pydantic import BaseModel
+
+from backend.app.db.database import get_db
+from backend.app.models.models import Client, Department, Designation
 
 router = APIRouter(prefix="/masters", tags=["Master Portal"])
 
-# --- CLIENTS ---
-@router.get("/clients", response_model=List[ClientOut])
-def get_clients(db: Session = Depends(get_db)):
-    return db.query(Client).all()
+class ClientCreate(BaseModel):
+    name: str
+    email: Optional[str] = None
+    status: Optional[str] = "Active"
 
-@router.post("/clients", response_model=ClientOut)
+class DepartmentCreate(BaseModel):
+    name: str
+    status: Optional[str] = "Active"
+
+class DesignationCreate(BaseModel):
+    name: str
+    status: Optional[str] = "Active"
+
+# --- CLIENTS ---
+@router.get("/clients")
+def get_clients(db: Session = Depends(get_db)):
+    return [c.to_dict() for c in db.query(Client).all()]
+
+@router.post("/clients")
 def create_client(client_in: ClientCreate, db: Session = Depends(get_db)):
     count = db.query(Client).count()
     new_id = f"CLI-{str(count + 1).zfill(2)}"
@@ -21,14 +35,14 @@ def create_client(client_in: ClientCreate, db: Session = Depends(get_db)):
     db.add(client)
     db.commit()
     db.refresh(client)
-    return client
+    return client.to_dict()
 
 # --- DEPARTMENTS ---
-@router.get("/departments", response_model=List[DepartmentOut])
+@router.get("/departments")
 def get_departments(db: Session = Depends(get_db)):
-    return db.query(Department).all()
+    return [d.to_dict() for d in db.query(Department).all()]
 
-@router.post("/departments", response_model=DepartmentOut)
+@router.post("/departments")
 def create_department(dep_in: DepartmentCreate, db: Session = Depends(get_db)):
     count = db.query(Department).count()
     new_id = f"DEP-{str(count + 1).zfill(2)}"
@@ -36,14 +50,14 @@ def create_department(dep_in: DepartmentCreate, db: Session = Depends(get_db)):
     db.add(department)
     db.commit()
     db.refresh(department)
-    return department
+    return department.to_dict()
 
 # --- DESIGNATIONS ---
-@router.get("/designations", response_model=List[DesignationOut])
+@router.get("/designations")
 def get_designations(db: Session = Depends(get_db)):
-    return db.query(Designation).all()
+    return [d.to_dict() for d in db.query(Designation).all()]
 
-@router.post("/designations", response_model=DesignationOut)
+@router.post("/designations")
 def create_designation(des_in: DesignationCreate, db: Session = Depends(get_db)):
     count = db.query(Designation).count()
     new_id = f"DES-{str(count + 1).zfill(2)}"
@@ -51,5 +65,4 @@ def create_designation(des_in: DesignationCreate, db: Session = Depends(get_db))
     db.add(designation)
     db.commit()
     db.refresh(designation)
-    return designation
-
+    return designation.to_dict()

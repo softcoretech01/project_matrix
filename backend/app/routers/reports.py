@@ -1,10 +1,9 @@
 # backend/app/routers/reports.py
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from app.db.session import get_db
-from app.models.task import Task
-from app.models.project import Project
-from app.models.user import User
+
+from backend.app.db.database import get_db
+from backend.app.models.models import Task, Project, User
 
 router = APIRouter(prefix="/reports", tags=["Reports"])
 
@@ -15,7 +14,7 @@ def get_project_effort_report(db: Session = Depends(get_db)):
     for p in projects:
         tasks = db.query(Task).filter(Task.project_id == p.id).all()
         total_tasks = len(tasks)
-        completed_tasks = len([t for t in tasks if t.status == "Completed" or t.status == "Closed"])
+        completed_tasks = len([t for t in tasks if t.status in ["Completed", "Closed"]])
         rate = int((completed_tasks / total_tasks * 100)) if total_tasks > 0 else 0
         result.append({
             "projectName": p.name,
@@ -32,7 +31,7 @@ def get_utilization_report(db: Session = Depends(get_db)):
     for u in users:
         tasks = db.query(Task).filter(Task.assigned_to == u.id).all()
         total = len(tasks)
-        completed = len([t for t in tasks if t.status == "Completed" or t.status == "Closed"])
+        completed = len([t for t in tasks if t.status in ["Completed", "Closed"]])
         in_progress = len([t for t in tasks if t.status == "In Progress"])
         open_tasks = total - completed - in_progress
         rate = 85 if total > 0 else 0
@@ -55,4 +54,3 @@ def get_productivity_report(db: Session = Depends(get_db)):
         {"period": "Sprint 3", "completedTasks": 25, "storyPoints": 75},
         {"period": "Sprint 4", "completedTasks": 21, "storyPoints": 63}
     ]
-
