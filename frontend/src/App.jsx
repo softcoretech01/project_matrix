@@ -1,3 +1,4 @@
+import Calendar from './views/Calendar';
 // src/App.jsx
 import React, { useState, useEffect } from 'react';
 import { AuthProvider, useAuth, API_BASE_URL } from './context/AuthContext';
@@ -13,63 +14,192 @@ import Notifications from './views/Notifications';
 import Profile from './views/Profile';
 import Admin from './views/Admin';
 import Masters from './views/Masters';
+const ALL_ROLES = ['Admin', 'PM', 'Team Lead', 'Manager', 'Management', 'Employee', 'Member'];
+const MANAGER_ROLES = ['Admin', 'PM', 'Team Lead', 'Manager', 'Management'];
+const ADMIN_ROLES = ['Admin'];
 
 const menuStructure = [
-  { key: 'dashboard', label: 'Dashboard', icon: 'ph-house', roles: ['Admin', 'PM', 'Team Lead', 'Employee', 'Management'] },
-  
-  { section: 'Tasks', roles: ['Admin', 'PM', 'Team Lead', 'Employee', 'Management'] },
-  { key: 'tasks-my', label: 'My Tasks', icon: 'ph-check-square-offset', roles: ['Admin', 'PM', 'Team Lead', 'Employee', 'Management'], viewKey: 'tasks', sub: 'my' },
-  { key: 'tasks-list', label: 'Task List', icon: 'ph-list-dashes', roles: ['Admin', 'PM', 'Team Lead', 'Employee', 'Management'], viewKey: 'tasks', sub: 'list' },
-  { key: 'tasks-board', label: 'Kanban Board', icon: 'ph-kanban', roles: ['Admin', 'PM', 'Team Lead', 'Employee', 'Management'], viewKey: 'tasks', sub: 'board' },
-  { key: 'tasks-calendar', label: 'Calendar', icon: 'ph-calendar-blank', roles: ['Admin', 'PM', 'Team Lead', 'Employee', 'Management'], viewKey: 'tasks', sub: 'calendar' },
-  { key: 'tasks-create', label: 'Create Task', icon: 'ph-plus-circle', roles: ['Admin', 'PM', 'Team Lead', 'Employee', 'Management'], viewKey: 'tasks', sub: 'create' },
-  { key: 'tasks-detail', label: 'Task Detail', icon: 'ph-info', roles: ['Admin', 'PM', 'Team Lead', 'Employee', 'Management'], viewKey: 'tasks', sub: 'detail' },
-  { key: 'tasks-review', label: 'Review & Closure', icon: 'ph-check-circle', roles: ['Admin', 'PM', 'Team Lead'], viewKey: 'tasks', sub: 'review' },
-  
-  { section: 'Projects', roles: ['Admin', 'PM', 'Team Lead', 'Employee', 'Management'] },
-  { key: 'projects-list', label: 'Projects', icon: 'ph-folder-open', roles: ['Admin', 'PM', 'Team Lead', 'Employee', 'Management'], viewKey: 'projects', sub: 'list' },
-  { key: 'projects-detail', label: 'Project Detail', icon: 'ph-file-text', roles: ['Admin', 'PM', 'Team Lead', 'Employee', 'Management'], viewKey: 'projects', sub: 'detail' },
-  
-  { section: 'Organization', roles: ['Admin', 'PM', 'Team Lead', 'Employee', 'Management'] },
-  { key: 'team', label: 'Team', icon: 'ph-users', roles: ['Admin', 'PM', 'Team Lead', 'Employee', 'Management'], viewKey: 'team', sub: '' },
-  { key: 'sections', label: 'Sections', icon: 'ph-squares-four', roles: ['Admin', 'PM'], viewKey: 'sections', sub: '' },
-  { key: 'labels', label: 'Labels', icon: 'ph-tag', roles: ['Admin', 'PM', 'Team Lead'], viewKey: 'labels', sub: '' },
-  
-  { section: 'Insights & Search', roles: ['Admin', 'PM', 'Team Lead', 'Employee', 'Management'] },
-  { key: 'reports', label: 'Reports', icon: 'ph-chart-bar', roles: ['Admin', 'PM', 'Team Lead', 'Management'], viewKey: 'reports', sub: '' },
-  { key: 'search', label: 'Global Search', icon: 'ph-magnifying-glass', roles: ['Admin', 'PM', 'Team Lead', 'Employee', 'Management'], viewKey: 'search', sub: '' },
-  
+  { key: 'dashboard', label: 'Dashboard', icon: 'ph-house', roles: ALL_ROLES, viewKey: 'dashboard', sub: '' },
+
+  { section: 'Tasks', roles: ALL_ROLES },
+  { key: 'tasks-my', label: 'My Tasks', icon: 'ph-check-square-offset', roles: ALL_ROLES, viewKey: 'tasks', sub: 'my' },
+  { key: 'tasks-list', label: 'Task List', icon: 'ph-list-dashes', roles: ALL_ROLES, viewKey: 'tasks', sub: 'list' },
+  { key: 'tasks-board', label: 'Kanban Board', icon: 'ph-kanban', roles: ALL_ROLES, viewKey: 'tasks', sub: 'board' },
+  { key: 'tasks-calendar', label: 'Calendar', icon: 'ph-calendar-blank', roles: ALL_ROLES, viewKey: 'tasks', sub: 'calendar' },
+  { key: 'tasks-detail', label: 'Task Detail', icon: 'ph-info', roles: ALL_ROLES, viewKey: 'tasks', sub: 'detail' },
+  { key: 'tasks-review', label: 'Review & Closure', icon: 'ph-check-circle', roles: MANAGER_ROLES, viewKey: 'tasks', sub: 'review' },
+
+  { section: 'Projects', roles: ALL_ROLES },
+  { key: 'projects-list', label: 'Projects', icon: 'ph-folder-open', roles: ALL_ROLES, viewKey: 'projects', sub: 'list' },
+  { key: 'projects-detail', label: 'Project Detail', icon: 'ph-file-text', roles: ALL_ROLES, viewKey: 'projects', sub: 'detail' },
+
+  { section: 'Organization', roles: ALL_ROLES },
+  { key: 'team', label: 'Team', icon: 'ph-users', roles: ALL_ROLES, viewKey: 'team', sub: '' },
+  { key: 'sections', label: 'Sections', icon: 'ph-squares-four', roles: ['Admin', 'PM', 'Team Lead', 'Manager'], viewKey: 'sections', sub: '' },
+  { key: 'labels', label: 'Labels', icon: 'ph-tag', roles: ['Admin', 'PM', 'Team Lead', 'Manager'], viewKey: 'labels', sub: '' },
+
+  { section: 'Insights & Search', roles: ALL_ROLES },
+  { key: 'reports', label: 'Reports', icon: 'ph-chart-bar', roles: MANAGER_ROLES, viewKey: 'reports', sub: '' },
+  { key: 'search', label: 'Global Search', icon: 'ph-magnifying-glass', roles: ALL_ROLES, viewKey: 'search', sub: '' },
+
   { section: 'Master Portal', roles: ['Admin', 'Management'] },
   { key: 'masters-clients', label: 'Clients', icon: 'ph-buildings', roles: ['Admin', 'Management'], viewKey: 'masters', sub: 'clients' },
   { key: 'masters-departments', label: 'Departments', icon: 'ph-tree-structure', roles: ['Admin', 'Management'], viewKey: 'masters', sub: 'departments' },
   { key: 'masters-designations', label: 'Designations', icon: 'ph-briefcase', roles: ['Admin', 'Management'], viewKey: 'masters', sub: 'designations' },
-  
-  { section: 'Admin Portal', roles: ['Admin'] },
-  { key: 'admin-roles', label: 'Role Manager', icon: 'ph-shield-check', roles: ['Admin'], viewKey: 'admin', sub: 'roles' },
-  { key: 'admin-users', label: 'User Management', icon: 'ph-users-three', roles: ['Admin'], viewKey: 'admin', sub: 'users' },
-  { key: 'admin-settings', label: 'System Settings', icon: 'ph-gear', roles: ['Admin'], viewKey: 'admin', sub: 'settings' },
 
-  { section: 'Personal', roles: ['Admin', 'PM', 'Team Lead', 'Employee', 'Management'] },
-  { key: 'notifications', label: 'Notifications', icon: 'ph-bell', roles: ['Admin', 'PM', 'Team Lead', 'Employee', 'Management'], viewKey: 'notifications', sub: '' },
-  { key: 'profile', label: 'Profile / Security', icon: 'ph-user-circle', roles: ['Admin', 'PM', 'Team Lead', 'Employee', 'Management'], viewKey: 'profile', sub: '' }
+  { section: 'Admin Portal', roles: ADMIN_ROLES },
+  { key: 'admin-roles', label: 'Role Manager', icon: 'ph-shield-check', roles: ADMIN_ROLES, viewKey: 'admin', sub: 'roles' },
+  { key: 'admin-users', label: 'User Management', icon: 'ph-users-three', roles: ADMIN_ROLES, viewKey: 'admin', sub: 'users' },
+  { key: 'admin-settings', label: 'System Settings', icon: 'ph-gear', roles: ADMIN_ROLES, viewKey: 'admin', sub: 'settings' },
+
+  { section: 'Personal', roles: ALL_ROLES },
+  { key: 'notifications', label: 'Notifications', icon: 'ph-bell', roles: ALL_ROLES, viewKey: 'notifications', sub: '' },
+  { key: 'profile', label: 'Profile / Security', icon: 'ph-user-circle', roles: ALL_ROLES, viewKey: 'profile', sub: '' }
 ];
 
-const hasAccess = (role, page, subPage) => {
+const hasAccess = (role, page, subPage = '') => {
   if (!role) return false;
-  const targetItem = menuStructure.find(m => m.key && (m.viewKey || m.key.split('-')[0]) === page && (!m.sub || m.sub === subPage));
-  return targetItem && targetItem.roles && targetItem.roles.includes(role);
+  if (page === 'tasks' && subPage === 'create') return true;
+  const targetItem = menuStructure.find(m => {
+    if (!m.key) return false;
+    const viewKey = m.viewKey || m.key.split('-')[0];
+    if (viewKey !== page) return false;
+    if (subPage && m.sub !== undefined && m.sub !== subPage) return false;
+    return true;
+  });
+  return Boolean(targetItem && targetItem.roles && targetItem.roles.includes(role));
+};
+
+// URL Routing Helpers (Clean URLs without /admin prefix)
+const getUrlPath = (page, subPage = '') => {
+  if (!page || page === 'dashboard') {
+    return '/dashboard';
+  }
+
+  // Dedicated Admin Portal pages: /admin/roles, /admin/users, /admin/settings
+  if (page === 'admin') {
+    return `/admin/${subPage || 'roles'}`;
+  }
+
+  if (subPage) {
+    return `/${page}/${subPage}`;
+  }
+  return `/${page}`;
+};
+
+const parseUrlPath = (pathname) => {
+  try {
+    const clean = decodeURIComponent(pathname || '')
+      .replace(/^\/+|\/+$/g, '')
+      .trim()
+      .toLowerCase();
+
+    if (!clean) {
+      return { page: 'dashboard', subPage: '' };
+    }
+
+    let parts = clean.split('/');
+
+    // Handle /admin prefix cleanly
+    if (parts[0] === 'admin') {
+      if (parts.length === 1 || parts[1] === 'dashboard') {
+        return { page: 'dashboard', subPage: '' };
+      }
+      // Admin portal direct subpages: /admin/roles, /admin/users, /admin/settings
+      if (['roles', 'users', 'settings'].includes(parts[1])) {
+        return { page: 'admin', subPage: parts[1] };
+      }
+      // Common admin shortcuts
+      if (parts[1] === 'mytasks' || parts[1] === 'my-tasks') {
+        return { page: 'tasks', subPage: 'my' };
+      }
+      if (parts[1] === 'create-task' || parts[1] === 'createtask' || parts[1] === 'create task') {
+        return { page: 'tasks', subPage: 'create' };
+      }
+      // Strip 'admin' prefix and parse remainder for clean fallback
+      parts = parts.slice(1);
+    }
+
+    let page = parts[0];
+    let subPage = parts[1] || '';
+
+    if (page === 'dashboard') {
+      return { page: 'dashboard', subPage: '' };
+    }
+
+    // Direct shortcuts & alias patterns
+    if (page === 'list') {
+      return { page: 'tasks', subPage: 'list' };
+    }
+    if (page === 'board' || page === 'kanban') {
+      return { page: 'tasks', subPage: 'board' };
+    }
+    if (page === 'my' || page === 'mytasks' || page === 'my-tasks') {
+      return { page: 'tasks', subPage: 'my' };
+    }
+    if (page === 'projects' && !subPage) {
+      return { page: 'projects', subPage: 'list' };
+    }
+    if (page === 'tasks' && !subPage) {
+      return { page: 'tasks', subPage: 'list' };
+    }
+    if (page === 'create task' || page === 'create-task' || page === 'createtask' || (page === 'tasks' && (subPage === 'create' || subPage === 'create task'))) {
+      return { page: 'tasks', subPage: 'create' };
+    }
+    if (page === 'tasklist' || page === 'task-list') {
+      return { page: 'tasks', subPage: 'list' };
+    }
+    if (page === 'calendar') {
+      return { page: 'tasks', subPage: 'calendar' };
+    }
+    if (page === 'project-detail' || page === 'projectdetail') {
+      return { page: 'projects', subPage: 'detail' };
+    }
+    if (page === 'roles') {
+      return { page: 'admin', subPage: 'roles' };
+    }
+    if (page === 'users') {
+      return { page: 'admin', subPage: 'users' };
+    }
+    if (page === 'settings') {
+      return { page: 'admin', subPage: 'settings' };
+    }
+
+    return { page, subPage };
+  } catch (err) {
+    return { page: 'dashboard', subPage: '' };
+  }
 };
 
 function AppContent() {
   const { user, login, logout, theme, toggleTheme, getRememberedEmail } = useAuth();
-  const [activePage, setActivePage] = useState('dashboard');
-  const [activeSubPage, setActiveSubPage] = useState('');
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const initialRoute = typeof window !== 'undefined' ? parseUrlPath(window.location.pathname) : { page: 'dashboard', subPage: '' };
+  const [activePage, setActivePage] = useState(initialRoute.page);
+  const [activeSubPage, setActiveSubPage] = useState(initialRoute.subPage);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(
+    typeof window !== 'undefined' ? window.innerWidth <= 1024 : false
+  );
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [expandedSections, setExpandedSections] = useState({
     'Tasks': true,
     'Projects': true
   });
+
+  // Responsive listener: auto-toolbar on small screen, auto-expanded on large screen
+  useEffect(() => {
+    let lastWidth = typeof window !== 'undefined' ? window.innerWidth : 1200;
+    const handleResize = () => {
+      const currentWidth = window.innerWidth;
+      if (lastWidth > 1024 && currentWidth <= 1024) {
+        setSidebarCollapsed(true);
+      } else if (lastWidth <= 1024 && currentWidth > 1024) {
+        setSidebarCollapsed(false);
+      }
+      lastWidth = currentWidth;
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const toggleSection = (sectionName) => {
     setExpandedSections(prev => ({
@@ -77,10 +207,10 @@ function AppContent() {
       [sectionName]: prev[sectionName] === undefined ? false : !prev[sectionName]
     }));
   };
-  
+
   // Login states
-  const [email, setEmail] = useState('admin@taskmanagement.com');
-  const [password, setPassword] = useState('admin123');
+  const [email, setEmail] = useState('admin@projectmatrix.com');
+  const [password, setPassword] = useState('admin');
   const [rememberMe, setRememberMe] = useState(false);
   const [authError, setAuthError] = useState('');
 
@@ -109,29 +239,69 @@ function AppContent() {
 
 
 
-  // Navigation Helper
-  const navigateTo = (page, subPage = '') => {
+  // Navigation Helper with Browser History sync (Clean URLs)
+  const navigateTo = (page, subPage = '', pushToHistory = true) => {
+    if (typeof window !== 'undefined' && window.innerWidth <= 1024) {
+      setSidebarCollapsed(true);
+    }
     if (!hasAccess(user?.role, page, subPage)) {
       setActivePage('dashboard');
       setActiveSubPage('');
+      if (pushToHistory && typeof window !== 'undefined') {
+        window.history.pushState(null, '', '/dashboard');
+      }
       return;
     }
     setActivePage(page);
     setActiveSubPage(subPage);
+    if (pushToHistory && typeof window !== 'undefined') {
+      const targetPath = getUrlPath(page, subPage);
+      if (window.location.pathname !== targetPath) {
+        window.history.pushState({ page, subPage }, '', targetPath);
+      }
+    }
   };
 
+  // Synchronize browser Back and Forward buttons (popstate)
   useEffect(() => {
-    if (user && activePage !== 'dashboard' && !hasAccess(user.role, activePage, activeSubPage)) {
-      setActivePage('dashboard');
-      setActiveSubPage('');
+    const handlePopState = () => {
+      const { page, subPage } = parseUrlPath(window.location.pathname);
+      if (hasAccess(user?.role, page, subPage)) {
+        setActivePage(page);
+        setActiveSubPage(subPage);
+      } else {
+        setActivePage('dashboard');
+        setActiveSubPage('');
+      }
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [user]);
+
+  // Keep route synced on auth state change (Clean URLs)
+  useEffect(() => {
+    if (user) {
+      const { page, subPage } = parseUrlPath(window.location.pathname);
+      if (hasAccess(user.role, page, subPage)) {
+        setActivePage(page);
+        setActiveSubPage(subPage);
+        const targetPath = getUrlPath(page, subPage);
+        if (window.location.pathname !== targetPath) {
+          window.history.replaceState({ page, subPage }, '', targetPath);
+        }
+      } else {
+        setActivePage('dashboard');
+        setActiveSubPage('');
+        window.history.replaceState({ page: 'dashboard', subPage: '' }, '', '/dashboard');
+      }
     }
-  }, [user, activePage, activeSubPage]);
+  }, [user]);
 
   // --- RENDER LOGIN IF NO USER ---
   if (!user) {
     return (
       <div className="auth-wrapper">
-        
+
         {/* Left Side: Premium Visuals */}
         <div className="auth-visual">
           <div style={{ position: 'relative', zIndex: 10 }}>
@@ -154,10 +324,10 @@ function AppContent() {
               <h2 className="auth-logo">Task Management</h2>
               <p className="auth-subtitle">Sign in to your account</p>
             </div>
-            
+
             <form id="react-login-form" onSubmit={handleLoginSubmit}>
               {authError && <div className="text-danger" style={{ marginBottom: '14px', fontSize: '0.85rem', fontWeight: 600 }}>{authError}</div>}
-              
+
               <div className="form-group">
                 <label className="form-label" htmlFor="login-email">Email Address</label>
                 <input
@@ -170,7 +340,7 @@ function AppContent() {
                   required
                 />
               </div>
-              
+
               <div className="form-group">
                 <label className="form-label" htmlFor="login-password">Password</label>
                 <input
@@ -183,7 +353,7 @@ function AppContent() {
                   required
                 />
               </div>
-              
+
               <div className="form-group checkbox-group" style={{ marginBottom: '32px' }}>
                 <input
                   type="checkbox"
@@ -193,7 +363,7 @@ function AppContent() {
                 />
                 <label htmlFor="login-remember" className="form-label" style={{ margin: 0, cursor: 'pointer' }}>Remember me on this device</label>
               </div>
-              
+
               <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: '14px', fontSize: '1.05rem' }}>
                 Sign In <i className="ph ph-arrow-right" style={{ marginLeft: '8px' }}></i>
               </button>
@@ -231,9 +401,25 @@ function AppContent() {
 
   return (
     <div className="app-wrapper">
+      {/* Mobile Backdrop Overlay */}
+      {!sidebarCollapsed && (
+        <div className="sidebar-backdrop" onClick={() => setSidebarCollapsed(true)} />
+      )}
+
       {/* Sidebar navigation */}
       <aside className={`sidebar ${sidebarCollapsed ? 'collapsed' : ''}`} id="app-sidebar">
-        <div className="sidebar-brand">
+        <div
+          className="sidebar-brand"
+          onClick={() => {
+            if (sidebarCollapsed) {
+              setSidebarCollapsed(false);
+            } else {
+              navigateTo('dashboard');
+            }
+          }}
+          style={{ cursor: 'pointer' }}
+          title={sidebarCollapsed ? "Click to expand sidebar menu" : "Go to Dashboard"}
+        >
           <span className="sidebar-brand-icon" style={{ fontSize: '1.4rem' }}><i className="ph-fill ph-lightning"></i></span>
           <span className="sidebar-brand-text">Task Management</span>
         </div>
@@ -248,9 +434,9 @@ function AppContent() {
                   const sectionName = item.section;
                   const isExpanded = expandedSections[sectionName] !== false; // Default true if not defined
                   return (
-                    <div 
-                      key={`sec-${idx}`} 
-                      className="menu-section-header" 
+                    <div
+                      key={`sec-${idx}`}
+                      className="menu-section-header"
                       onClick={() => !sidebarCollapsed && toggleSection(sectionName)}
                     >
                       <span>{sectionName}</span>
@@ -265,16 +451,23 @@ function AppContent() {
                 if (currentSection && expandedSections[currentSection] === false && !sidebarCollapsed) {
                   return null;
                 }
-                
+
                 const viewKey = item.viewKey || item.key.split('-')[0];
-                const subKey = item.sub;
-                const isActive = activePage === viewKey && activeSubPage === subKey;
+                const subKey = item.sub || '';
+                const currentSub = activeSubPage || '';
+                const isActive = activePage === viewKey && currentSub === subKey;
 
                 return (
                   <a
                     key={`item-${idx}`}
                     className={`menu-item ${isActive ? 'active' : ''}`}
-                    onClick={() => navigateTo(viewKey, subKey)}
+                    onClick={() => {
+                      navigateTo(viewKey, subKey);
+                      if (typeof window !== 'undefined' && window.innerWidth <= 1024) {
+                        setSidebarCollapsed(true);
+                      }
+                    }}
+                    title={item.label}
                   >
                     <span style={{ display: 'inline-block', width: '24px', textAlign: 'center', fontSize: '1.25rem' }}>
                       <i className={`ph ${item.icon}`}></i>
@@ -288,8 +481,8 @@ function AppContent() {
           })()}
         </nav>
 
-        <div className="sidebar-user">
-          <div className="user-avatar">{user.name ? user.name.split(' ').map(n=>n[0]).join('') : '?'}</div>
+        <div className="sidebar-user" onClick={() => sidebarCollapsed && setSidebarCollapsed(false)} style={{ cursor: sidebarCollapsed ? 'pointer' : 'default' }} title={sidebarCollapsed ? "Click to expand user details" : undefined}>
+          <div className="user-avatar">{user.name ? user.name.split(' ').map(n => n[0]).join('') : '?'}</div>
           <div className="user-info">
             <span className="user-name">{user.name || 'User'}</span>
             <span className="user-role">{user.role || 'Role'}</span>
@@ -301,7 +494,12 @@ function AppContent() {
       <div className="main-content">
         <header className="header">
           <div className="header-left">
-            <button className="toggle-sidebar-btn" onClick={() => setSidebarCollapsed(!sidebarCollapsed)}>
+            <button
+              className="toggle-sidebar-btn"
+              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+              title={sidebarCollapsed ? "Expand Navigation Sidebar" : "Collapse to Icon Toolbar"}
+              aria-label="Toggle Navigation Sidebar"
+            >
               <i className="ph ph-list" style={{ fontSize: '1.25rem' }}></i>
             </button>
             <div className="view-title-container">
@@ -313,6 +511,15 @@ function AppContent() {
 
 
             <div className="header-actions">
+              <button
+                className="btn-header-create-task"
+                onClick={() => navigateTo('tasks', 'create')}
+                title="Create New Task"
+                aria-label="Create Task"
+              >
+                <i className="ph-bold ph-plus"></i>
+                <span>Create Task</span>
+              </button>
               <button className="header-btn" onClick={() => navigateTo('notifications')} title="Notifications" style={{ position: 'relative' }}>
                 <i className="ph ph-bell" style={{ fontSize: '1.25rem' }}></i>
                 <span style={{ position: 'absolute', top: '4px', right: '4px', width: '8px', height: '8px', background: 'var(--color-danger)', borderRadius: '50%' }}></span>
@@ -331,9 +538,9 @@ function AppContent() {
         <main className="content-body">
           <>
             {activePage === 'dashboard' && <Dashboard navigateTo={navigateTo} />}
-            {activePage === 'tasks' && <Tasks subKey={activeSubPage} />}
-            {activePage === 'projects' && <Projects subKey={activeSubPage} />}
-            {activePage === 'team' && <Team />}
+            {activePage === 'tasks' ? <Tasks subKey={activeSubPage} onTabChange={(tab) => navigateTo('tasks', tab)} /> : null}
+            {activePage === 'projects' && <Projects subKey={activeSubPage} onViewChange={(sub) => navigateTo('projects', sub)} navigateTo={navigateTo} />}
+            {activePage === 'team' && <Team navigateTo={navigateTo} />}
             {activePage === 'sections' && <Sections />}
             {activePage === 'labels' && <Labels />}
             {activePage === 'reports' && <Reports />}
@@ -360,6 +567,9 @@ function AppContent() {
               <button className="btn btn-primary" style={{ background: 'var(--color-danger)', borderColor: 'var(--color-danger)' }} onClick={() => {
                 setShowLogoutConfirm(false);
                 logout();
+                if (typeof window !== 'undefined') {
+                  window.history.replaceState(null, '', '/');
+                }
               }}>Sign Out</button>
             </div>
           </div>

@@ -30,6 +30,10 @@ export default function Dashboard({ navigateTo }) {
       }
     };
     fetchData();
+
+    // Instant real-time reflection across tabs
+    window.addEventListener('pm_data_updated', fetchData);
+    return () => window.removeEventListener('pm_data_updated', fetchData);
   }, [user.id]);
 
   if (loading) {
@@ -41,70 +45,96 @@ export default function Dashboard({ navigateTo }) {
   }
 
   const { tasks, projects } = data;
-  const activeProjects = projects.filter(p => p.status === 'Active').length;
-  
-  // Tasks specifically for this user if they aren't admin
-  const userTasks = user.role === 'Admin' ? tasks : tasks.filter(t => t.assignedTo === user.id);
-  const pendingTasks = userTasks.filter(t => ['Open', 'Assigned', 'In Progress'].includes(t.status)).length;
-  const completedTasks = userTasks.filter(t => ['Completed', 'Closed'].includes(t.status)).length;
+  const isManagerOrAdmin = ['Admin', 'PM', 'Management'].includes(user.role);
 
-  const taskStatusCounts = {};
-  userTasks.forEach(t => {
-    taskStatusCounts[t.status] = (taskStatusCounts[t.status] || 0) + 1;
+  // Today ISO string for overdue calculations
+  const todayStr = new Date().toISOString().split('T')[0];
+
+  // 1. MANAGER / ADMIN CALCULATIONS (PDF Section 7.3)
+  const openTasks = tasks.filter(t => ['Open', 'In Progress', 'Assigned'].includes(t.status));
+  const overdueTasks = tasks.filter(t => t.dueDate && t.dueDate < todayStr && !['Completed', 'Closed'].includes(t.status));
+  const completedThisWeek = tasks.filter(t => ['Closed', 'Completed'].includes(t.status) && t.status !== 'Review');
+  const awaitingReview = tasks.filter(t => t.status === 'Review');
+
+  // Chart 1: Tasks by status
+  const statusCounts = {};
+  ['Open', 'In Progress', 'Review', 'Completed', 'Closed'].forEach(st => {
+    statusCounts[st] = tasks.filter(t => t.status === st).length;
   });
 
-  const taskChart = {
-    labels: Object.keys(taskStatusCounts),
+  const taskStatusChart = {
+    labels: Object.keys(statusCounts),
     datasets: [{
-      data: Object.values(taskStatusCounts),
-      backgroundColor: ['#3b82f6', '#f59e0b', '#8b5cf6', '#10b981', '#64748b', '#ec4899'],
+      data: Object.values(statusCounts),
+      backgroundColor: ['#3b82f6', '#f59e0b', '#8b5cf6', '#10b981', '#64748b'],
       borderWidth: 1
+    }]
+  };
+
+  // Chart 2: Tasks per member (Workload)
+  const memberCounts = {};
+  tasks.forEach(t => {
+    const assignee = t.assignee || 'Unassigned';
+    memberCounts[assignee] = (memberCounts[assignee] || 0) + 1;
+  });
+
+  const workloadChart = {
+    labels: Object.keys(memberCounts).length > 0 ? Object.keys(memberCounts) : ['No Members'],
+    datasets: [{
+      label: 'Tasks Assigned',
+      data: Object.values(memberCounts).length > 0 ? Object.values(memberCounts) : [0],
+      backgroundColor: 'rgba(99, 102, 241, 0.7)',
+      borderColor: 'hsl(244, 97%, 66%)',
+      borderWidth: 1,
+      borderRadius: 4
     }]
   };
 
   return (
     <div>
-      <div style={{ marginBottom: '24px', padding: '32px', background: 'linear-gradient(135deg, var(--color-primary-glow), transparent)', border: '1px solid var(--border-glow)', borderRadius: 'var(--radius-lg)', position: 'relative', overflow: 'hidden' }}>
-        <div style={{ position: 'relative', zIndex: 1 }}>
-          <h2 style={{ fontSize: '1.8rem', marginBottom: '8px', fontWeight: 700 }}>Welcome back, {user.name.split(' ')[0]}!</h2>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '1.05rem' }}>Here is what's happening with your projects and tasks today.</p>
-        </div>
-        <i className="ph-fill ph-rocket" style={{ position: 'absolute', right: '30px', top: '50%', transform: 'translateY(-50%)', fontSize: '8rem', color: 'var(--border-glow)', opacity: 0.5 }}></i>
+      {/* Header Banner */}
+      <div style={{ marginBottom: '24px', padding: '24px 32px', background: 'linear-gradient(135deg, var(--color-primary-glow), transparent)', border: '1px solid var(--border-glow)', borderRadius: 'var(--radius-lg)' }}>
+        <h2 style={{ fontSize: '1.7rem', marginBottom: '6px', fontWeight: 700 }}>
+          Welcome back, {user.name.split(' ')[0]}! ({user.role})
+        </h2>
+        <p style={{ color: 'var(--text-secondary)', margin: 0 }}>
+          {isManagerOrAdmin 
+            ? 'Manager Workspace: Track team workload, overdue items, and project progress.' 
+            : 'Personal Workspace: View tasks assigned directly to you.'}
+        </p>
       </div>
 
-      <div className="kpi-grid" style={{ marginBottom: '32px' }}>
-        <div className="kpi-card clickable-row" onClick={() => navigateTo('projects', 'list')}>
-          <div className="kpi-icon primary" style={{ fontSize: '1.5rem' }}><i className="ph-fill ph-folder-open"></i></div>
-          <div className="kpi-info">
-            <span className="kpi-label">{user.role === 'Admin' ? 'Total Projects' : 'Active Projects'}</span>
-            <span className="kpi-value">{user.role === 'Admin' ? projects.length : activeProjects}</span>
-          </div>
+      {/* 4 KPI CARDS (PDF Section 7.3 Manager / Admin view) */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))', gap: '16px', marginBottom: '32px' }}>
+        <div className="card" onClick={() => navigateTo('tasks', 'list')} style={{ cursor: 'pointer', padding: '18px', borderLeft: '4px solid var(--color-primary)' }}>
+          <span className="text-muted" style={{ fontSize: '13px', fontWeight: 500 }}>Open Tasks</span>
+          <h2 style={{ margin: '8px 0 0 0', fontSize: '2rem' }}>{openTasks.length}</h2>
         </div>
-        <div className="kpi-card clickable-row" onClick={() => navigateTo('tasks', 'my')}>
-          <div className="kpi-icon warning" style={{ fontSize: '1.5rem' }}><i className="ph-fill ph-notebook"></i></div>
-          <div className="kpi-info">
-            <span className="kpi-label">Pending Tasks</span>
-            <span className="kpi-value">{pendingTasks}</span>
-          </div>
+
+        <div className="card" onClick={() => navigateTo('tasks', 'list')} style={{ cursor: 'pointer', padding: '18px', borderLeft: '4px solid var(--color-danger)' }}>
+          <span className="text-muted" style={{ fontSize: '13px', fontWeight: 500 }}>Overdue</span>
+          <h2 style={{ margin: '8px 0 0 0', fontSize: '2rem', color: 'var(--color-danger)' }}>{overdueTasks.length}</h2>
         </div>
-        <div className="kpi-card clickable-row" onClick={() => navigateTo('tasks', 'list')}>
-          <div className="kpi-icon success" style={{ fontSize: '1.5rem' }}><i className="ph-fill ph-check-circle"></i></div>
-          <div className="kpi-info">
-            <span className="kpi-label">Completed Tasks</span>
-            <span className="kpi-value">{completedTasks}</span>
-          </div>
+
+        <div className="card" onClick={() => navigateTo('tasks', 'list')} style={{ cursor: 'pointer', padding: '18px', borderLeft: '4px solid var(--color-success)' }}>
+          <span className="text-muted" style={{ fontSize: '13px', fontWeight: 500 }}>Completed</span>
+          <h2 style={{ margin: '8px 0 0 0', fontSize: '2rem', color: 'var(--color-success)' }}>{completedThisWeek.length}</h2>
+        </div>
+
+        <div className="card" onClick={() => navigateTo('tasks', 'review')} style={{ cursor: 'pointer', padding: '18px', borderLeft: '4px solid var(--color-warning)' }}>
+          <span className="text-muted" style={{ fontSize: '13px', fontWeight: 500 }}>Awaiting Review</span>
+          <h2 style={{ margin: '8px 0 0 0', fontSize: '2rem', color: 'var(--color-warning)' }}>{awaitingReview.length}</h2>
         </div>
       </div>
 
-      <div className="grid-cols-2" style={{ marginBottom: '32px' }}>
-        <div className="card">
-          <div className="card-header-flex">
-            <h3>Task Overview</h3>
-          </div>
-          <div className="chart-container" style={{ position: 'relative', height: '250px' }}>
-            {userTasks.length > 0 ? (
+      {/* CHARTS GRID (PDF: Tasks by status chart & Workload chart) */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: '20px', marginBottom: '32px' }}>
+        <div className="card" style={{ padding: '20px' }}>
+          <h4 style={{ marginBottom: '15px' }}>Tasks by Status</h4>
+          <div style={{ position: 'relative', height: '220px' }}>
+            {tasks.length > 0 ? (
               <Doughnut
-                data={taskChart}
+                data={taskStatusChart}
                 options={{
                   responsive: true,
                   maintainAspectRatio: false,
@@ -113,38 +143,91 @@ export default function Dashboard({ navigateTo }) {
               />
             ) : (
               <div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>
-                No task data available.
+                No task data recorded.
               </div>
             )}
           </div>
         </div>
 
-        <div className="card">
-          <div className="card-header-flex">
-            <h3>Recent Tasks</h3>
-            <button className="btn btn-primary btn-sm" onClick={() => navigateTo('tasks', 'create')}>Add Task</button>
+        <div className="card" style={{ padding: '20px' }}>
+          <h4 style={{ marginBottom: '15px' }}>Team Workload (Tasks per Member)</h4>
+          <div style={{ position: 'relative', height: '220px' }}>
+            {tasks.length > 0 ? (
+              <Bar
+                data={workloadChart}
+                options={{
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  scales: {
+                    y: { beginAtZero: true, ticks: { stepSize: 1, color: 'var(--text-secondary)' } },
+                    x: { ticks: { color: 'var(--text-secondary)' } }
+                  },
+                  plugins: { legend: { display: false } }
+                }}
+              />
+            ) : (
+              <div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>
+                No assigned members.
+              </div>
+            )}
           </div>
-          <div className="table-responsive">
-            <table className="table">
-              <thead>
+        </div>
+      </div>
+
+      {/* PROJECTS OVERVIEW TABLE WITH PROGRESS BARS (PDF Section 7.3) */}
+      <div className="card" style={{ padding: '20px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <h4 style={{ margin: 0 }}>Projects Overview & Progress</h4>
+          <button className="btn btn-secondary btn-sm" onClick={() => navigateTo('projects', 'list')}>View All Projects</button>
+        </div>
+
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+            <thead>
+              <tr style={{ borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)', fontSize: '13px' }}>
+                <th style={{ padding: '10px' }}>Project Name</th>
+                <th style={{ padding: '10px' }}>Status</th>
+                <th style={{ padding: '10px' }}>Tasks</th>
+                <th style={{ padding: '10px', minWidth: '180px' }}>Progress</th>
+              </tr>
+            </thead>
+            <tbody>
+              {projects.length === 0 ? (
                 <tr>
-                  <th>Task Name</th>
-                  <th>Status</th>
+                  <td colSpan="4" style={{ padding: '20px', textAlign: 'center' }} className="text-muted">
+                    No projects found. Create a project to track team progress.
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {userTasks.slice(0, 5).map(t => (
-                  <tr key={t.id}>
-                    <td><strong>{t.name}</strong></td>
-                    <td><span className={`badge badge-${t.status.toLowerCase().replace(' ', '-')}`}>{t.status}</span></td>
-                  </tr>
-                ))}
-                {userTasks.length === 0 && (
-                  <tr><td colSpan="2" className="text-center text-muted">No tasks available.</td></tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+              ) : (
+                projects.map(p => {
+                  const pTasks = tasks.filter(t => t.project === p.name || t.project_id === p.id);
+                  const pTotal = pTasks.length;
+                  const pDone = pTasks.filter(t => ['Completed', 'Closed'].includes(t.status)).length;
+                  const percentage = pTotal > 0 ? Math.round((pDone / pTotal) * 100) : 0;
+
+                  return (
+                    <tr key={p.id} style={{ borderBottom: '1px solid var(--border-color)', fontSize: '14px' }}>
+                      <td style={{ padding: '12px 10px', fontWeight: 500 }}>{p.name}</td>
+                      <td style={{ padding: '12px 10px' }}>
+                        <span className="badge badge-primary">{p.status || 'Active'}</span>
+                      </td>
+                      <td style={{ padding: '12px 10px' }} className="text-muted">
+                        {pDone} / {pTotal} done
+                      </td>
+                      <td style={{ padding: '12px 10px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          <div style={{ flex: 1, height: '8px', background: 'var(--bg-secondary)', borderRadius: '4px', overflow: 'hidden' }}>
+                            <div style={{ width: `${percentage}%`, height: '100%', background: percentage === 100 ? 'var(--color-success)' : 'var(--color-primary)', transition: 'width 0.3s ease' }} />
+                          </div>
+                          <span style={{ fontSize: '12px', minWidth: '35px', fontWeight: 'bold' }}>{percentage}%</span>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

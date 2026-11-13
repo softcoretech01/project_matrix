@@ -1,39 +1,80 @@
+# ==============================================================================
 # Dependencies
+# ==============================================================================
 node_modules/
 **/node_modules/
+.pnp
+.pnp.js
 
-# Local env files
+# ==============================================================================
+# Environment Files & Secrets (Never commit credentials)
+# ==============================================================================
 .env
 **/.env
 .env.local
-.env.development.local
-.env.test.local
-.env.production.local
+.env.*.local
+!.env.example
+!**/.env.example
 
-# Production builds
+# ==============================================================================
+# Local Databases & Cache
+# ==============================================================================
+*.db
+*.sqlite
+*.sqlite3
+backend/*.db
+backend/mock_db.json
+
+# ==============================================================================
+# Production Builds
+# ==============================================================================
 dist/
 **/dist/
 build/
 **/build/
+dist-ssr/
 
-# Local databases & logs
-backend/mock_db.json
+# ==============================================================================
+# Logs & Temp Files
+# ==============================================================================
+logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+lerna-debug.log*
+*.tmp
 
-# System files
-.DS_Store
-Thumbs.db
-
-# Python
+# ==============================================================================
+# Python Runtime & Virtual Environments
+# ==============================================================================
 venv/
 .venv/
 **/venv/
 **/.venv/
+env/
+**/env/
 __pycache__/
 **/__pycache__/
 *.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# ==============================================================================
+# IDEs & OS Files
+# ==============================================================================
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.DS_Store
+Thumbs.db
+[Dd]esktop.ini
 .claude/

@@ -1,0 +1,148 @@
+================================================================================
+           TECHSPIRE PORTAL V2 (PROJECT MATRIX) - PRESENTATION NOTES
+================================================================================
+Author / Module Owner : Priyanka (Tasks & Projects Modules)
+Organization          : Techspire Solutions
+Date                  : November 2026
+================================================================================
+
+1. TECHNOLOGY STACK
+--------------------------------------------------------------------------------
+* Frontend Framework : React 19 with Vite (Fast & modern SPA)
+* Frontend Styling   : Responsive Custom Design System (Theme-adaptive tokens,
+                       Dark/Light mode, fluid layouts, auto-collapsing toolbar)
+* Backend Framework  : Python FastAPI (High-performance async REST API)
+* Backend Server     : Uvicorn ASGI Server (Running at http://localhost:8000)
+* Primary Database   : MySQL Server 8.0 (`projectmatrix` on localhost:3306)
+                       Configured with clean schema and verified official seed data
+* Fallback Database  : SQLite (project_matrix.db with identical synced schema)
+* Database ORM       : SQLAlchemy + PyMySQL
+* Automation Scripts : Automated 1-click DB setup (scripts/setup_database.py),
+                       end-to-end changes verification (scripts/verify_all_changes.py),
+                       work summary generator (scripts/project_work_summary.py)
+
+--------------------------------------------------------------------------------
+2. PROJECT SCOPE & TEAM CREDENTIALS
+--------------------------------------------------------------------------------
+* Module Ownership   : "Tasks" and "Projects" Modules
+                       (Based on Specification PDF Section 8 & Page 11)
+* Official Head Credentials & Team Accounts (100% Clean Roster):
+  - Admin User       : admin@projectmatrix.com   (Role: Admin / IT Director)
+  - Priya            : priya@projectmatrix.com   (Role: Employee / Frontend Dev)
+  - Sophia Davis     : sophia@projectmatrix.com  (Role: PM / Project Manager)
+  - Liam Miller      : liam@projectmatrix.com    (Role: Team Lead)
+  - Emily Watson     : emily@projectmatrix.com   (Role: Executive Director / Management)
+* Note: All outdated sample test data (Hari, Shaji, tech learn) removed; fresh database active.
+
+--------------------------------------------------------------------------------
+3. DATABASE ARCHITECTURE (15 Relational Tables)
+--------------------------------------------------------------------------------
+* projects        : Project code, name, description, owner, client, budget, status, reviewRequired
+* tasks           : Task ID, title, description, project, assignee, assignedBy/createdBy, priority,
+                    status, progress, start/end dates, dueDate, logged hours, completedAt
+* subtasks        : Granular checklist items linked to tasks with live completion status
+* task_comments   : Discussion comments, progress updates, and formal sign-off notes
+* project_members : Project-level member allocation with assigned project roles
+* project_sections: Functional modules/sections belonging to projects (e.g. Frontend, API)
+* modules         : Core application modules linked to projects
+* clients         : Client directory, contact person, email, country, status
+* employees       : Official user accounts, designations, roles, departments
+* allocations     : Team resource allocations & planned hours per project
+* task_activity   : Real-time audit timeline of changes per task
+* task_types      : Configurable task categories and classifications
+* timesheets      : Work log hours, task linkages, submission status
+* holidays        : Company & public holidays calendar
+* leaves          : Employee leave requests and approval status
+
+--------------------------------------------------------------------------------
+4. KEY FEATURES BUILT (Tasks & Projects)
+--------------------------------------------------------------------------------
+A. "ASSIGNED BY" TRACKING & VISIBILITY:
+   - Every task captures the delegator (`createdBy`), showing exactly who assigned it.
+   - Kanban Cards: Prominently displays `By: <Assignor>` badge on every task card.
+   - My Tasks & Task List: Dedicated `Assigned By` column in both table views.
+   - Task Details Modal: Highlights the assignor with full name and role badge.
+
+B. CALENDAR PAGE - PURE MONTH GRID:
+   - Streamlined into a pure month grid focused strictly on scheduling and deadlines.
+   - Priority-based color coding (High: Rose, Medium: Amber, Low: Emerald).
+   - Removed redundant "Add Task" buttons and toolbar clutter for distraction-free view.
+   - 100% Theme-Adaptive: Integrated design tokens (`--card-bg`, `--bg-secondary`)
+     ensuring flawless contrast in both Dark and Light modes.
+
+C. UNIFIED DATE-MONTH-YEAR (DD-MM-YYYY) FORMATTING:
+   - Project-wide standardization to Date Month Year (`DD-MM-YYYY`, e.g. `20-11-2026`).
+   - Replaced browser-native UTC date string conversion with timezone-safe regex parsing
+     to eliminate timezone shifts across all views.
+
+D. PROJECTS MODULE:
+   - Projects List: Search, filter by status, KPI summary cards, progress bars.
+   - Auto-Generated Project Codes: Automatic PRJ-001, PRJ-002 codes generated by system.
+   - Dynamic Delivery Progress: Progress bar auto-calculates from completed
+     tasks ratio ((Completed / Total) * 100) with zero manual slider tampering.
+   - Project Detail View:
+     * Header with Project Code, Status badge, Quick Jump buttons.
+     * Overview & Metrics tab (total, completed, in-progress, review, overdue).
+     * Project Members tab (dynamic member addition & removal).
+     * Sections & Modules tab (add, inline-rename, delete functional sections).
+     * Daily Completed Tasks Tab: Chronological log of deliverables with exact
+       completion date and timestamp.
+
+E. TASKS MODULE (Integrated Sub-Views & Checklist):
+   - 1. My Tasks     : Personal view filtered automatically by logged-in user.
+   - 2. Task List    : Enterprise table with sorting, search, priority badges, and Assigned By.
+   - 3. Kanban Board : Button-driven forward workflow ("Move to Next Stage")
+                       instead of buggy drag-and-drop; displays assignor badge.
+   - 4. Calendar     : Pure month grid mapping tasks to due dates with priority colors.
+   - 5. Create Task  : Wide 2-column modal with Auto-Generated Task IDs (TSK-001)
+                       and an interactive Employee Availability Matrix.
+   - 6. Task Detail  : Interactive Subtask Checklist (dynamically updates progress %),
+                       discussion comments, and completion timestamp tracking.
+
+F. DAILY WORK LOG & REPORTS:
+   - Dedicated "Daily Completed Deliverables" audit log showing what was completed
+     each day with exact Date & Time stamp (e.g. 12-11-2026, 07:31 PM).
+   - One-click CSV export for team reporting and management sign-off.
+
+G. REVIEW & CLOSURE WORKFLOW (Role-Guarded):
+   - Spec Page 11 compliance: Employees cannot self-close tasks.
+   - Employee completes work -> Advances status to "Review".
+   - PM / Admin reviews work in "Review & Closure" tab -> Signs off and closes task.
+   - Automatically locks progress to 100% and timestamps completion.
+
+H. RESPONSIVE DESIGN & ADAPTIVE SIDEBAR:
+   - Screen <= 1024px: Sidebar automatically collapses into a sleek icon toolbar.
+   - Screen > 1024px: Sidebar expands automatically with full menu labels.
+   - Responsive multi-column layouts across all pages.
+
+--------------------------------------------------------------------------------
+5. 1-MINUTE QUICK TALKING POINTS FOR TEAM HEAD
+--------------------------------------------------------------------------------
+"Good morning / afternoon Sir/Ma'am,
+
+Here is the completed progress report on the Tasks & Projects modules for Project Matrix:
+
+1. DATABASE & ARCHITECTURE:
+   - All 15 relational tables are initialized and verified in MySQL 8.0 under 'projectmatrix'.
+   - Clean 5-role user roster (Admin, Priya, Sophia Davis PM, Liam Miller Lead, Emily Watson Exec).
+   - Python setup script (scripts/setup_database.py) fully automated and synchronized.
+
+2. CORE ENHANCEMENTS IMPLEMENTED:
+   - 'Assigned By' Tracking: Captures and displays who delegated each task across Kanban cards,
+     My Tasks, Task List, and Task Details.
+   - Pure Month Calendar: Streamlined into a clean month grid with priority colors and
+     100% theme-adaptive design tokens for Dark and Light modes.
+   - Project-Wide Date Format: Strictly standardized to Date-Month-Year (DD-MM-YYYY)
+     everywhere with zero timezone offset bugs.
+   - Subtasks Checklist Engine: Dynamic checklist where checking subtasks recalculates progress
+     in real-time and reflects on deliverable metrics.
+   - Role-Guarded Review & Closure: Spec Page 11 workflow verified with formal PM/Admin sign-off
+     and daily deliverable timestamp logging.
+
+3. STATUS:
+   - All 5 roles tested end-to-end with 100% pass rate.
+   - The application is running live and production-ready."
+
+================================================================================
+                            END OF PRESENTATION NOTES
+================================================================================
