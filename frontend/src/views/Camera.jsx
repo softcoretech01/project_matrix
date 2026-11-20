@@ -29,15 +29,18 @@ export default function Camera() {
   const [dateF, setDateF] = useState('');
   const [preview, setPreview] = useState(null);
   const [capturing, setCapturing] = useState(false);
+  const [livePick, setLivePick] = useState(false);
   const live = useLive();
   const { user } = useAuth();
   const canLive = user && (user.role === 'Admin' || user.role === 'Master');
 
-  const startLive = () => {
+  // If an employee is already filtered, request them directly; otherwise show the picker.
+  const openLive = () => {
     const emp = employees.find((e) => String(e.id) === String(empF));
-    if (!emp) { toast.error('Select an employee first'); return; }
-    live?.requestView(emp);
+    if (emp) live?.requestView(emp);
+    else setLivePick(true);
   };
+  const pickLive = (emp) => { setLivePick(false); live?.requestView(emp); };
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -80,8 +83,8 @@ export default function Camera() {
         <input type="date" className="form-control" style={{ width: 150 }} value={dateF} onChange={(e) => setDateF(e.target.value)} />
         <div style={{ flex: 1 }} />
         {canLive && (
-          <button className="btn btn-secondary" onClick={startLive} disabled={!empF}
-            title={empF ? 'Request a live camera view (employee must allow)' : 'Select an employee first'}>
+          <button className="btn btn-secondary" onClick={openLive}
+            title="Request a live camera view (the employee must allow it)">
             <i className="ph ph-video-camera"></i> Live View
           </button>
         )}
@@ -112,7 +115,13 @@ export default function Camera() {
                 <tr key={l.id}>
                   <td className="text-muted">{idx + 1}</td>
                   <td>
-                    {l.mediaType === 'video' ? (
+                    {l.activityType === 'live-view' ? (
+                      <div title="Live view session (no recording)" style={{ width: 40, height: 40, borderRadius: 6,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        background: 'rgba(16,185,129,.12)', border: '1px solid var(--border-color,#e2e8f0)' }}>
+                        <i className="ph ph-video-camera" style={{ color: '#059669', fontSize: 18 }}></i>
+                      </div>
+                    ) : l.mediaType === 'video' ? (
                       <div onClick={() => setPreview(l)} style={{ position: 'relative', width: 40, height: 40, cursor: 'pointer' }}>
                         <video src={assetUrl(l.url)} muted preload="metadata"
                           style={{ display: 'block', width: 40, height: 40, objectFit: 'cover', borderRadius: 6,
@@ -136,7 +145,7 @@ export default function Camera() {
                   <td><span className="badge" style={{ background: 'rgba(16,185,129,.12)', color: '#059669' }}>{l.activityType}</span></td>
                   <td style={{ textAlign: 'center' }}>
                     <RowActions actions={[
-                      { icon: 'ph-eye', title: 'View', tone: 'primary', onClick: () => setPreview(l) },
+                      { icon: 'ph-eye', title: 'View', tone: 'primary', show: l.activityType !== 'live-view', onClick: () => setPreview(l) },
                     ]} />
                   </td>
                 </tr>
@@ -146,6 +155,27 @@ export default function Camera() {
         </div>
       )}
 
+      {livePick && (
+        <Modal title="Live view — choose an employee" onClose={() => setLivePick(false)} size="sm"
+          footer={<button className="btn btn-secondary" onClick={() => setLivePick(false)}>Cancel</button>}>
+          <p className="text-secondary" style={{ fontSize: '0.85rem', marginTop: 0 }}>
+            The employee gets a prompt and must allow it. Their live camera appears here once they accept.
+          </p>
+          {employees.length === 0 ? (
+            <p className="text-muted">No employees found.</p>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 340, overflowY: 'auto' }}>
+              {employees.map((e) => (
+                <button key={e.id} className="btn btn-secondary" style={{ justifyContent: 'flex-start', textAlign: 'left' }}
+                  onClick={() => pickLive(e)}>
+                  <i className="ph ph-user-circle" style={{ marginRight: 8, color: '#059669' }}></i>
+                  {e.name} <span className="text-muted" style={{ marginLeft: 6, fontSize: '0.8rem' }}>{e.designation || 'Worker'}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </Modal>
+      )}
       {capturing && <CameraCapture onCapture={onCapture} onClose={() => setCapturing(false)} />}
       {preview && (
         <Modal title={`${preview.mediaType === 'video' ? 'Video' : 'Capture'} — ${preview.employeeName}`} onClose={() => setPreview(null)} size="md">
