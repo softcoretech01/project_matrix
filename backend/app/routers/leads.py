@@ -69,7 +69,9 @@ def upload_leads(taskId: str, file: UploadFile = File(...),
     headers = [str(c).strip().lower() if c is not None else "" for c in rows[0]]
     col_field = {i: HEADER_MAP[h] for i, h in enumerate(headers) if h in HEADER_MAP}
     if "name" not in col_field.values():
-        raise HTTPException(status_code=400, detail="A 'Name' column is required in the Excel file")
+        raise HTTPException(status_code=400,
+                            detail="This file doesn't match the leads template (a 'Name' column is required). "
+                                   "Please download the Template and use it.")
 
     imported, skipped = 0, 0
     for row in rows[1:]:

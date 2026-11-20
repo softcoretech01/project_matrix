@@ -275,7 +275,7 @@ def upload_attachment(task_id: str, file: UploadFile = File(...),
         raise HTTPException(status_code=404, detail="Task not found")
     saved = save_upload(file, "tasks", allowed=DOC_EXTS, max_bytes=10 * 1024 * 1024)
     att = TaskAttachment(task_id=task_id, filename=saved["filename"], filepath=saved["filepath"],
-                         uploaded_by=current_user.id)
+                         original_name=file.filename or saved["filename"], uploaded_by=current_user.id)
     db.add(att)
     db.commit()
     db.refresh(att)

@@ -17,7 +17,9 @@ WORK_CATEGORIES = [
      ]},
 
     {"key": "sales", "name": "Sales & Lead Management", "icon": "ph-trend-up", "color": "#10b981",
-     "statuses": ["New", "Contacted", "Qualified", "Proposal", "Won", "Lost"], "doneStatuses": ["Won"],
+     # The task itself uses a normal work lifecycle; the sales pipeline (New -> Won/Lost)
+     # lives on each individual lead inside the Lead Contacts panel.
+     "statuses": ["To Do", "In Progress", "Completed"], "doneStatuses": ["Completed"],
      # Leads are bulk-imported from an Excel sheet on the task (no manual per-lead fields)
      "leadsUpload": True,
      "fields": []},

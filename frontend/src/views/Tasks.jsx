@@ -329,6 +329,7 @@ function TaskDetail({ id, projects, employees, categories = [], onBack, onChange
   };
 
   const eff = effectiveStatus(t);
+  const leadsTask = !!(categories.find((c) => c.key === (t.category || 'general')) || {}).leadsUpload;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -344,7 +345,12 @@ function TaskDetail({ id, projects, employees, categories = [], onBack, onChange
             <div style={{ display: 'flex', gap: 8, margin: '8px 0' }}>
               <PriorityBadge priority={t.priority} /><StatusBadge status={eff} />
             </div>
-            <p className="text-secondary">{t.description || 'No description.'}</p>
+            <div style={{ margin: '10px 0' }}>
+              <div className="text-secondary" style={{ fontSize: '0.75rem', marginBottom: 2 }}>Description</div>
+              <p style={{ margin: 0, whiteSpace: 'pre-wrap' }}>
+                {t.description ? t.description : <span className="text-muted">No description provided.</span>}
+              </p>
+            </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12, marginTop: 12 }}>
               <div><div className="text-secondary" style={{ fontSize: '0.75rem' }}>Assignee</div><strong>{t.assignedToName || '—'}</strong></div>
               <div><div className="text-secondary" style={{ fontSize: '0.75rem' }}>Reviewer</div><strong>{t.reviewerName || '—'}</strong></div>
@@ -461,16 +467,23 @@ function TaskDetail({ id, projects, employees, categories = [], onBack, onChange
               ))}
           </Card>
 
-          <Card title={`Attachments (${t.attachments.length})`}>
-            {t.attachments.map((a) => (
-              <a key={a.id} href={assetUrl(a.url)} target="_blank" rel="noreferrer" style={{ display: 'block', fontSize: '0.85rem', marginBottom: 6 }}>
-                <i className="ph ph-paperclip"></i> {a.filename}
-              </a>
-            ))}
-            <label className="btn btn-sm btn-secondary" style={{ marginTop: 8, cursor: 'pointer' }}>
-              <i className="ph ph-upload"></i> Upload<input type="file" hidden onChange={uploadFile} />
-            </label>
-          </Card>
+          {!leadsTask && (
+            <Card title={`Attachments (${t.attachments.length})`}>
+              {t.attachments.map((a) => (
+                <a key={a.id} href={assetUrl(a.url)} target="_blank" rel="noreferrer" download
+                  style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', marginBottom: 6,
+                    border: '1px solid var(--border-color,#e2e8f0)', borderRadius: 8, fontSize: '0.85rem',
+                    textDecoration: 'none', color: 'var(--text,#0f172a)' }}>
+                  <i className="ph ph-paperclip" style={{ color: '#64748b' }}></i>
+                  <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.originalName || a.filename}</span>
+                  <i className="ph ph-download-simple" style={{ color: '#94a3b8' }}></i>
+                </a>
+              ))}
+              <label className="btn btn-sm btn-secondary" style={{ marginTop: 8, cursor: 'pointer' }}>
+                <i className="ph ph-upload"></i> Upload<input type="file" hidden onChange={uploadFile} />
+              </label>
+            </Card>
+          )}
 
           <LinksPanel parentType="task" parentId={t.id} />
 

@@ -343,6 +343,7 @@ class TaskAttachment(Base):
     task_id = Column(String(50), ForeignKey("pm_tasks.id", ondelete="CASCADE"))
     filename = Column(String(255))
     filepath = Column(String(500))
+    original_name = Column(String(255))             # user's file name (stored file gets a uuid name)
     uploaded_by = Column(String(50), ForeignKey("pm_users.id"))
     uploaded_at = Column(DateTime, default=datetime.utcnow)
 
@@ -350,6 +351,7 @@ class TaskAttachment(Base):
 
     def to_dict(self):
         return {"id": self.id, "taskId": self.task_id, "filename": self.filename,
+                "originalName": self.original_name or self.filename,
                 "url": f"/uploads/tasks/{self.filename}", "uploadedBy": self.uploaded_by,
                 "uploadedAt": _dt(self.uploaded_at)}
 

@@ -30,6 +30,7 @@ def _run_lightweight_migrations():
     create_all() never alters existing tables, so new nullable columns are added here."""
     adds = [
         ("pm_timesheet_attachments", "original_name", "VARCHAR(255) NULL"),
+        ("pm_task_attachments", "original_name", "VARCHAR(255) NULL"),
     ]
     insp = inspect(engine)
     existing_tables = set(insp.get_table_names())
