@@ -21,7 +21,20 @@ function TaskForm({ task, projects, employees, categories = [], onClose, onSaved
   });
   const [file, setFile] = useState(null);
   const [busy, setBusy] = useState(false);
+  const [existingAtts, setExistingAtts] = useState([]);
   const set = (k, v) => setF((p) => ({ ...p, [k]: v }));
+
+  // When editing, load the files already attached to this task so they are visible here
+  const loadAtts = useCallback(async () => {
+    if (!task?.id) return;
+    try { const d = await api.get(`/tasks/${task.id}`); setExistingAtts(d.attachments || []); }
+    catch { /* ignore */ }
+  }, [task?.id]);
+  useEffect(() => { loadAtts(); }, [loadAtts]);
+  const removeAtt = async (id) => {
+    try { await api.del(`/tasks/attachments/${id}`); setExistingAtts((p) => p.filter((a) => a.id !== id)); toast.success('Attachment removed'); }
+    catch (e) { toast.error(e.message); }
+  };
 
   const cat = categories.find((c) => c.key === (f.category || 'general'))
     || { name: 'General', icon: 'ph-check-square', statuses: EDITABLE_STATUSES, fields: [] };
@@ -206,6 +219,24 @@ function TaskForm({ task, projects, employees, categories = [], onClose, onSaved
             <label className="form-label" style={{ margin: 0 }}>Attachment</label>
             <span className="text-muted" style={{ fontSize: '0.75rem' }}>Max size: 10MB</span>
           </div>
+          {editing && existingAtts.length > 0 && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 8 }}>
+              {existingAtts.map((a) => (
+                <div key={a.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px',
+                  border: '1px solid var(--border-color,#e2e8f0)', borderRadius: 8, fontSize: '0.82rem' }}>
+                  <i className="ph ph-paperclip" style={{ color: '#64748b' }}></i>
+                  <a href={assetUrl(a.url)} target="_blank" rel="noreferrer" download
+                    style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: 'var(--text,#0f172a)', textDecoration: 'none' }}>
+                    {a.originalName || a.filename}
+                  </a>
+                  <button type="button" title="Remove" onClick={() => removeAtt(a.id)}
+                    style={{ color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer', padding: 2 }}>
+                    <i className="ph ph-trash"></i>
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
           <input type="file" className="form-control" onChange={handleFileChange} />
           {file && (
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 6, fontSize: '0.8rem' }}>
