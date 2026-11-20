@@ -4,17 +4,6 @@ node_modules/
 
 # Local env files
 .env
-**/.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
-# Production builds
-dist/
-**/dist/
-build/
-**/build/
 
 # Local databases & logs
 backend/mock_db.json
@@ -39,12 +28,6 @@ venv/
 **/.venv/
 __pycache__/
 **/__pycache__/
-*.py[cod]
 .claude/
 
-*.db
-**/*.db
 
-# Runtime file uploads (camera captures, task/project/timesheet attachments)
-backend/uploads/
-backend/app/uploads/

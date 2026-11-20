@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { Spinner, STATUS_COLORS, effectiveStatus, toast } from '../components/ui';
+import { Spinner, STATUS_COLORS, effectiveStatus, toast, fmtDate } from '../components/ui';
 import TimesheetForm from '../components/TimesheetForm';
 
 const DOW = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -17,33 +17,100 @@ const LEGEND = [
 
 function Tooltip({ task, x, y }) {
   if (!task) return null;
+  const eff = effectiveStatus(task);
+  const statusColor = STATUS_COLORS[eff] || '#64748b';
+
   return (
-    <div style={{ position: 'fixed', left: Math.min(x + 12, window.innerWidth - 280), top: y + 12, zIndex: 9999,
-      width: 260, background: 'var(--surface,#1e293b)', border: '1px solid var(--border,#334155)',
-      borderRadius: 10, padding: 12, boxShadow: '0 8px 24px rgba(0,0,0,.4)', fontSize: '0.8rem', pointerEvents: 'none' }}>
-      <div style={{ fontWeight: 700, marginBottom: 6 }}>{task.name}</div>
-      <div className="text-secondary" style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '2px 8px' }}>
-        <span>Project:</span><span>{task.projectName || task.projectId || '—'}</span>
-        <span>Task ID:</span><span>{task.code || task.id}</span>
-        <span>Assignee:</span><span>{task.assignedToName || '—'}</span>
-        <span>Priority:</span><span>{task.priority}</span>
-        <span>Start:</span><span>{task.startDate || '—'}</span>
-        <span>Due:</span><span>{task.endDate || '—'}</span>
-        <span>Status:</span><span>{effectiveStatus(task)}</span>
+    <div style={{
+      position: 'fixed',
+      left: Math.min(x + 14, window.innerWidth - 300),
+      top: y + 14,
+      zIndex: 9999,
+      width: 280,
+      background: '#ffffff',
+      border: '1px solid #cbd5e1',
+      borderRadius: 12,
+      padding: '14px 16px',
+      boxShadow: '0 12px 28px -4px rgba(15, 23, 42, 0.16), 0 4px 8px -2px rgba(15, 23, 42, 0.08)',
+      fontSize: '0.82rem',
+      color: '#0f172a',
+      pointerEvents: 'none',
+      lineHeight: 1.5,
+    }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 10 }}>
+        <div style={{ fontWeight: 700, fontSize: '0.92rem', color: '#0f172a', lineHeight: 1.3 }}>{task.name}</div>
+        <span style={{
+          fontSize: '0.72rem',
+          fontWeight: 600,
+          padding: '2px 8px',
+          borderRadius: 6,
+          background: `${statusColor}18`,
+          color: statusColor,
+          border: `1px solid ${statusColor}44`,
+          whiteSpace: 'nowrap',
+          flexShrink: 0,
+        }}>
+          {eff}
+        </span>
       </div>
-      {task.description && <div className="text-muted" style={{ marginTop: 6, fontSize: '0.75rem' }}>{task.description.slice(0, 120)}</div>}
+
+      <div style={{ display: 'grid', gridTemplateColumns: '70px 1fr', gap: '5px 8px', fontSize: '0.8rem' }}>
+        <span style={{ color: '#64748b', fontWeight: 500 }}>Project:</span>
+        <span style={{ color: '#0f172a', fontWeight: 600 }}>{task.projectName || task.projectId || '—'}</span>
+
+        <span style={{ color: '#64748b', fontWeight: 500 }}>Task ID:</span>
+        <span style={{ color: '#334155', fontFamily: 'monospace', fontWeight: 600 }}>{task.code || task.id}</span>
+
+        <span style={{ color: '#64748b', fontWeight: 500 }}>Assignee:</span>
+        <span style={{ color: '#0f172a', fontWeight: 600 }}>{task.assignedToName || 'Unassigned'}</span>
+
+        <span style={{ color: '#64748b', fontWeight: 500 }}>Priority:</span>
+        <span style={{ color: '#0f172a', fontWeight: 600 }}>{task.priority || 'Medium'}</span>
+
+        <span style={{ color: '#64748b', fontWeight: 500 }}>Start:</span>
+        <span style={{ color: '#334155' }}>{fmtDate(task.startDate)}</span>
+
+        <span style={{ color: '#64748b', fontWeight: 500 }}>Due:</span>
+        <span style={{ color: '#0f172a', fontWeight: 600 }}>{fmtDate(task.endDate)}</span>
+      </div>
+
+      {task.description && (
+        <div style={{
+          marginTop: 10,
+          paddingTop: 8,
+          borderTop: '1px solid #e2e8f0',
+          color: '#64748b',
+          fontSize: '0.76rem',
+          lineHeight: 1.4,
+        }}>
+          {task.description.slice(0, 120)}{task.description.length > 120 ? '…' : ''}
+        </div>
+      )}
     </div>
   );
 }
 
 function Chip({ task, onHover, onLeave, onClick }) {
-  const color = STATUS_COLORS[effectiveStatus(task)] || '#64748b';
+  const eff = effectiveStatus(task);
+  const color = STATUS_COLORS[eff] || '#64748b';
   return (
     <div onMouseEnter={(e) => onHover(task, e)} onMouseMove={(e) => onHover(task, e)} onMouseLeave={onLeave}
       onClick={(e) => { e.stopPropagation(); onClick(task); }}
-      style={{ background: `${color}22`, borderLeft: `3px solid ${color}`, color: 'inherit',
-        padding: '2px 6px', borderRadius: 4, fontSize: '0.72rem', marginBottom: 3, cursor: 'pointer',
-        whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+      style={{
+        background: `${color}18`,
+        borderLeft: `3px solid ${color}`,
+        color: '#0f172a',
+        fontWeight: 500,
+        padding: '3px 7px',
+        borderRadius: 4,
+        fontSize: '0.74rem',
+        marginBottom: 3,
+        cursor: 'pointer',
+        whiteSpace: 'nowrap',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        boxShadow: '0 1px 2px rgba(0,0,0,0.03)',
+      }}>
       {task.assignedToName ? `${task.assignedToName.split(' ')[0]}: ` : ''}{task.name}
     </div>
   );
@@ -106,14 +173,31 @@ export default function Calendar({ navigate }) {
     const isToday = key === todayISO;
     const dim = view === 'month' && d.getMonth() !== cursor.getMonth();
     return (
-      <div key={key} style={{ minHeight: tall ? 120 : 80, padding: 6, border: '1px solid var(--border,#334155)',
-        background: isToday ? 'var(--color-primary-bg,rgba(99,102,241,.08))' : 'transparent', opacity: dim ? 0.4 : 1, overflow: 'hidden' }}>
-        <div style={{ fontSize: '0.75rem', fontWeight: isToday ? 800 : 500, marginBottom: 4,
-          color: isToday ? 'var(--color-primary,#818cf8)' : 'inherit' }}>{d.getDate()}</div>
+      <div key={key} style={{
+        minHeight: tall ? 120 : 85,
+        padding: 6,
+        border: '1px solid #e2e8f0',
+        background: isToday ? 'rgba(16, 185, 129, 0.08)' : (dim ? '#f8fafc' : '#ffffff'),
+        opacity: dim ? 0.7 : 1,
+        overflow: 'hidden',
+        transition: 'background 0.15s ease',
+      }}>
+        <div style={{
+          fontSize: '0.75rem',
+          fontWeight: isToday ? 800 : 600,
+          marginBottom: 4,
+          color: isToday ? '#059669' : (dim ? '#94a3b8' : '#334155'),
+        }}>
+          {d.getDate()}
+        </div>
         {dayTasks.slice(0, tall ? 10 : 3).map((t) => (
           <Chip key={t.id} task={t} onHover={onHover} onLeave={onLeave} onClick={openTask} />
         ))}
-        {dayTasks.length > (tall ? 10 : 3) && <div className="text-muted" style={{ fontSize: '0.68rem' }}>+{dayTasks.length - 3} more</div>}
+        {dayTasks.length > (tall ? 10 : 3) && (
+          <div className="text-muted" style={{ fontSize: '0.68rem', fontWeight: 600, marginTop: 2 }}>
+            +{dayTasks.length - (tall ? 10 : 3)} more
+          </div>
+        )}
       </div>
     );
   };
@@ -169,10 +253,14 @@ export default function Calendar({ navigate }) {
       </div>
 
       {/* Grid */}
-      <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+      <div className="card" style={{ padding: 0, overflow: 'hidden', border: '1px solid #e2e8f0', borderRadius: 12 }}>
         {view !== 'day' && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)' }}>
-            {DOW.map((d) => <div key={d} style={{ padding: 8, textAlign: 'center', fontWeight: 600, fontSize: '0.8rem', borderBottom: '1px solid var(--border,#334155)' }}>{d}</div>)}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+            {DOW.map((d) => (
+              <div key={d} style={{ padding: '10px 8px', textAlign: 'center', fontWeight: 600, fontSize: '0.82rem', color: '#475569' }}>
+                {d}
+              </div>
+            ))}
           </div>
         )}
         {view === 'month' && (
@@ -187,8 +275,8 @@ export default function Calendar({ navigate }) {
               ? <p className="text-secondary" style={{ textAlign: 'center', padding: 20 }}>No tasks due this day.</p>
               : (byDate[iso(cursor)] || []).map((t) => (
                 <div key={t.id} onClick={() => openTask(t)} onMouseEnter={(e) => onHover(t, e)} onMouseMove={(e) => onHover(t, e)} onMouseLeave={onLeave}
-                  className="clickable-row" style={{ display: 'flex', justifyContent: 'space-between', padding: '12px',
-                    borderLeft: `4px solid ${STATUS_COLORS[effectiveStatus(t)]}`, borderRadius: 6, marginBottom: 8, background: 'var(--surface-2,rgba(148,163,184,.06))' }}>
+                  className="clickable-row" style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 14px',
+                    borderLeft: `4px solid ${STATUS_COLORS[effectiveStatus(t)]}`, borderRadius: 8, marginBottom: 8, background: '#f8fafc', border: '1px solid #e2e8f0' }}>
                   <div><strong>{t.name}</strong><div className="text-secondary" style={{ fontSize: '0.8rem' }}>{t.projectName} · {t.assignedToName || 'Unassigned'}</div></div>
                   <span style={{ color: STATUS_COLORS[effectiveStatus(t)], fontWeight: 600 }}>{effectiveStatus(t)}</span>
                 </div>
