@@ -90,11 +90,21 @@ def dashboard(current_user: User = Depends(get_current_user), db: Session = Depe
             "withPendingTasks": len(with_pending),
         }
 
-    # ---- Task status distribution (for charts) ----
+    # ---- Task status distribution (normalised to 4 buckets for the chart) ----
+    TODO_STATUSES = {"To Do", "To Call", "Scheduled", "Planned", "Pending", "New"}
+    def _bucket(t):
+        if _is_overdue(t):
+            return "Overdue"
+        s = t.status or "To Do"
+        if s in DONE:
+            return "Completed"
+        if s in TODO_STATUSES:
+            return "To Do"
+        return "In Progress"
     status_dist = {}
     for t in tasks:
-        s = "Overdue" if _is_overdue(t) else (t.status or "To Do")
-        status_dist[s] = status_dist.get(s, 0) + 1
+        b = _bucket(t)
+        status_dist[b] = status_dist.get(b, 0) + 1
 
     # ---- Tasks by work category ----
     cat_counts = {}
@@ -131,10 +141,15 @@ def dashboard(current_user: User = Depends(get_current_user), db: Session = Depe
     timesheets = ts_q.all()
     logged_hours = round(sum((t.total_hours or 0) for t in timesheets), 1)
 
-    # ---- Idle-time notifications (admin/master) ----
+    # ---- Idle-time summary (admin/master): alerts are sessions idle > 15 min ----
     idle_alerts = 0
+    idle_sessions = 0
+    idle_minutes = 0
     if not is_worker:
-        idle_alerts = db.query(IdleTimeLog).filter(IdleTimeLog.duration_seconds >= 900).count()
+        idle_logs = db.query(IdleTimeLog).all()
+        idle_sessions = len(idle_logs)
+        idle_minutes = round(sum((l.duration_seconds or 0) for l in idle_logs) / 60)
+        idle_alerts = sum(1 for l in idle_logs if (l.duration_seconds or 0) >= 900)
 
     return {
         "role": current_user.role,
@@ -167,6 +182,7 @@ def dashboard(current_user: User = Depends(get_current_user), db: Session = Depe
         "recentActivity": [n.to_dict() for n in recent],
         "timesheets": {"loggedHours": logged_hours, "count": len(timesheets)},
         "idleAlerts": idle_alerts,
+        "idle": {"alerts": idle_alerts, "sessions": idle_sessions, "minutes": idle_minutes},
     }
 
 

@@ -460,20 +460,25 @@ export default function Dashboard({ navigate }) {
               { label: isWorker ? 'Completed' : 'Unassigned', value: isWorker ? c.tasks.completed : c.tasks.unassigned },
             ]} />
         )}
-        {!isWorker && c.employees && (
-          isAdmin ? (
-            <EmployeesOverviewCard c={c} navigate={navigate} />
-          ) : (
-            <StatCard icon="ph-users" color="#10b981" title="Employee Overview"
-              cta="View" onClick={() => navigate('employees')}
-              stats={[
-                { label: 'Total', value: c.employees.total },
-                { label: 'Active', value: c.employees.active, color: '#10b981' },
-                { label: 'Working', value: c.employees.working, color: '#3b82f6' },
-                { label: 'With Pending', value: c.employees.withPendingTasks, color: '#f59e0b' },
-              ]} />
-          )
-        )}
+        {isAdmin ? (
+          <StatCard icon="ph-timer" color="#ef4444" title="Idle-Time Alerts" cta="View"
+            onClick={() => navigate('idletime')}
+            stats={[
+              { label: 'Alerts (>15 min)', value: (data.idle?.alerts ?? data.idleAlerts ?? 0), color: '#ef4444' },
+              { label: 'Idle Sessions', value: data.idle?.sessions ?? 0 },
+              { label: 'Idle Minutes', value: data.idle?.minutes ?? 0, color: '#f59e0b' },
+              { label: 'Logged Hours', value: data.timesheets?.loggedHours ?? 0, color: '#3b82f6' },
+            ]} />
+        ) : (!isWorker && c.employees && (
+          <StatCard icon="ph-users" color="#10b981" title="Employee Overview"
+            cta="View" onClick={() => navigate('employees')}
+            stats={[
+              { label: 'Total', value: c.employees.total },
+              { label: 'Active', value: c.employees.active, color: '#10b981' },
+              { label: 'Working', value: c.employees.working, color: '#3b82f6' },
+              { label: 'With Pending', value: c.employees.withPendingTasks, color: '#f59e0b' },
+            ]} />
+        ))}
       </div>
 
       {/* Charts */}
