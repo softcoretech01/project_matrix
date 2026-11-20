@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { api, assetUrl } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import LinksPanel from '../components/LinksPanel';
@@ -264,17 +264,55 @@ function TaskForm({ task, projects, employees, categories = [], onClose, onSaved
   );
 }
 
+function fmtDateTime(d) {
+  if (!d) return '—';
+  const dt = new Date(d);
+  if (isNaN(dt)) return d;
+  return dt.toLocaleString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  });
+}
+
 function TaskDetail({ id, projects, employees, categories = [], onBack, onChanged }) {
   const { user } = useAuth();
   const [t, setT] = useState(null);
   const [loading, setLoading] = useState(true);
   const [comment, setComment] = useState('');
-  const [subtask, setSubtask] = useState('');
+  const [commentPage, setCommentPage] = useState(1);
+  const COMMENTS_PER_PAGE = 5;
   const [statusDraft, setStatusDraft] = useState('');
   const [remarkDraft, setRemarkDraft] = useState('');
+  const [selectedTs, setSelectedTs] = useState(null);
 
   const canEdit = user.role !== 'Worker';
   const isOwner = t && t.assignedTo === user.id;
+
+  const sortedComments = useMemo(() => {
+    if (!t?.comments) return [];
+    return [...t.comments].sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
+  }, [t?.comments]);
+
+  const totalCommentPages = Math.max(1, Math.ceil(sortedComments.length / COMMENTS_PER_PAGE));
+
+  const pagedComments = useMemo(() => {
+    const page = Math.min(commentPage, totalCommentPages);
+    const start = (page - 1) * COMMENTS_PER_PAGE;
+    return sortedComments.slice(start, start + COMMENTS_PER_PAGE);
+  }, [sortedComments, commentPage, totalCommentPages]);
+
+  const openTimesheetDetail = async (ts) => {
+    try {
+      const full = await api.get(`/timesheets/${ts.id}`);
+      setSelectedTs(full);
+    } catch {
+      setSelectedTs(ts);
+    }
+  };
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -337,16 +375,16 @@ function TaskDetail({ id, projects, employees, categories = [], onBack, onChange
   };
   const addComment = async () => {
     if (!comment.trim()) return;
-    try { await api.post(`/tasks/${id}/comments`, { text: comment }); setComment(''); load(); }
-    catch (e) { toast.error(e.message); }
+    try {
+      await api.post(`/tasks/${id}/comments`, { text: comment });
+      setComment('');
+      await load();
+      const newTotal = sortedComments.length + 1;
+      setCommentPage(Math.ceil(newTotal / COMMENTS_PER_PAGE));
+    } catch (e) {
+      toast.error(e.message);
+    }
   };
-  const addSubtask = async () => {
-    if (!subtask.trim()) return;
-    try { await api.post(`/tasks/${id}/subtasks`, { title: subtask }); setSubtask(''); load(); }
-    catch (e) { toast.error(e.message); }
-  };
-  const toggleSub = async (sid) => { try { await api.put(`/tasks/subtasks/${sid}/toggle`); load(); } catch (e) { toast.error(e.message); } };
-  const delSub = async (sid) => { try { await api.del(`/tasks/subtasks/${sid}`); load(); } catch (e) { toast.error(e.message); } };
   const uploadFile = async (e) => {
     const file = e.target.files[0]; if (!file) return;
     if (file.size > 10 * 1024 * 1024) {
@@ -362,24 +400,6 @@ function TaskDetail({ id, projects, employees, categories = [], onBack, onChange
   const eff = effectiveStatus(t);
   const leadsTask = !!(categories.find((c) => c.key === (t.category || 'general')) || {}).leadsUpload;
 
-  const attachmentsCard = (
-    <Card title={`Attachments (${t.attachments.length})`}>
-      {t.attachments.map((a) => (
-        <a key={a.id} href={assetUrl(a.url)} target="_blank" rel="noreferrer" download
-          style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', marginBottom: 6,
-            border: '1px solid var(--border-color,#e2e8f0)', borderRadius: 8, fontSize: '0.85rem',
-            textDecoration: 'none', color: 'var(--text,#0f172a)' }}>
-          <i className="ph ph-paperclip" style={{ color: '#64748b' }}></i>
-          <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.originalName || a.filename}</span>
-          <i className="ph ph-download-simple" style={{ color: '#94a3b8' }}></i>
-        </a>
-      ))}
-      <label className="btn btn-sm btn-secondary" style={{ marginTop: 8, cursor: 'pointer' }}>
-        <i className="ph ph-upload"></i> Upload<input type="file" hidden onChange={uploadFile} />
-      </label>
-    </Card>
-  );
-
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -394,19 +414,15 @@ function TaskDetail({ id, projects, employees, categories = [], onBack, onChange
             <div style={{ display: 'flex', gap: 8, margin: '8px 0' }}>
               <PriorityBadge priority={t.priority} /><StatusBadge status={eff} />
             </div>
-            <div style={{ margin: '10px 0' }}>
-              <div className="text-secondary" style={{ fontSize: '0.75rem', marginBottom: 2 }}>Description</div>
-              <p style={{ margin: 0, whiteSpace: 'pre-wrap' }}>
-                {t.description ? t.description : <span className="text-muted">No description provided.</span>}
-              </p>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12, marginTop: 12 }}>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 14, marginTop: 14 }}>
               <div><div className="text-secondary" style={{ fontSize: '0.75rem' }}>Assignee</div><strong>{t.assignedToName || '—'}</strong></div>
               <div><div className="text-secondary" style={{ fontSize: '0.75rem' }}>Reviewer</div><strong>{t.reviewerName || '—'}</strong></div>
               <div><div className="text-secondary" style={{ fontSize: '0.75rem' }}>Est. Hours</div><strong>{t.estimatedHours ?? '—'}</strong></div>
               <div><div className="text-secondary" style={{ fontSize: '0.75rem' }}>Start</div><strong>{fmtDate(t.startDate)}</strong></div>
               <div><div className="text-secondary" style={{ fontSize: '0.75rem' }}>Due</div><strong>{fmtDate(t.endDate)}</strong></div>
             </div>
+
             {(() => {
               const cat = categories.find((c) => c.key === (t.category || 'general'));
               if (!cat || cat.key === 'general') return null;
@@ -434,47 +450,206 @@ function TaskDetail({ id, projects, employees, categories = [], onBack, onChange
                 </div>
               );
             })()}
-          </Card>
 
-          {/* Lead contacts (Excel import) for categories that use it (e.g. Sales).
-              Attachments sit directly above the lead list for these tasks. */}
-          {leadsTask && (
-            <>
-              {attachmentsCard}
-              <LeadsPanel taskId={t.id} canEdit={canEdit || isOwner} />
-            </>
-          )}
-
-          {/* Subtasks */}
-          <Card title={`Subtasks (${t.subtasks.length})`}>
-            {t.subtasks.map((s) => (
-              <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '6px 0' }}>
-                <input type="checkbox" checked={s.isDone} onChange={() => toggleSub(s.id)} />
-                <span style={{ flex: 1, textDecoration: s.isDone ? 'line-through' : 'none', opacity: s.isDone ? 0.6 : 1 }}>{s.title}</span>
-                {canEdit && <button className="btn btn-sm" style={{ color: '#ef4444' }} onClick={() => delSub(s.id)}><i className="ph ph-x"></i></button>}
+            {/* Marked Area: Highlighted Description & Highlighted Attachments */}
+            <div style={{ marginTop: 18, display: 'flex', flexDirection: 'column', gap: 14 }}>
+              {/* Highlighted Description */}
+              <div style={{
+                padding: '14px 16px',
+                background: '#f8fafc',
+                border: '1px solid #e2e8f0',
+                borderLeft: '4px solid #10b981',
+                borderRadius: 8,
+                boxShadow: '0 1px 3px rgba(0,0,0,0.02)',
+              }}>
+                <div style={{
+                  fontSize: '0.72rem',
+                  fontWeight: 700,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.06em',
+                  color: '#059669',
+                  marginBottom: 6,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                }}>
+                  <i className="ph ph-notepad" style={{ fontSize: '0.95rem' }}></i>
+                  Description
+                </div>
+                <p style={{
+                  margin: 0,
+                  whiteSpace: 'pre-wrap',
+                  color: '#0f172a',
+                  fontSize: '0.92rem',
+                  lineHeight: 1.55,
+                  fontWeight: 500,
+                }}>
+                  {t.description ? t.description : <span className="text-muted" style={{ fontWeight: 400, fontStyle: 'italic' }}>No description provided.</span>}
+                </p>
               </div>
-            ))}
-            <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-              <input className="form-control" placeholder="Add a subtask…" value={subtask}
-                onChange={(e) => setSubtask(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && addSubtask()} />
-              <button className="btn btn-secondary" onClick={addSubtask}>Add</button>
+
+              {/* Highlighted Attachments Box */}
+              <div style={{
+                padding: '14px 16px',
+                background: '#f8fafc',
+                border: '1px solid #e2e8f0',
+                borderLeft: '4px solid #3b82f6',
+                borderRadius: 8,
+                boxShadow: '0 1px 3px rgba(0,0,0,0.02)',
+              }}>
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: 8,
+                }}>
+                  <div style={{
+                    fontSize: '0.72rem',
+                    fontWeight: 700,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.06em',
+                    color: '#2563eb',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6,
+                  }}>
+                    <i className="ph ph-paperclip" style={{ fontSize: '0.95rem' }}></i>
+                    Attachments ({t.attachments?.length || 0})
+                  </div>
+                  <label className="btn btn-sm btn-secondary" style={{ padding: '3px 10px', fontSize: '0.75rem', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                    <i className="ph ph-upload"></i> Upload<input type="file" hidden onChange={uploadFile} />
+                  </label>
+                </div>
+
+                {t.attachments && t.attachments.length > 0 ? (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 4 }}>
+                    {t.attachments.map((a) => (
+                      <a key={a.id} href={assetUrl(a.url)} target="_blank" rel="noreferrer" download
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 7,
+                          padding: '6px 12px',
+                          background: '#ffffff',
+                          border: '1.5px solid #cbd5e1',
+                          borderRadius: 7,
+                          fontSize: '0.82rem',
+                          color: '#0f172a',
+                          textDecoration: 'none',
+                          fontWeight: 600,
+                          boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
+                          transition: 'border-color 0.15s ease, box-shadow 0.15s ease',
+                        }}>
+                        <i className="ph ph-file-text" style={{ color: '#2563eb', fontSize: '1rem' }}></i>
+                        <span>{a.originalName || a.filename}</span>
+                        <i className="ph ph-download-simple" style={{ color: '#64748b', marginLeft: 4 }}></i>
+                      </a>
+                    ))}
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#64748b', fontSize: '0.82rem' }}>
+                    <i className="ph ph-info" style={{ color: '#94a3b8' }}></i>
+                    <span>No attachments uploaded yet. Click Upload to attach files (up to 10MB).</span>
+                  </div>
+                )}
+              </div>
             </div>
           </Card>
 
+          {/* Lead contacts (Excel import) for categories that use it (e.g. Sales) */}
+          {leadsTask && <LeadsPanel taskId={t.id} canEdit={canEdit || isOwner} />}
+
           {/* Comments */}
-          <Card title={`Comments (${t.comments.length})`}>
-            {t.comments.map((c) => (
-              <div key={c.id} style={{ padding: '8px 0', borderBottom: '1px solid var(--border,#334155)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <strong>{c.userName}</strong><span className="text-muted" style={{ fontSize: '0.75rem' }}>{c.createdAt}</span>
+          <Card title={`Comments (${sortedComments.length})`}>
+            {sortedComments.length === 0 ? (
+              <p className="text-secondary" style={{ fontSize: '0.85rem', margin: '4px 0 14px' }}>
+                No comments yet. Write a message below to start the conversation.
+              </p>
+            ) : (
+              <>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {pagedComments.map((c) => (
+                    <div
+                      key={c.id}
+                      style={{
+                        padding: '10px 14px',
+                        background: '#f8fafc',
+                        border: '1px solid #e2e8f0',
+                        borderRadius: 8,
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <i className="ph ph-user-circle" style={{ color: '#059669', fontSize: '1.15rem' }}></i>
+                          <strong style={{ fontSize: '0.86rem', color: '#0f172a' }}>{c.userName}</strong>
+                        </div>
+                        <span className="text-muted" style={{ fontSize: '0.74rem' }}>{fmtDateTime(c.createdAt)}</span>
+                      </div>
+                      <div style={{ color: '#334155', fontSize: '0.88rem', lineHeight: 1.5, whiteSpace: 'pre-wrap', paddingLeft: 24 }}>
+                        {c.text}
+                      </div>
+                    </div>
+                  ))}
                 </div>
-                <div className="text-secondary">{c.text}</div>
-              </div>
-            ))}
-            <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
-              <input className="form-control" placeholder="Write a comment…" value={comment}
-                onChange={(e) => setComment(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && addComment()} />
-              <button className="btn btn-primary" onClick={addComment}>Post</button>
+
+                {/* Page-wise Pagination Controls */}
+                {totalCommentPages > 1 && (
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    padding: '10px 2px 4px',
+                    marginTop: 10,
+                    borderTop: '1px solid #e2e8f0',
+                    fontSize: '0.8rem',
+                  }}>
+                    <span className="text-secondary" style={{ fontSize: '0.78rem' }}>
+                      Showing {(Math.min(commentPage, totalCommentPages) - 1) * COMMENTS_PER_PAGE + 1}–{Math.min(Math.min(commentPage, totalCommentPages) * COMMENTS_PER_PAGE, sortedComments.length)} of {sortedComments.length}
+                    </span>
+                    <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                      <button
+                        type="button"
+                        className="btn btn-secondary btn-sm"
+                        disabled={commentPage <= 1}
+                        onClick={() => setCommentPage((p) => Math.max(1, p - 1))}
+                        style={{ padding: '3px 8px', fontSize: '0.75rem' }}
+                      >
+                        <i className="ph ph-caret-left"></i> Prev
+                      </button>
+                      <span style={{ fontWeight: 600, color: '#334155', padding: '0 4px', fontSize: '0.78rem' }}>
+                        Page {Math.min(commentPage, totalCommentPages)} / {totalCommentPages}
+                      </span>
+                      <button
+                        type="button"
+                        className="btn btn-secondary btn-sm"
+                        disabled={commentPage >= totalCommentPages}
+                        onClick={() => setCommentPage((p) => Math.min(totalCommentPages, p + 1))}
+                        style={{ padding: '3px 8px', fontSize: '0.75rem' }}
+                      >
+                        Next <i className="ph ph-caret-right"></i>
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* Downside: Latest Reply Input Box */}
+            <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+              <input
+                className="form-control"
+                placeholder="Write a comment or reply…"
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && addComment()}
+              />
+              <button
+                className="btn btn-primary"
+                onClick={addComment}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '0 16px', whiteSpace: 'nowrap' }}
+              >
+                <i className="ph ph-paper-plane-right"></i> Post
+              </button>
             </div>
           </Card>
         </div>
@@ -511,23 +686,64 @@ function TaskDetail({ id, projects, employees, categories = [], onBack, onChange
           <Card title={`Timesheets (${t.timesheets.length})`}>
             {t.timesheets.length === 0 ? <p className="text-secondary" style={{ fontSize: '0.85rem' }}>No timesheets logged.</p> :
               t.timesheets.map((ts) => (
-                <div key={ts.id} style={{ padding: '6px 0', borderBottom: '1px solid var(--border,#334155)', fontSize: '0.85rem' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <strong>{ts.employeeName}</strong><span>{ts.totalHours}h</span>
+                <div key={ts.id} style={{ padding: '8px 0', borderBottom: '1px solid var(--border-color, #e2e8f0)', fontSize: '0.85rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <strong>{ts.employeeName}</strong>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{ fontWeight: 600 }}>{ts.totalHours}h</span>
+                      <button
+                        type="button"
+                        className="btn btn-sm"
+                        style={{
+                          padding: '2px 8px',
+                          background: '#eff6ff',
+                          color: '#2563eb',
+                          border: '1px solid #bfdbfe',
+                          borderRadius: 6,
+                          cursor: 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 4,
+                          fontSize: '0.74rem',
+                          fontWeight: 500,
+                        }}
+                        title="View Remarks & Timesheet Details"
+                        onClick={() => openTimesheetDetail(ts)}
+                      >
+                        <i className="ph ph-eye"></i> View
+                      </button>
+                    </div>
                   </div>
-                  <div className="text-muted">{ts.workDate} · {ts.fromTime}–{ts.toTime}</div>
+                  <div className="text-muted" style={{ fontSize: '0.78rem', marginTop: 2 }}>
+                    {ts.workDate} · {ts.fromTime}–{ts.toTime}
+                  </div>
+                  {ts.remarks && (
+                    <div style={{
+                      fontSize: '0.76rem',
+                      color: '#475569',
+                      marginTop: 4,
+                      fontStyle: 'italic',
+                      background: '#f8fafc',
+                      padding: '3px 6px',
+                      borderRadius: 4,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}>
+                      <i className="ph ph-chat-text" style={{ marginRight: 4, color: '#059669' }}></i>
+                      {ts.remarks}
+                    </div>
+                  )}
                 </div>
               ))}
           </Card>
-
-          {!leadsTask && attachmentsCard}
 
           <LinksPanel parentType="task" parentId={t.id} />
 
           <Card title="Activity / Updates">
             {t.updates.length === 0 ? <p className="text-secondary" style={{ fontSize: '0.85rem' }}>No updates yet.</p> :
               t.updates.map((u) => (
-                <div key={u.id} style={{ fontSize: '0.82rem', padding: '6px 0', borderBottom: '1px solid var(--border,#334155)' }}>
+                <div key={u.id} style={{ fontSize: '0.82rem', padding: '6px 0', borderBottom: '1px solid var(--border-color, #e2e8f0)' }}>
                   <div><strong>{u.userName}</strong> <span className="text-secondary">{u.updateType}</span>
                     {u.oldValue && <> {u.oldValue} → <strong>{u.newValue}</strong></>}</div>
                   {u.remark && <div className="text-muted">“{u.remark}”</div>}
@@ -537,6 +753,100 @@ function TaskDetail({ id, projects, employees, categories = [], onBack, onChange
           </Card>
         </div>
       </div>
+
+      {selectedTs && (
+        <Modal
+          title={`Timesheet Details · ${selectedTs.code || selectedTs.id}`}
+          onClose={() => setSelectedTs(null)}
+          size="md"
+          footer={<button className="btn btn-secondary" onClick={() => setSelectedTs(null)}>Close</button>}
+        >
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12, marginBottom: 14 }}>
+            <div>
+              <div className="text-secondary" style={{ fontSize: '0.75rem' }}>Employee</div>
+              <strong style={{ fontSize: '0.92rem' }}>{selectedTs.employeeName || '—'}</strong>
+            </div>
+            <div>
+              <div className="text-secondary" style={{ fontSize: '0.75rem' }}>Status</div>
+              <StatusBadge status={selectedTs.status || 'Submitted'} />
+            </div>
+            <div>
+              <div className="text-secondary" style={{ fontSize: '0.75rem' }}>Work Date</div>
+              <strong>{fmtDate(selectedTs.workDate)}</strong>
+            </div>
+            <div>
+              <div className="text-secondary" style={{ fontSize: '0.75rem' }}>Logged Hours</div>
+              <strong>{selectedTs.totalHours}h <span className="text-muted" style={{ fontWeight: 400, fontSize: '0.8rem' }}>({selectedTs.fromTime} – {selectedTs.toTime})</span></strong>
+            </div>
+            {selectedTs.createdAt && (
+              <div style={{ gridColumn: '1 / -1' }}>
+                <div className="text-secondary" style={{ fontSize: '0.75rem' }}>Updated / Logged At</div>
+                <span style={{ fontSize: '0.82rem', color: '#475569' }}>{fmtDate(selectedTs.createdAt)}</span>
+              </div>
+            )}
+          </div>
+
+          {/* Highlighted Remarks */}
+          <div style={{
+            padding: '12px 14px',
+            background: '#f8fafc',
+            border: '1px solid #e2e8f0',
+            borderLeft: '4px solid #10b981',
+            borderRadius: 8,
+            marginBottom: 14,
+          }}>
+            <div style={{
+              fontSize: '0.72rem',
+              fontWeight: 700,
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em',
+              color: '#059669',
+              marginBottom: 6,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+            }}>
+              <i className="ph ph-chat-text" style={{ fontSize: '0.9rem' }}></i>
+              Employee Remarks
+            </div>
+            <p style={{ margin: 0, whiteSpace: 'pre-wrap', color: '#0f172a', fontSize: '0.88rem', lineHeight: 1.5 }}>
+              {selectedTs.remarks ? selectedTs.remarks : <span className="text-muted" style={{ fontStyle: 'italic' }}>No remarks provided by employee.</span>}
+            </p>
+          </div>
+
+          {/* Images if any */}
+          {selectedTs.images && selectedTs.images.length > 0 && (
+            <div style={{ marginBottom: 12 }}>
+              <div className="text-secondary" style={{ fontSize: '0.75rem', marginBottom: 6 }}>Screen / Images ({selectedTs.images.length})</div>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                {selectedTs.images.map((im) => (
+                  <a key={im.id} href={assetUrl(im.url)} target="_blank" rel="noreferrer">
+                    <img src={assetUrl(im.url)} alt="" style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 6, border: '1px solid #e2e8f0' }} />
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Files if any */}
+          {selectedTs.files && selectedTs.files.length > 0 && (
+            <div>
+              <div className="text-secondary" style={{ fontSize: '0.75rem', marginBottom: 6 }}>Attachments ({selectedTs.files.length})</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {selectedTs.files.map((fl) => (
+                  <a key={fl.id} href={assetUrl(fl.url)} target="_blank" rel="noreferrer" download
+                    style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px',
+                      border: '1px solid #e2e8f0', borderRadius: 6, fontSize: '0.82rem', textDecoration: 'none', color: '#0f172a', background: '#f8fafc' }}>
+                    <i className="ph ph-file" style={{ color: '#059669' }}></i>
+                    <span style={{ flex: 1 }}>{fl.originalName || fl.filename}</span>
+                    <i className="ph ph-download-simple" style={{ color: '#64748b' }}></i>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+        </Modal>
+      )}
     </div>
   );
 }
