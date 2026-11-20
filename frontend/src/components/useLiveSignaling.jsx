@@ -35,6 +35,7 @@ export function LiveSignalingProvider({ children }) {
   const [session, setSession] = useState(null);     // active session (admin or worker)
   const [remoteStream, setRemoteStream] = useState(null);
   const [localStream, setLocalStream] = useState(null);
+  const [micOn, setMicOn] = useState(true);         // worker: is the shared mic live?
 
   const setSess = (s) => { sessionRef.current = s; setSession(s); };
 
@@ -51,8 +52,20 @@ export function LiveSignalingProvider({ children }) {
     pendingIce.current = [];
     setLocalStream(null);
     setRemoteStream(null);
+    setMicOn(true);
     setSess(null);
   }, [send]);
+
+  // Worker: mute/unmute the shared microphone (toggles the audio track locally; no renegotiation).
+  const toggleMic = useCallback(() => {
+    const stream = localStreamRef.current;
+    if (!stream) return;
+    const tracks = stream.getAudioTracks();
+    if (!tracks.length) return;
+    const next = !tracks[0].enabled;
+    tracks.forEach((t) => { t.enabled = next; });
+    setMicOn(next);
+  }, []);
 
   const flushIce = useCallback(async () => {
     const pc = pcRef.current;
@@ -205,8 +218,8 @@ export function LiveSignalingProvider({ children }) {
   }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const value = {
-    incoming, session, remoteStream, localStream,
-    requestView, acceptIncoming, rejectIncoming, endSession,
+    incoming, session, remoteStream, localStream, micOn,
+    requestView, acceptIncoming, rejectIncoming, endSession, toggleMic,
     isAdmin: user && (user.role === 'Admin' || user.role === 'Master'),
   };
   return <LiveCtx.Provider value={value}>{children}</LiveCtx.Provider>;

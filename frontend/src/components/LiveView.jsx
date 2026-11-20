@@ -19,7 +19,7 @@ export default function LiveView() {
   const workerLive = live?.session?.role === 'worker';
   useEffect(() => { if (!workerLive) setMinimized(false); }, [workerLive]);
   if (!live) return null;
-  const { incoming, session, remoteStream, localStream, acceptIncoming, rejectIncoming, endSession } = live;
+  const { incoming, session, remoteStream, localStream, micOn, acceptIncoming, rejectIncoming, endSession, toggleMic } = live;
 
   return (
     <>
@@ -51,6 +51,10 @@ export default function LiveView() {
           }}>
             <span style={{ width: 9, height: 9, borderRadius: '50%', background: '#ef4444', animation: 'pulse 1s infinite' }}></span>
             <span style={{ fontSize: '0.74rem', fontWeight: 700 }}>LIVE</span>
+            <button title={micOn ? 'Mute mic' : 'Unmute mic'} onClick={toggleMic}
+              style={{ background: micOn ? 'rgba(255,255,255,.12)' : '#ef4444', border: 'none', color: '#fff', borderRadius: 14, width: 26, height: 26, cursor: 'pointer' }}>
+              <i className={`ph ${micOn ? 'ph-microphone' : 'ph-microphone-slash'}`}></i>
+            </button>
             <button title="Show preview" onClick={() => setMinimized(false)}
               style={{ background: 'rgba(255,255,255,.12)', border: 'none', color: '#fff', borderRadius: 14, width: 26, height: 26, cursor: 'pointer' }}>
               <i className="ph ph-arrows-out-simple"></i>
@@ -81,11 +85,17 @@ export default function LiveView() {
             </div>
             <div style={{ padding: '8px 10px' }}>
               <div style={{ fontSize: '0.78rem', lineHeight: 1.3 }}>
-                <strong>{session.peerName}</strong> is viewing your camera &amp; mic.
+                <strong>{session.peerName}</strong> is viewing your camera{micOn ? ' & mic' : ''}.
+                {!micOn && <span style={{ color: '#fca5a5' }}> Mic muted.</span>}
               </div>
-              <button className="btn btn-sm btn-danger" style={{ width: '100%', marginTop: 8 }} onClick={endSession}>
-                <i className="ph ph-stop"></i> Stop sharing
-              </button>
+              <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
+                <button className={`btn btn-sm ${micOn ? 'btn-secondary' : 'btn-danger'}`} style={{ flex: 1 }} onClick={toggleMic}>
+                  <i className={`ph ${micOn ? 'ph-microphone' : 'ph-microphone-slash'}`}></i> {micOn ? 'Mute' : 'Unmute'}
+                </button>
+                <button className="btn btn-sm btn-danger" style={{ flex: 1 }} onClick={endSession}>
+                  <i className="ph ph-stop"></i> Stop
+                </button>
+              </div>
             </div>
           </div>
         )
