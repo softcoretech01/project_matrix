@@ -1,79 +1,81 @@
 // src/context/AuthContext.jsx
-import React, { createContext, useState, useEffect, useContext } from 'react';
+import React, { createContext, useState, useEffect, useContext, useCallback } from 'react';
+import { api, setToken, getToken, API_BASE_URL as API_BASE } from '../services/api';
 
 const AuthContext = createContext();
+export const API_BASE_URL = API_BASE;
 
-export const API_BASE_URL = 'http://localhost:5001/api';
+const SESSION_KEY = 'projectmatrix_session';
+const REMEMBER_KEY = 'projectmatrix_remembered_email';
+
+function safeGet(key) {
+  try { return localStorage.getItem(key); } catch (_) { return null; }
+}
+function safeSet(key, val) {
+  try { if (val === null) localStorage.removeItem(key); else localStorage.setItem(key, val); } catch (_) {}
+}
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
-  const [theme, setTheme] = useState(localStorage.getItem('pm_theme') || 'dark');
+  const theme = 'light';                 // light theme only (dark mode removed)
   const [loading, setLoading] = useState(true);
 
+  // Rehydrate session (user object + token) on load
   useEffect(() => {
-    // Check local storage session on load
-    const savedSession = localStorage.getItem('projectmatrix_session');
-    if (savedSession) {
-      try {
-        setUser(JSON.parse(savedSession));
-      } catch (e) {
-        localStorage.removeItem('projectmatrix_session');
-      }
+    const saved = safeGet(SESSION_KEY);
+    const token = getToken();
+    if (saved && token) {
+      try { setUser(JSON.parse(saved)); } catch (_) { safeSet(SESSION_KEY, null); }
+    } else {
+      // token and session must both exist
+      safeSet(SESSION_KEY, null);
+      setToken(null);
     }
     setLoading(false);
   }, []);
 
+  // Force light theme
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem('pm_theme', theme);
-  }, [theme]);
+    document.documentElement.setAttribute('data-theme', 'light');
+  }, []);
 
-  const login = async (email, password, rememberMe) => {
-    const res = await fetch(`${API_BASE_URL}/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password })
-    });
-
-    if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.error || 'Login failed.');
-    }
-
-    const userData = await res.json();
-    setUser(userData);
-    localStorage.setItem('projectmatrix_session', JSON.stringify(userData));
-
-    if (rememberMe) {
-      localStorage.setItem('projectmatrix_remembered_email', email);
-    } else {
-      localStorage.removeItem('projectmatrix_remembered_email');
-    }
-    return userData;
-  };
-
-  const logout = () => {
+  const logout = useCallback(() => {
     setUser(null);
-    localStorage.removeItem('projectmatrix_session');
-  };
+    setToken(null);
+    safeSet(SESSION_KEY, null);
+  }, []);
 
+  // Auto-logout when any API call reports 401
+  useEffect(() => {
+    const handler = () => logout();
+    window.addEventListener('pm:unauthorized', handler);
+    return () => window.removeEventListener('pm:unauthorized', handler);
+  }, [logout]);
+
+  const login = async (email, password, rememberMe, portal) => {
+    const data = await api.post('/auth/login', { email, password, portal });
+    setToken(data.token);
+    const u = { ...data };
+    delete u.token;
+    setUser(u);
+    safeSet(SESSION_KEY, JSON.stringify(u));
+    safeSet(REMEMBER_KEY, rememberMe ? email : null);
+    return u;
+  };
 
   const changePassword = async (oldPassword, newPassword) => {
-    // Check old password on client side or backend, we update directly
-    const res = await fetch(`${API_BASE_URL}/auth/password`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-user-id': user.id },
-      body: JSON.stringify({ employeeId: user.id, password: newPassword })
-    });
-
-    if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.error || 'Failed to update password.');
-    }
+    await api.post('/auth/change-password', { oldPassword, newPassword });
   };
 
-  const toggleTheme = () => {
-    setTheme(prev => prev === 'dark' ? 'light' : 'dark');
+  const forgotPassword = async (email) => api.post('/auth/forgot-password', { email });
+  const resetPassword = async (token, newPassword) =>
+    api.post('/auth/reset-password', { token, newPassword });
+
+  const refreshMe = async () => {
+    const me = await api.get('/auth/me');
+    setUser(me);
+    safeSet(SESSION_KEY, JSON.stringify(me));
+    return me;
   };
 
   const value = {
@@ -83,8 +85,10 @@ export function AuthProvider({ children }) {
     login,
     logout,
     changePassword,
-    toggleTheme,
-    getRememberedEmail: () => localStorage.getItem('projectmatrix_remembered_email') || ''
+    forgotPassword,
+    resetPassword,
+    refreshMe,
+    getRememberedEmail: () => safeGet(REMEMBER_KEY) || '',
   };
 
   return (

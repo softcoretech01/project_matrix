@@ -1,37 +1,66 @@
 # backend/app/core/deps.py
+"""Authentication & role-based-access dependencies (real JWT, enforced)."""
+from typing import List, Optional
 from fastapi import Depends, HTTPException, Header, status
 from sqlalchemy.orm import Session
-from typing import Optional, List
-from app.db.session import get_db
-from app.models.user import User
+
+from backend.app.db.database import get_db
+from backend.app.models.models import User
+from backend.app.core.security import decode_access_token
+
 
 def get_current_user(
-    x_user_id: Optional[str] = Header(None, alias="x-user-id"),
     authorization: Optional[str] = Header(None, alias="Authorization"),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+) -> User:
+    if not authorization or not authorization.lower().startswith("bearer "):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    token = authorization.split(" ", 1)[1].strip()
+    payload = decode_access_token(token)
+    if not payload or not payload.get("sub"):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired token",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    user = db.query(User).filter(User.id == payload["sub"]).first()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User no longer exists")
+    if (user.status or "Active").lower() != "active":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Account is not active")
+    return user
+
+
+def get_optional_user(
+    authorization: Optional[str] = Header(None, alias="Authorization"),
+    db: Session = Depends(get_db),
 ) -> Optional[User]:
-    user_id = None
-    if x_user_id:
-        user_id = x_user_id
-    elif authorization and authorization.startswith("Bearer "):
-        # Token can carry user ID directly or email
-        user_id = authorization.replace("Bearer ", "").strip()
+    """Like get_current_user but returns None instead of raising (for public-ish reads)."""
+    if not authorization or not authorization.lower().startswith("bearer "):
+        return None
+    payload = decode_access_token(authorization.split(" ", 1)[1].strip())
+    if not payload or not payload.get("sub"):
+        return None
+    return db.query(User).filter(User.id == payload["sub"]).first()
 
-    if user_id:
-        user = db.query(User).filter((User.id == user_id) | (User.email == user_id)).first()
-        if user:
-            return user
-
-    # Fallback to default admin if in development mode
-    admin = db.query(User).filter(User.role == "Admin").first()
-    return admin
 
 def require_roles(allowed_roles: List[str]):
-    def role_checker(current_user: User = Depends(get_current_user)):
-        if not current_user:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication required")
-        if current_user.role not in allowed_roles and current_user.role != "Admin":
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied: Insufficient permissions")
+    """Dependency factory. Admin always allowed."""
+    def role_checker(current_user: User = Depends(get_current_user)) -> User:
+        if current_user.role != "Admin" and current_user.role not in allowed_roles:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied: insufficient permissions",
+            )
         return current_user
     return role_checker
 
+
+# Convenience dependencies
+require_admin = require_roles(["Admin"])
+require_admin_or_master = require_roles(["Admin", "Master"])
+require_any = require_roles(["Admin", "Master", "Worker"])

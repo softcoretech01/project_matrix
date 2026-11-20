@@ -1,124 +1,95 @@
-import React, { useState } from 'react';
-import { Bar, Doughnut } from 'react-chartjs-2';
-import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement } from 'chart.js';
+import React, { useEffect, useState } from 'react';
+import { Bar, Line } from 'react-chartjs-2';
+import {
+  Chart as ChartJS, CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Tooltip, Legend,
+} from 'chart.js';
+import { api } from '../services/api';
+import { Spinner, Card, EmptyState, ExportButton, toast } from '../components/ui';
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement);
+ChartJS.register(CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Tooltip, Legend);
+
+const OPTS = {
+  responsive: true, maintainAspectRatio: false,
+  plugins: { legend: { labels: { color: '#475569' } } },
+  scales: { x: { ticks: { color: '#475569' }, grid: { display: false } },
+            y: { ticks: { color: '#475569' }, grid: { color: 'rgba(100,116,139,.1)' }, beginAtZero: true } },
+};
 
 export default function Reports() {
-  const [activeReport, setActiveReport] = useState('tasks');
-  const [search, setSearch] = useState('');
+  const [effort, setEffort] = useState([]);
+  const [util, setUtil] = useState([]);
+  const [prod, setProd] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const reportTypes = [
-    { key: 'tasks', label: 'Task Status Report', icon: '📝' },
-    { key: 'projects', label: 'Project Progress', icon: '📁' },
-    { key: 'productivity', label: 'Team Productivity', icon: '👥' }
-  ];
+  useEffect(() => { (async () => {
+    try {
+      const [e, u, p] = await Promise.all([
+        api.get('/reports/effort'), api.get('/reports/utilization'), api.get('/reports/productivity'),
+      ]);
+      setEffort(e); setUtil(u); setProd(p);
+    } catch (err) { toast.error(err.message); }
+    finally { setLoading(false); }
+  })(); }, []);
 
-  const handleExport = () => {
-    alert('CSV Export file generated! Initiating file download (Mock).');
+  if (loading) return <Spinner label="Building reports…" />;
+
+  const effortChart = {
+    labels: effort.map((e) => e.projectName),
+    datasets: [
+      { label: 'Planned Hours', data: effort.map((e) => e.plannedHours), backgroundColor: '#059669', borderRadius: 5 },
+      { label: 'Actual Hours', data: effort.map((e) => e.actualHours), backgroundColor: '#eab308', borderRadius: 5 },
+    ],
   };
-
-  const chartOptions = {
-    responsive: true,
-    maintainAspectRatio: false
-  };
-
-  const renderChart = () => {
-    if (activeReport === 'tasks') {
-      return (
-        <Doughnut
-          data={{
-            labels: ['Open', 'In Progress', 'In Review', 'Completed'],
-            datasets: [{ data: [12, 19, 3, 15], backgroundColor: ['#3b82f6', '#f59e0b', '#8b5cf6', '#10b981'] }]
-          }}
-          options={chartOptions}
-        />
-      );
-    }
-    if (activeReport === 'projects') {
-      return (
-        <Bar
-          data={{
-            labels: ['Project Alpha', 'Project Beta', 'Project Gamma'],
-            datasets: [{ label: 'Completion %', data: [80, 45, 100], backgroundColor: '#6366f1', borderRadius: 4 }]
-          }}
-          options={{ ...chartOptions, scales: { y: { beginAtZero: true, max: 100 } } }}
-        />
-      );
-    }
-    if (activeReport === 'productivity') {
-      return (
-        <Bar
-          data={{
-            labels: ['Alice', 'Bob', 'Charlie'],
-            datasets: [{ label: 'Tasks Completed', data: [15, 8, 22], backgroundColor: '#10b981', borderRadius: 4 }]
-          }}
-          options={chartOptions}
-        />
-      );
-    }
-    return null;
+  const prodChart = {
+    labels: prod.map((p) => p.period),
+    datasets: [{ label: 'Completed Tasks', data: prod.map((p) => p.completedTasks),
+      borderColor: '#059669', backgroundColor: 'rgba(5,150,105,.15)', tension: 0.3, fill: true }],
   };
 
   return (
-    <div>
-      <div style={{ display: 'flex', gap: '10px', marginBottom: '24px', flexWrap: 'wrap' }}>
-        {reportTypes.map(rpt => (
-          <button
-            key={rpt.key}
-            className={`btn ${activeReport === rpt.key ? 'btn-primary' : 'btn-secondary'} btn-sm`}
-            onClick={() => setActiveReport(rpt.key)}
-          >
-            {rpt.icon} {rpt.label}
-          </button>
-        ))}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+        <ExportButton path="/exports/projects" filename="Projects_Report.xlsx" label="Projects" />
+        <ExportButton path="/exports/tasks" filename="Task_Report.xlsx" label="Tasks" />
+        <ExportButton path="/exports/timesheets" filename="Timesheet_Report.xlsx" label="Timesheets" />
+        <ExportButton path="/exports/performance" filename="Performance_Report.xlsx" label="Performance" />
       </div>
 
-      <div className="page-actions-bar">
-        <div className="search-input-wrapper">
-          <input
-            type="text"
-            className="form-control"
-            placeholder="Search report..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-          />
-        </div>
-        <button className="btn btn-secondary btn-sm" onClick={handleExport}>
-          Export to CSV
-        </button>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+        <Card title="Project Effort — Planned vs Actual Hours">
+          <div style={{ height: 280 }}>{effort.length ? <Bar data={effortChart} options={OPTS} /> : <EmptyState icon="ph-chart-bar" title="No data" />}</div>
+        </Card>
+        <Card title="Productivity Trend">
+          <div style={{ height: 280 }}>{prod.length ? <Line data={prodChart} options={OPTS} /> : <EmptyState icon="ph-chart-line" title="No completed tasks" />}</div>
+        </Card>
       </div>
 
-      <div className="grid-cols-3" style={{ gridTemplateColumns: '2fr 1fr', gap: '24px' }}>
-        <div className="card" style={{ overflow: 'visible' }}>
-          <h3>Report Data</h3>
-          <div className="table-responsive mt-4">
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>Category</th>
-                  <th>Metric</th>
-                  <th>Value</th>
+      <Card title="Employee Utilization">
+        <div className="table-responsive">
+          <table className="table">
+            <thead>
+              <tr><th>Employee</th><th>Role</th><th>Total Tasks</th><th>In Progress</th><th>Completed</th><th>Open</th><th>Logged Hrs</th><th>Utilization</th></tr>
+            </thead>
+            <tbody>
+              {util.map((u, i) => (
+                <tr key={i}>
+                  <td><strong>{u.employeeName}</strong></td><td>{u.role}</td>
+                  <td>{u.totalTasks}</td><td>{u.inProgressTasks}</td><td>{u.completedTasks}</td><td>{u.openTasks}</td>
+                  <td>{u.loggedHours}</td>
+                  <td>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <div style={{ flex: 1, height: 6, borderRadius: 3, background: 'var(--border-color,#e2e8f0)', minWidth: 60 }}>
+                        <div style={{ width: `${u.utilizationRate}%`, height: '100%', borderRadius: 3, background: '#059669' }}></div>
+                      </div>
+                      <span style={{ fontSize: '0.8rem' }}>{u.utilizationRate}%</span>
+                    </div>
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>Sample Data</td>
-                  <td>Sample Metric</td>
-                  <td>100</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+              ))}
+            </tbody>
+          </table>
         </div>
-
-        <div className="card" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-          <h3>Visualization</h3>
-          <div className="chart-container mt-4" style={{ position: 'relative', width: '100%', height: '300px' }}>
-            {renderChart()}
-          </div>
-        </div>
-      </div>
+      </Card>
     </div>
   );
 }

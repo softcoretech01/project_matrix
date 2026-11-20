@@ -1,15 +1,24 @@
 # backend/app/routers/tasks.py
-from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.orm import Session
-from pydantic import BaseModel
-from typing import Optional, List
+import json
 import random
 from datetime import datetime
+from typing import Optional
+
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+from sqlalchemy.orm import Session
+from pydantic import BaseModel
 
 from backend.app.db.database import get_db
-from backend.app.models.models import Task, Subtask, Comment, Notification
+from backend.app.models.models import (
+    Task, Subtask, Comment, Notification, TaskUpdate as TaskUpdateLog, TaskAttachment, User, Project,
+)
+from backend.app.core.deps import get_current_user
+from backend.app.core.storage import save_upload, delete_file, IMAGE_EXTS, DOC_EXTS
+from backend.app.core.work_categories import DONE_STATUSES
 
 router = APIRouter(prefix="/api/tasks", tags=["tasks"])
+DONE = DONE_STATUSES
+
 
 class TaskCreate(BaseModel):
     name: str
@@ -18,16 +27,19 @@ class TaskCreate(BaseModel):
     sectionId: Optional[str] = ""
     moduleId: Optional[str] = ""
     priority: Optional[str] = "Medium"
-    status: Optional[str] = "Open"
+    status: Optional[str] = "To Do"
     progress: Optional[int] = 0
     assignedTo: Optional[str] = ""
     reviewerId: Optional[str] = ""
     startDate: Optional[str] = ""
     endDate: Optional[str] = ""
+    estimatedHours: Optional[float] = None
     label: Optional[str] = ""
-    parentTaskId: Optional[str] = ""
+    category: Optional[str] = "general"
+    customData: Optional[dict] = None
 
-class TaskUpdate(BaseModel):
+
+class TaskPatch(BaseModel):
     name: Optional[str] = None
     description: Optional[str] = None
     projectId: Optional[str] = None
@@ -40,266 +52,325 @@ class TaskUpdate(BaseModel):
     reviewerId: Optional[str] = None
     startDate: Optional[str] = None
     endDate: Optional[str] = None
+    estimatedHours: Optional[float] = None
     label: Optional[str] = None
-    parentTaskId: Optional[str] = None
+    category: Optional[str] = None
+    customData: Optional[dict] = None
+    remark: Optional[str] = None     # optional note attached to the update
+
 
 class SubtaskCreate(BaseModel):
     title: str
     isDone: Optional[bool] = False
     sortOrder: Optional[int] = 0
 
+
 class CommentCreate(BaseModel):
-    userId: str
-    userName: str
     text: str
 
-@router.get("")
-def get_tasks(
-    status: Optional[str] = None,
-    projectId: Optional[str] = None,
-    assignedTo: Optional[str] = None,
-    db: Session = Depends(get_db)
-):
-    query = db.query(Task)
-    if status and status != "All":
-        query = query.filter(Task.status == status)
-    if projectId:
-        query = query.filter(Task.project_id == projectId)
-    if assignedTo:
-        query = query.filter(Task.assigned_to == assignedTo)
 
-    tasks = query.order_by(Task.created_at.desc()).all()
-    results = []
+def _log(db, task, user, utype, old, new, remark=None):
+    db.add(TaskUpdateLog(task_id=task.id, user_id=user.id, user_name=user.name,
+                         update_type=utype, old_value=str(old) if old is not None else None,
+                         new_value=str(new) if new is not None else None, remark=remark))
+
+
+def _supervisor_ids(db, task):
+    """Everyone who should hear about activity on a task: its creator, its
+    reviewer, and all Admins (so the Admin is always notified)."""
+    ids = {task.created_by, task.reviewer_id}
+    ids.update(uid for (uid,) in db.query(User.id).filter(User.role == "Admin").all())
+    return ids
+
+
+def _notify(db, recipient_ids, actor, title, message, task_id):
+    """Create one notification per distinct recipient, skipping the actor."""
+    seen = set()
+    for uid in recipient_ids:
+        if not uid or uid == actor.id or uid in seen:
+            continue
+        seen.add(uid)
+        db.add(Notification(user_id=uid, type="task", title=title, message=message, task_id=task_id))
+
+
+@router.get("")
+def get_tasks(status: Optional[str] = None, projectId: Optional[str] = None,
+              assignedTo: Optional[str] = None, search: Optional[str] = None,
+              priority: Optional[str] = None, category: Optional[str] = None,
+              current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    q = db.query(Task)
+    if current_user.role == "Worker":
+        q = q.filter(Task.assigned_to == current_user.id)
+    elif assignedTo:
+        q = q.filter(Task.assigned_to == assignedTo)
+    if status and status not in ("All", ""):
+        q = q.filter(Task.status == status)
+    if category and category not in ("All", ""):
+        q = q.filter(Task.category == category)
+    if projectId:
+        q = q.filter(Task.project_id == projectId)
+    if priority and priority not in ("All", ""):
+        q = q.filter(Task.priority == priority)
+    if search:
+        term = f"%{search.strip()}%"
+        q = q.filter((Task.name.ilike(term)) | (Task.id.ilike(term)) | (Task.description.ilike(term)))
+    tasks = q.order_by(Task.created_at.desc()).all()
+    out = []
     for t in tasks:
         d = t.to_dict()
-        subs = db.query(Subtask).filter(Subtask.task_id == t.id).all()
-        d["subtasks"] = [s.to_dict() for s in subs]
-        results.append(d)
-    return results
+        d["subtasks"] = [s.to_dict() for s in
+                         db.query(Subtask).filter(Subtask.task_id == t.id).order_by(Subtask.sort_order).all()]
+        out.append(d)
+    return out
+
 
 @router.post("")
-def create_task(data: TaskCreate, db: Session = Depends(get_db)):
-    count = db.query(Task).count() + 101
-    new_id = f"TSK-{count}"
-    while db.query(Task).filter(Task.id == new_id).first():
-        new_id = f"TSK-{random.randint(200, 9999)}"
+def create_task(data: TaskCreate, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    if current_user.role == "Worker":
+        raise HTTPException(status_code=403, detail="Workers cannot create tasks")
 
-    sec_id = data.sectionId or data.moduleId or ""
+    if data.projectId:
+        proj = db.query(Project).filter(Project.id == data.projectId).first()
+        if proj:
+            if proj.start_date and data.startDate and data.startDate < proj.start_date:
+                raise HTTPException(status_code=400, detail=f"Task start date cannot be earlier than project start date ({proj.start_date})")
+            if proj.end_date and data.startDate and data.startDate > proj.end_date:
+                raise HTTPException(status_code=400, detail=f"Task start date cannot be later than project end date ({proj.end_date})")
+            if proj.start_date and data.endDate and data.endDate < proj.start_date:
+                raise HTTPException(status_code=400, detail=f"Task due date cannot be earlier than project start date ({proj.start_date})")
+            if proj.end_date and data.endDate and data.endDate > proj.end_date:
+                raise HTTPException(status_code=400, detail=f"Task due date cannot be later than project end date ({proj.end_date})")
+    if data.startDate and data.endDate and data.startDate > data.endDate:
+        raise HTTPException(status_code=400, detail="Task start date cannot be after due date")
+
+    n = db.query(Task).count() + 1001
+    new_id = f"TSK-{n}"
+    while db.query(Task).filter(Task.id == new_id).first():
+        new_id = f"TSK-{random.randint(2000, 99999)}"
 
     task = Task(
-        id=new_id,
-        name=data.name,
-        description=data.description or "",
-        project_id=data.projectId or "",
-        section_id=sec_id,
-        module_id=sec_id,
-        priority=data.priority or "Medium",
-        status=data.status or "Open",
-        progress=data.progress or 0,
-        assigned_to=data.assignedTo or "",
-        reviewer_id=data.reviewerId or "",
-        start_date=data.startDate or "",
-        end_date=data.endDate or "",
-        label=data.label or "",
-        parent_task_id=data.parentTaskId or ""
+        id=new_id, code=new_id, name=data.name, description=data.description or "",
+        project_id=data.projectId or None, section_id=data.sectionId or None,
+        module_id=data.moduleId or None, priority=data.priority or "Medium",
+        status=data.status or "To Do", progress=data.progress or 0,
+        assigned_to=data.assignedTo or None, reviewer_id=data.reviewerId or None,
+        start_date=data.startDate or "", end_date=data.endDate or "",
+        estimated_hours=data.estimatedHours, label=data.label or "", created_by=current_user.id,
+        category=data.category or "general", custom_data=json.dumps(data.customData or {}),
     )
     db.add(task)
-
+    db.flush()
+    _log(db, task, current_user, "created", None, task.status)
     if data.assignedTo:
-        notif = Notification(
-            user_id=data.assignedTo,
-            title="New Task Assigned",
-            message=f"You have been assigned to '{task.name}'."
-        )
-        db.add(notif)
-
+        db.add(Notification(user_id=data.assignedTo, type="task", title="New Task Assigned",
+                            message=f"You have been assigned to '{task.name}'.", task_id=task.id))
     db.commit()
     db.refresh(task)
-
     d = task.to_dict()
     d["subtasks"] = []
     d["comments"] = []
     return d
 
+
 @router.get("/{task_id}")
-def get_task_detail(task_id: str, db: Session = Depends(get_db)):
+def get_task_detail(task_id: str, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     task = db.query(Task).filter(Task.id == task_id).first()
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
+    d = task.to_dict()
+    d["subtasks"] = [s.to_dict() for s in
+                     db.query(Subtask).filter(Subtask.task_id == task_id).order_by(Subtask.sort_order).all()]
+    d["comments"] = [c.to_dict() for c in
+                     db.query(Comment).filter(Comment.task_id == task_id).order_by(Comment.created_at).all()]
+    d["updates"] = [u.to_dict() for u in
+                    db.query(TaskUpdateLog).filter(TaskUpdateLog.task_id == task_id)
+                    .order_by(TaskUpdateLog.created_at.desc()).all()]
+    d["attachments"] = [a.to_dict() for a in
+                        db.query(TaskAttachment).filter(TaskAttachment.task_id == task_id).all()]
+    # timesheets for this task
+    from backend.app.models.models import Timesheet
+    d["timesheets"] = [t.to_dict() for t in
+                       db.query(Timesheet).filter(Timesheet.task_id == task_id)
+                       .order_by(Timesheet.created_at.desc()).all()]
+    return d
 
-    subtasks = db.query(Subtask).filter(Subtask.task_id == task_id).all()
-    comments = db.query(Comment).filter(Comment.task_id == task_id).order_by(Comment.created_at.asc()).all()
-
-    result = task.to_dict()
-    result["subtasks"] = [s.to_dict() for s in subtasks]
-    result["comments"] = [c.to_dict() for c in comments]
-    return result
 
 @router.put("/{task_id}")
-def update_task(task_id: str, data: TaskUpdate, db: Session = Depends(get_db)):
+def update_task(task_id: str, data: TaskPatch, current_user: User = Depends(get_current_user),
+                db: Session = Depends(get_db)):
     task = db.query(Task).filter(Task.id == task_id).first()
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
+    # Workers can only update their own tasks (status/progress)
+    if current_user.role == "Worker" and task.assigned_to != current_user.id:
+        raise HTTPException(status_code=403, detail="You can only update your own tasks")
 
-    old_status = task.status
-    if data.name is not None:
-        task.name = data.name
-    if data.description is not None:
-        task.description = data.description
-    if data.projectId is not None:
-        task.project_id = data.projectId
-    if data.sectionId is not None:
-        task.section_id = data.sectionId
-        task.module_id = data.sectionId
-    elif data.moduleId is not None:
-        task.module_id = data.moduleId
-        task.section_id = data.moduleId
-    if data.priority is not None:
-        task.priority = data.priority
-    if data.status is not None:
+    target_project_id = data.projectId if data.projectId is not None else task.project_id
+    target_start = data.startDate if data.startDate is not None else task.start_date
+    target_end = data.endDate if data.endDate is not None else task.end_date
+
+    if target_project_id:
+        proj = db.query(Project).filter(Project.id == target_project_id).first()
+        if proj:
+            if proj.start_date and target_start and target_start < proj.start_date:
+                raise HTTPException(status_code=400, detail=f"Task start date cannot be earlier than project start date ({proj.start_date})")
+            if proj.end_date and target_start and target_start > proj.end_date:
+                raise HTTPException(status_code=400, detail=f"Task start date cannot be later than project end date ({proj.end_date})")
+            if proj.start_date and target_end and target_end < proj.start_date:
+                raise HTTPException(status_code=400, detail=f"Task due date cannot be earlier than project start date ({proj.start_date})")
+            if proj.end_date and target_end and target_end > proj.end_date:
+                raise HTTPException(status_code=400, detail=f"Task due date cannot be later than project end date ({proj.end_date})")
+    if target_start and target_end and target_start > target_end:
+        raise HTTPException(status_code=400, detail="Task start date cannot be after due date")
+
+    old_status, old_progress, old_assignee = task.status, task.progress, task.assigned_to
+
+    simple = {"name": "name", "description": "description", "projectId": "project_id",
+              "sectionId": "section_id", "moduleId": "module_id", "priority": "priority",
+              "startDate": "start_date", "endDate": "end_date", "estimatedHours": "estimated_hours",
+              "label": "label", "reviewerId": "reviewer_id", "category": "category"}
+    # These map to nullable foreign keys — an empty string is not a valid key, so store NULL.
+    fk_fields = {"projectId", "sectionId", "moduleId", "reviewerId"}
+    for field, col in simple.items():
+        val = getattr(data, field)
+        if val is not None:
+            if field in fk_fields and val == "":
+                val = None
+            setattr(task, col, val)
+    if data.customData is not None:
+        task.custom_data = json.dumps(data.customData)
+
+    status_changed = False
+    if data.status is not None and data.status != old_status:
+        status_changed = True
         task.status = data.status
-        if task.status in ["Completed", "Closed"]:
+        if data.status in DONE:
             task.completed_at = datetime.utcnow()
             task.progress = 100
         else:
             task.completed_at = None
-    if data.progress is not None:
+        _log(db, task, current_user, "status", old_status, data.status, data.remark)
+        _msg = f"{current_user.name} set '{task.name}' to {task.status}."
+        if data.remark:
+            _msg += f" Remark: {data.remark}"
+        _notify(db, {task.assigned_to} | _supervisor_ids(db, task), current_user,
+                "Task Status Updated", _msg, task.id)
+    if data.progress is not None and data.progress != old_progress:
         task.progress = data.progress
-    if data.assignedTo is not None:
-        task.assigned_to = data.assignedTo
-    if data.reviewerId is not None:
-        task.reviewer_id = data.reviewerId
-    if data.startDate is not None:
-        task.start_date = data.startDate
-    if data.endDate is not None:
-        task.end_date = data.endDate
-    if data.label is not None:
-        task.label = data.label
-    if data.parentTaskId is not None:
-        task.parent_task_id = data.parentTaskId
-
-    if data.status and data.status != old_status and task.assigned_to:
-        db.add(Notification(
-            user_id=task.assigned_to,
-            title="Task Status Updated",
-            message=f"'{task.name}' status changed to {task.status}."
-        ))
+        _log(db, task, current_user, "progress", old_progress, data.progress, data.remark)
+        _notify(db, _supervisor_ids(db, task), current_user, "Task Progress Updated",
+                f"{current_user.name} set '{task.name}' progress to {data.progress}%.", task.id)
+    if data.assignedTo is not None and data.assignedTo != old_assignee:
+        task.assigned_to = data.assignedTo or None
+        _log(db, task, current_user, "assignment", old_assignee, data.assignedTo)
+        if data.assignedTo:
+            db.add(Notification(user_id=data.assignedTo, type="task", title="Task Assigned",
+                                message=f"You have been assigned to '{task.name}'.", task_id=task.id))
+    if data.remark and not status_changed:
+        _log(db, task, current_user, "remark", None, None, data.remark)
+        _notify(db, {task.assigned_to} | _supervisor_ids(db, task), current_user,
+                "New Remark", f"{current_user.name} added a remark on '{task.name}': {data.remark}", task.id)
 
     db.commit()
     db.refresh(task)
     return task.to_dict()
 
+
 @router.delete("/{task_id}")
-def delete_task(task_id: str, db: Session = Depends(get_db)):
+def delete_task(task_id: str, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    if current_user.role == "Worker":
+        raise HTTPException(status_code=403, detail="Workers cannot delete tasks")
     task = db.query(Task).filter(Task.id == task_id).first()
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
-
-    db.query(Subtask).filter(Subtask.task_id == task_id).delete()
-    db.query(Comment).filter(Comment.task_id == task_id).delete()
-    db.delete(task)
+    for a in db.query(TaskAttachment).filter(TaskAttachment.task_id == task_id).all():
+        delete_file("tasks", a.filename)
+    db.delete(task)   # cascades subtasks/comments/updates/attachments
     db.commit()
     return {"success": True, "message": "Task deleted successfully"}
 
-# Subtasks
-@router.get("/{task_id}/subtasks")
-def get_subtasks(task_id: str, db: Session = Depends(get_db)):
-    subtasks = db.query(Subtask).filter(Subtask.task_id == task_id).all()
-    return [s.to_dict() for s in subtasks]
 
-@router.post("/{task_id}/subtasks")
-def add_subtask(task_id: str, data: SubtaskCreate, db: Session = Depends(get_db)):
+# ---------- attachments ----------
+@router.post("/{task_id}/attachments")
+def upload_attachment(task_id: str, file: UploadFile = File(...),
+                      current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     task = db.query(Task).filter(Task.id == task_id).first()
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
-
-    subtask = Subtask(
-        task_id=task_id,
-        title=data.title,
-        is_done=data.isDone if data.isDone is not None else False,
-        sort_order=data.sortOrder or 0
-    )
-    db.add(subtask)
+    saved = save_upload(file, "tasks", allowed=DOC_EXTS, max_bytes=10 * 1024 * 1024)
+    att = TaskAttachment(task_id=task_id, filename=saved["filename"], filepath=saved["filepath"],
+                         original_name=file.filename or saved["filename"], uploaded_by=current_user.id)
+    db.add(att)
     db.commit()
-    db.refresh(subtask)
+    db.refresh(att)
+    return att.to_dict()
 
-    all_subs = db.query(Subtask).filter(Subtask.task_id == task_id).all()
-    if all_subs:
-        done_count = sum(1 for s in all_subs if s.is_done)
-        task.progress = int((done_count / len(all_subs)) * 100)
-        db.commit()
 
-    return subtask.to_dict()
+@router.delete("/attachments/{attachment_id}")
+def delete_attachment(attachment_id: int, current_user: User = Depends(get_current_user),
+                      db: Session = Depends(get_db)):
+    att = db.query(TaskAttachment).filter(TaskAttachment.id == attachment_id).first()
+    if not att:
+        raise HTTPException(status_code=404, detail="Attachment not found")
+    delete_file("tasks", att.filename)
+    db.delete(att)
+    db.commit()
+    return {"success": True}
+
+
+# ---------- subtasks ----------
+@router.post("/{task_id}/subtasks")
+def add_subtask(task_id: str, data: SubtaskCreate, current_user: User = Depends(get_current_user),
+                db: Session = Depends(get_db)):
+    task = db.query(Task).filter(Task.id == task_id).first()
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    sub = Subtask(task_id=task_id, title=data.title, is_done=bool(data.isDone), sort_order=data.sortOrder or 0)
+    db.add(sub)
+    db.commit()
+    db.refresh(sub)
+    return sub.to_dict()
+
 
 @router.put("/subtasks/{subtask_id}/toggle")
-def toggle_subtask(subtask_id: int, db: Session = Depends(get_db)):
-    subtask = db.query(Subtask).filter(Subtask.id == subtask_id).first()
-    if not subtask:
+def toggle_subtask(subtask_id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    sub = db.query(Subtask).filter(Subtask.id == subtask_id).first()
+    if not sub:
         raise HTTPException(status_code=404, detail="Subtask not found")
-
-    subtask.is_done = not subtask.is_done
+    sub.is_done = not sub.is_done
     db.commit()
-
-    task = db.query(Task).filter(Task.id == subtask.task_id).first()
+    task = db.query(Task).filter(Task.id == sub.task_id).first()
     if task:
-        all_subs = db.query(Subtask).filter(Subtask.task_id == task.id).all()
-        if all_subs:
-            done_count = sum(1 for s in all_subs if s.is_done)
-            task.progress = int((done_count / len(all_subs)) * 100)
-            if task.progress == 100:
-                task.status = "Completed"
-            elif task.status == "Completed" and task.progress < 100:
-                task.status = "In Progress"
+        subs = db.query(Subtask).filter(Subtask.task_id == task.id).all()
+        if subs:
+            task.progress = int(sum(1 for s in subs if s.is_done) / len(subs) * 100)
             db.commit()
+    return sub.to_dict()
 
-    return subtask.to_dict()
 
 @router.delete("/subtasks/{subtask_id}")
-def delete_subtask(subtask_id: int, db: Session = Depends(get_db)):
-    subtask = db.query(Subtask).filter(Subtask.id == subtask_id).first()
-    if not subtask:
+def delete_subtask(subtask_id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    sub = db.query(Subtask).filter(Subtask.id == subtask_id).first()
+    if not sub:
         raise HTTPException(status_code=404, detail="Subtask not found")
-    task_id = subtask.task_id
-    db.delete(subtask)
+    db.delete(sub)
     db.commit()
-
-    task = db.query(Task).filter(Task.id == task_id).first()
-    if task:
-        all_subs = db.query(Subtask).filter(Subtask.task_id == task_id).all()
-        if all_subs:
-            done_count = sum(1 for s in all_subs if s.is_done)
-            task.progress = int((done_count / len(all_subs)) * 100)
-            db.commit()
-
     return {"message": "Subtask deleted successfully"}
 
-# Comments
-@router.get("/{task_id}/comments")
-def get_comments(task_id: str, db: Session = Depends(get_db)):
-    comments = db.query(Comment).filter(Comment.task_id == task_id).order_by(Comment.created_at.asc()).all()
-    return [c.to_dict() for c in comments]
 
+# ---------- comments ----------
 @router.post("/{task_id}/comments")
-def add_comment(task_id: str, data: CommentCreate, db: Session = Depends(get_db)):
+def add_comment(task_id: str, data: CommentCreate, current_user: User = Depends(get_current_user),
+                db: Session = Depends(get_db)):
     task = db.query(Task).filter(Task.id == task_id).first()
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
-
-    comment = Comment(
-        task_id=task_id,
-        user_id=data.userId,
-        user_name=data.userName,
-        text=data.text
-    )
+    comment = Comment(task_id=task_id, user_id=current_user.id, user_name=current_user.name, text=data.text)
     db.add(comment)
-
-    if task.assigned_to and task.assigned_to != data.userId:
-        db.add(Notification(
-            user_id=task.assigned_to,
-            title="New Comment on Task",
-            message=f"{data.userName} commented on '{task.name}'."
-        ))
-
+    snippet = (data.text or "").strip()
+    snippet = snippet if len(snippet) <= 120 else snippet[:117] + "…"
+    _notify(db, {task.assigned_to} | _supervisor_ids(db, task), current_user,
+            "New Comment", f"{current_user.name} commented on '{task.name}': {snippet}", task.id)
     db.commit()
     db.refresh(comment)
     return comment.to_dict()

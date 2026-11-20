@@ -1,377 +1,447 @@
-// src/App.jsx
+// src/App.jsx — ProjectMatrix: Admin / Master / Worker portals
 import React, { useState, useEffect } from 'react';
-import { AuthProvider, useAuth, API_BASE_URL } from './context/AuthContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { Toaster, toast, ConfirmDialog } from './components/ui';
+import useIdleTracker from './components/useIdleTracker';
+import { LiveSignalingProvider } from './components/useLiveSignaling';
+import LiveView from './components/LiveView';
+
 import Dashboard from './views/Dashboard';
-import Tasks from './views/Tasks';
 import Projects from './views/Projects';
-import Team from './views/Team';
-import Sections from './views/Sections';
-import Labels from './views/Labels';
+import Tasks from './views/Tasks';
+import CalendarView from './views/Calendar';
+import Timesheets from './views/Timesheets';
+import Employees from './views/Employees';
+import Performance from './views/Performance';
+import IdleTime from './views/IdleTime';
+import Camera from './views/Camera';
 import Reports from './views/Reports';
-import Search from './views/Search';
 import Notifications from './views/Notifications';
+import Settings from './views/Settings';
 import Profile from './views/Profile';
-import Admin from './views/Admin';
-import Masters from './views/Masters';
+import Approvals from './views/Approvals';
 
-const menuStructure = [
-  { key: 'dashboard', label: 'Dashboard', icon: 'ph-house', roles: ['Admin', 'PM', 'Team Lead', 'Employee', 'Management'] },
-  
-  { section: 'Tasks', roles: ['Admin', 'PM', 'Team Lead', 'Employee', 'Management'] },
-  { key: 'tasks-my', label: 'My Tasks', icon: 'ph-check-square-offset', roles: ['Admin', 'PM', 'Team Lead', 'Employee', 'Management'], viewKey: 'tasks', sub: 'my' },
-  { key: 'tasks-list', label: 'Task List', icon: 'ph-list-dashes', roles: ['Admin', 'PM', 'Team Lead', 'Employee', 'Management'], viewKey: 'tasks', sub: 'list' },
-  { key: 'tasks-board', label: 'Kanban Board', icon: 'ph-kanban', roles: ['Admin', 'PM', 'Team Lead', 'Employee', 'Management'], viewKey: 'tasks', sub: 'board' },
-  { key: 'tasks-calendar', label: 'Calendar', icon: 'ph-calendar-blank', roles: ['Admin', 'PM', 'Team Lead', 'Employee', 'Management'], viewKey: 'tasks', sub: 'calendar' },
-  { key: 'tasks-create', label: 'Create Task', icon: 'ph-plus-circle', roles: ['Admin', 'PM', 'Team Lead', 'Employee', 'Management'], viewKey: 'tasks', sub: 'create' },
-  { key: 'tasks-detail', label: 'Task Detail', icon: 'ph-info', roles: ['Admin', 'PM', 'Team Lead', 'Employee', 'Management'], viewKey: 'tasks', sub: 'detail' },
-  { key: 'tasks-review', label: 'Review & Closure', icon: 'ph-check-circle', roles: ['Admin', 'PM', 'Team Lead'], viewKey: 'tasks', sub: 'review' },
-  
-  { section: 'Projects', roles: ['Admin', 'PM', 'Team Lead', 'Employee', 'Management'] },
-  { key: 'projects-list', label: 'Projects', icon: 'ph-folder-open', roles: ['Admin', 'PM', 'Team Lead', 'Employee', 'Management'], viewKey: 'projects', sub: 'list' },
-  { key: 'projects-detail', label: 'Project Detail', icon: 'ph-file-text', roles: ['Admin', 'PM', 'Team Lead', 'Employee', 'Management'], viewKey: 'projects', sub: 'detail' },
-  
-  { section: 'Organization', roles: ['Admin', 'PM', 'Team Lead', 'Employee', 'Management'] },
-  { key: 'team', label: 'Team', icon: 'ph-users', roles: ['Admin', 'PM', 'Team Lead', 'Employee', 'Management'], viewKey: 'team', sub: '' },
-  { key: 'sections', label: 'Sections', icon: 'ph-squares-four', roles: ['Admin', 'PM'], viewKey: 'sections', sub: '' },
-  { key: 'labels', label: 'Labels', icon: 'ph-tag', roles: ['Admin', 'PM', 'Team Lead'], viewKey: 'labels', sub: '' },
-  
-  { section: 'Insights & Search', roles: ['Admin', 'PM', 'Team Lead', 'Employee', 'Management'] },
-  { key: 'reports', label: 'Reports', icon: 'ph-chart-bar', roles: ['Admin', 'PM', 'Team Lead', 'Management'], viewKey: 'reports', sub: '' },
-  { key: 'search', label: 'Global Search', icon: 'ph-magnifying-glass', roles: ['Admin', 'PM', 'Team Lead', 'Employee', 'Management'], viewKey: 'search', sub: '' },
-  
-  { section: 'Master Portal', roles: ['Admin', 'Management'] },
-  { key: 'masters-clients', label: 'Clients', icon: 'ph-buildings', roles: ['Admin', 'Management'], viewKey: 'masters', sub: 'clients' },
-  { key: 'masters-departments', label: 'Departments', icon: 'ph-tree-structure', roles: ['Admin', 'Management'], viewKey: 'masters', sub: 'departments' },
-  { key: 'masters-designations', label: 'Designations', icon: 'ph-briefcase', roles: ['Admin', 'Management'], viewKey: 'masters', sub: 'designations' },
-  
-  { section: 'Admin Portal', roles: ['Admin'] },
-  { key: 'admin-roles', label: 'Role Manager', icon: 'ph-shield-check', roles: ['Admin'], viewKey: 'admin', sub: 'roles' },
-  { key: 'admin-users', label: 'User Management', icon: 'ph-users-three', roles: ['Admin'], viewKey: 'admin', sub: 'users' },
-  { key: 'admin-settings', label: 'System Settings', icon: 'ph-gear', roles: ['Admin'], viewKey: 'admin', sub: 'settings' },
-
-  { section: 'Personal', roles: ['Admin', 'PM', 'Team Lead', 'Employee', 'Management'] },
-  { key: 'notifications', label: 'Notifications', icon: 'ph-bell', roles: ['Admin', 'PM', 'Team Lead', 'Employee', 'Management'], viewKey: 'notifications', sub: '' },
-  { key: 'profile', label: 'Profile / Security', icon: 'ph-user-circle', roles: ['Admin', 'PM', 'Team Lead', 'Employee', 'Management'], viewKey: 'profile', sub: '' }
+// --------------------------------------------------------------------------
+// Portal + navigation configuration (spec §14)
+// --------------------------------------------------------------------------
+const PORTALS = [
+  { key: 'admin', label: 'Admin Portal', icon: 'ph-shield-check',
+    desc: 'Full control & analytics', color: '#059669' },
+  { key: 'worker', label: 'Worker Portal', icon: 'ph-user-focus',
+    desc: 'My work & timesheets', color: '#eab308' },
 ];
 
-const hasAccess = (role, page, subPage) => {
-  if (!role) return false;
-  const targetItem = menuStructure.find(m => m.key && (m.viewKey || m.key.split('-')[0]) === page && (!m.sub || m.sub === subPage));
-  return targetItem && targetItem.roles && targetItem.roles.includes(role);
+// Default credentials pre-filled per portal (one-click sign-in for the seeded accounts)
+const PORTAL_DEFAULTS = {
+  admin: { username: 'admin', password: 'admin123' },
+  worker: { username: 'ravi', password: 'worker123' },
 };
 
-function AppContent() {
-  const { user, login, logout, theme, toggleTheme, getRememberedEmail } = useAuth();
-  const [activePage, setActivePage] = useState('dashboard');
-  const [activeSubPage, setActiveSubPage] = useState('');
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-  const [expandedSections, setExpandedSections] = useState({
-    'Tasks': true,
-    'Projects': true
-  });
+const NAV = {
+  Admin: [
+    { view: 'dashboard', label: 'Dashboard', icon: 'ph-squares-four' },
+    { view: 'projects', label: 'Projects', icon: 'ph-folder-open' },
+    { view: 'tasks', label: 'Tasks', icon: 'ph-check-square' },
+    { view: 'calendar', label: 'Calendar', icon: 'ph-calendar-blank' },
+    { view: 'timesheets', label: 'Timesheets', icon: 'ph-clock' },
+    { view: 'employees', label: 'Employees', icon: 'ph-users' },
+    { view: 'approvals', label: 'Approvals', icon: 'ph-seal-check' },
+    { view: 'performance', label: 'Performance Matrix', icon: 'ph-chart-line-up' },
+    { view: 'idletime', label: 'Idle-Time Monitoring', icon: 'ph-timer' },
+    { view: 'camera', label: 'Camera Activity Logs', icon: 'ph-camera' },
+    { view: 'reports', label: 'Reports', icon: 'ph-chart-bar' },
+    { view: 'notifications', label: 'Notifications', icon: 'ph-bell' },
+    { view: 'settings', label: 'Settings', icon: 'ph-gear' },
+  ],
+  Master: [
+    { view: 'dashboard', label: 'Dashboard', icon: 'ph-squares-four' },
+    { view: 'projects', label: 'Projects', icon: 'ph-folder-open' },
+    { view: 'tasks', label: 'Tasks', icon: 'ph-check-square' },
+    { view: 'calendar', label: 'Calendar', icon: 'ph-calendar-blank' },
+    { view: 'timesheets', label: 'Timesheets', icon: 'ph-clock' },
+    { view: 'employees', label: 'Employee Monitoring', icon: 'ph-users' },
+    { view: 'reports', label: 'Reports', icon: 'ph-chart-bar' },
+  ],
+  Worker: [
+    { view: 'dashboard', label: 'Dashboard', icon: 'ph-squares-four' },
+    { view: 'projects', label: 'My Projects', icon: 'ph-folder-open' },
+    { view: 'tasks', label: 'My Tasks', icon: 'ph-check-square' },
+    { view: 'calendar', label: 'Calendar', icon: 'ph-calendar-blank' },
+    { view: 'timesheets', label: 'My Timesheets', icon: 'ph-clock' },
+    { view: 'performance', label: 'My Performance', icon: 'ph-chart-line-up' },
+    { view: 'notifications', label: 'Notifications', icon: 'ph-bell' },
+    { view: 'profile', label: 'Profile', icon: 'ph-user-circle' },
+  ],
+};
 
-  const toggleSection = (sectionName) => {
-    setExpandedSections(prev => ({
-      ...prev,
-      [sectionName]: prev[sectionName] === undefined ? false : !prev[sectionName]
-    }));
+const VIEWS = {
+  dashboard: Dashboard, projects: Projects, tasks: Tasks, calendar: CalendarView,
+  timesheets: Timesheets, employees: Employees, performance: Performance,
+  idletime: IdleTime, camera: Camera, reports: Reports, notifications: Notifications,
+  settings: Settings, profile: Profile, approvals: Approvals,
+};
+
+const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+
+// --------------------------------------------------------------------------
+// Login / Forgot / Reset screen
+// --------------------------------------------------------------------------
+function LoginScreen() {
+  const { login, forgotPassword, resetPassword, getRememberedEmail } = useAuth();
+  const urlToken = new URLSearchParams(window.location.search).get('reset_token');
+
+  const [mode, setMode] = useState(urlToken ? 'reset' : 'login');
+  const [portal, setPortal] = useState('admin');
+  const [email, setEmail] = useState(PORTAL_DEFAULTS.admin.username);         // username or email
+  const [password, setPassword] = useState(PORTAL_DEFAULTS.admin.password);
+  const [showPw, setShowPw] = useState(false);
+
+  // Selecting a portal pre-fills that portal's default credentials
+  const selectPortal = (key) => {
+    setPortal(key);
+    const d = PORTAL_DEFAULTS[key];
+    if (d) { setEmail(d.username); setPassword(d.password); }
+    setError('');
   };
-  
-  // Login states
-  const [email, setEmail] = useState('admin@taskmanagement.com');
-  const [password, setPassword] = useState('admin123');
-  const [rememberMe, setRememberMe] = useState(false);
-  const [authError, setAuthError] = useState('');
+  const [remember, setRemember] = useState(false);
+  const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
 
-
+  // reset form
+  const [newPw, setNewPw] = useState('');
+  const [confirmPw, setConfirmPw] = useState('');
+  const [devLink, setDevLink] = useState('');
+  const [resetToken, setResetToken] = useState(urlToken || '');
 
   useEffect(() => {
-    if (!user) {
-      const rem = getRememberedEmail();
-      if (rem) {
-        setEmail(rem);
-        setRememberMe(true);
-      }
-    }
-  }, [user, getRememberedEmail]);
+    const rem = getRememberedEmail();
+    if (rem) { setEmail(rem); setRemember(true); }
+  }, [getRememberedEmail]);
 
-  // LOGIN TRIGGER
-  const handleLoginSubmit = async (e) => {
+  const submitLogin = async (e) => {
     e.preventDefault();
-    setAuthError('');
+    setError('');
+    if (!email.trim()) return setError('Please enter your username.');
+    if (!password) return setError('Please enter your password.');
+    setBusy(true);
     try {
-      await login(email, password, rememberMe);
+      await login(email.trim(), password, remember, portal);
     } catch (err) {
-      setAuthError(err.message);
+      setError(err.message || 'Login failed.');
+    } finally {
+      setBusy(false);
     }
   };
 
-
-
-  // Navigation Helper
-  const navigateTo = (page, subPage = '') => {
-    if (!hasAccess(user?.role, page, subPage)) {
-      setActivePage('dashboard');
-      setActiveSubPage('');
-      return;
+  const submitForgot = async (e) => {
+    e.preventDefault();
+    setError(''); setDevLink('');
+    if (!email.trim()) return setError('Please enter your username or email.');
+    setBusy(true);
+    try {
+      const res = await forgotPassword(email.trim());
+      if (res.devResetLink) {
+        // No SMTP configured: extract the token so the user can reset in-app
+        const tok = res.devResetLink.split('reset_token=')[1] || '';
+        setResetToken(tok);
+        setDevLink(res.devResetLink);
+        toast.success('Reset link ready — set your new password.');
+        setMode('reset');
+      } else {
+        toast.success('A reset link has been sent to your email.');
+      }
+    } catch (err) {
+      setError(err.message || 'Request failed.');
+    } finally {
+      setBusy(false);
     }
-    setActivePage(page);
-    setActiveSubPage(subPage);
   };
 
-  useEffect(() => {
-    if (user && activePage !== 'dashboard' && !hasAccess(user.role, activePage, activeSubPage)) {
-      setActivePage('dashboard');
-      setActiveSubPage('');
+  const submitReset = async (e) => {
+    e.preventDefault();
+    setError('');
+    if (newPw.length < 6) return setError('Password must be at least 6 characters.');
+    if (newPw !== confirmPw) return setError('Passwords do not match.');
+    if (!resetToken) return setError('Reset link is missing or expired. Please request a new one.');
+    setBusy(true);
+    try {
+      await resetPassword(resetToken, newPw);
+      toast.success('Password updated. Please sign in.');
+      window.history.replaceState({}, '', window.location.pathname);
+      setMode('login'); setPassword(''); setNewPw(''); setConfirmPw(''); setResetToken('');
+    } catch (err) {
+      setError(err.message || 'Reset failed.');
+    } finally {
+      setBusy(false);
     }
-  }, [user, activePage, activeSubPage]);
+  };
 
-  // --- RENDER LOGIN IF NO USER ---
-  if (!user) {
-    return (
-      <div className="auth-wrapper">
-        
-        {/* Left Side: Premium Visuals */}
-        <div className="auth-visual">
-          <div style={{ position: 'relative', zIndex: 10 }}>
-            <h1 style={{ fontSize: '3.5rem', fontWeight: 800, marginBottom: '20px', lineHeight: 1.1 }}>
-              Master Your Work.<br />Empower Your Team.
-            </h1>
-            <p style={{ fontSize: '1.2rem', opacity: 0.9, maxWidth: '500px', lineHeight: 1.5 }}>
-              The all-in-one professional task management portal built for modern, high-performance teams. Keep projects on track, automate workflows, and collaborate seamlessly.
-            </p>
-          </div>
-          {/* Decorative background icons */}
-          <i className="ph-fill ph-kanban" style={{ position: 'absolute', right: '-10%', bottom: '-10%', fontSize: '40vw', opacity: 0.05, transform: 'rotate(-15deg)' }}></i>
-          <i className="ph-fill ph-chart-line-up" style={{ position: 'absolute', right: '20%', top: '10%', fontSize: '10vw', opacity: 0.05, transform: 'rotate(15deg)' }}></i>
-        </div>
-
-        {/* Right Side: Login Form */}
-        <div className="auth-form-container">
-          <div className="auth-card">
-            <div className="auth-header">
-              <h2 className="auth-logo">Task Management</h2>
-              <p className="auth-subtitle">Sign in to your account</p>
-            </div>
-            
-            <form id="react-login-form" onSubmit={handleLoginSubmit}>
-              {authError && <div className="text-danger" style={{ marginBottom: '14px', fontSize: '0.85rem', fontWeight: 600 }}>{authError}</div>}
-              
-              <div className="form-group">
-                <label className="form-label" htmlFor="login-email">Email Address</label>
-                <input
-                  type="email"
-                  id="login-email"
-                  className="form-control form-control-lg"
-                  placeholder="name@company.com"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  required
-                />
-              </div>
-              
-              <div className="form-group">
-                <label className="form-label" htmlFor="login-password">Password</label>
-                <input
-                  type="password"
-                  id="login-password"
-                  className="form-control form-control-lg"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  required
-                />
-              </div>
-              
-              <div className="form-group checkbox-group" style={{ marginBottom: '32px' }}>
-                <input
-                  type="checkbox"
-                  id="login-remember"
-                  checked={rememberMe}
-                  onChange={e => setRememberMe(e.target.checked)}
-                />
-                <label htmlFor="login-remember" className="form-label" style={{ margin: 0, cursor: 'pointer' }}>Remember me on this device</label>
-              </div>
-              
-              <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: '14px', fontSize: '1.05rem' }}>
-                Sign In <i className="ph ph-arrow-right" style={{ marginLeft: '8px' }}></i>
-              </button>
-            </form>
-          </div>
-        </div>
-
-      </div>
-    );
-  }
-
-  // --- RENDER APPLICATION SHELL ---
-
-  // Dynamic Header Title compute
-  let titleText = activePage.charAt(0).toUpperCase() + activePage.slice(1);
-  if (activePage === 'tasks') {
-    const titles = {
-      my: 'My Tasks', list: 'Task List', board: 'Kanban Board', calendar: 'Calendar',
-      create: 'Create Task', detail: 'Task Detail', review: 'Review & Closure'
-    };
-    titleText = titles[activeSubPage] || 'Tasks';
-  } else if (activePage === 'projects') {
-    titleText = activeSubPage === 'detail' ? 'Project Detail' : 'Projects';
-  } else if (activePage === 'admin') {
-    const titles = { roles: 'Role Manager', users: 'User Management', settings: 'System Settings' };
-    titleText = titles[activeSubPage] || 'Admin Portal';
-  } else if (activePage === 'masters') {
-    const titles = { clients: 'Client Master', departments: 'Department Master', designations: 'Designation Master' };
-    titleText = titles[activeSubPage] || 'Master Portal';
-  } else if (activePage === 'profile') {
-    titleText = 'Profile & Security';
-  } else if (activePage === 'search') {
-    titleText = 'Global Search';
-  }
+  const activePortal = PORTALS.find((p) => p.key === portal) || PORTALS[0];
 
   return (
+    <div className="auth-wrapper">
+      <div className="auth-visual" style={{ background: `linear-gradient(135deg, ${activePortal.color} 0%, #0f172a 100%)` }}>
+        <div style={{ position: 'relative', zIndex: 10 }}>
+          <h1 style={{ fontSize: '3.2rem', fontWeight: 800, marginBottom: '20px', lineHeight: 1.1 }}>
+            Master Your Work.<br />Monitor Performance.
+          </h1>
+          <p style={{ fontSize: '1.15rem', opacity: 0.9, maxWidth: '460px', lineHeight: 1.5 }}>
+            Projects, tasks, calendar, timesheets and employee performance — one professional,
+            fully integrated portal for Admins and Workers.
+          </p>
+        </div>
+        <i className="ph-fill ph-chart-line-up" style={{ position: 'absolute', right: '-5%', bottom: '-8%', fontSize: '32vw', opacity: 0.08 }}></i>
+      </div>
+
+      <div className="auth-form-container">
+        <div className="auth-card">
+          <div className="auth-header">
+            <h2 className="auth-logo"><i className="ph-fill ph-lightning"></i> Task <span className="brand-accent">Management</span></h2>
+            <p className="auth-subtitle">
+              {mode === 'login' && 'Select your portal and sign in'}
+              {mode === 'forgot' && 'Reset your password'}
+              {mode === 'reset' && 'Choose a new password'}
+            </p>
+          </div>
+
+          {error && <div className="text-danger" style={{ marginBottom: 14, fontSize: '0.85rem', fontWeight: 600 }}>{error}</div>}
+
+          {mode === 'login' && (
+            <form onSubmit={submitLogin}>
+              {/* Portal selector */}
+              <div style={{ display: 'grid', gridTemplateColumns: `repeat(${PORTALS.length}, 1fr)`, gap: 10, marginBottom: 22 }}>
+                {PORTALS.map((p) => (
+                  <button type="button" key={p.key} onClick={() => selectPortal(p.key)}
+                    style={{
+                      border: `2px solid ${portal === p.key ? p.color : 'var(--border,#334155)'}`,
+                      background: portal === p.key ? `${p.color}18` : 'transparent',
+                      borderRadius: 12, padding: '12px 6px', cursor: 'pointer', textAlign: 'center',
+                      color: 'inherit', transition: 'all .15s',
+                    }}>
+                    <i className={`ph ${p.icon}`} style={{ fontSize: '1.5rem', color: p.color }}></i>
+                    <div style={{ fontSize: '0.72rem', fontWeight: 700, marginTop: 6 }}>{p.label.replace(' Portal', '')}</div>
+                  </button>
+                ))}
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Username</label>
+                <input type="text" className="form-control form-control-lg" placeholder="username"
+                  value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="username" />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Password</label>
+                <div style={{ position: 'relative' }}>
+                  <input type={showPw ? 'text' : 'password'} className="form-control form-control-lg"
+                    placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)}
+                    autoComplete="current-password" style={{ paddingRight: 44 }} />
+                  <button type="button" onClick={() => setShowPw((s) => !s)}
+                    style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
+                      background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary,#94a3b8)', fontSize: '1.2rem' }}
+                    aria-label={showPw ? 'Hide password' : 'Show password'}>
+                    <i className={`ph ${showPw ? 'ph-eye-slash' : 'ph-eye'}`}></i>
+                  </button>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+                <label className="checkbox-group" style={{ margin: 0, cursor: 'pointer' }}>
+                  <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} />
+                  <span className="form-label" style={{ margin: 0 }}>Remember me</span>
+                </label>
+                <a onClick={() => { setMode('forgot'); setError(''); }}
+                  style={{ cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, color: activePortal.color }}>
+                  Forgot password?
+                </a>
+              </div>
+
+              <button type="submit" className="btn btn-primary" disabled={busy}
+                style={{ width: '100%', padding: 14, fontSize: '1.05rem', background: activePortal.color, borderColor: activePortal.color }}>
+                {busy ? 'Signing in…' : <>Sign In to {activePortal.label.replace(' Portal', '')} <i className="ph ph-arrow-right" style={{ marginLeft: 8 }}></i></>}
+              </button>
+            </form>
+          )}
+
+          {mode === 'forgot' && (
+            <form onSubmit={submitForgot}>
+              <div className="form-group">
+                <label className="form-label">Username or Email</label>
+                <input type="text" className="form-control form-control-lg" placeholder="username or name@company.com"
+                  value={email} onChange={(e) => setEmail(e.target.value)} />
+              </div>
+              {devLink && (
+                <div className="card" style={{ padding: 12, marginBottom: 14, fontSize: '0.8rem' }}>
+                  <strong>Dev mode (no SMTP configured):</strong>
+                  <a href={devLink} style={{ wordBreak: 'break-all', display: 'block', marginTop: 6 }}>{devLink}</a>
+                </div>
+              )}
+              <button type="submit" className="btn btn-primary" disabled={busy} style={{ width: '100%', padding: 14 }}>
+                {busy ? 'Sending…' : 'Send Reset Link'}
+              </button>
+              <button type="button" className="btn btn-secondary" style={{ width: '100%', marginTop: 10 }}
+                onClick={() => { setMode('login'); setError(''); }}>Back to Sign In</button>
+            </form>
+          )}
+
+          {mode === 'reset' && (
+            <form onSubmit={submitReset}>
+              <div className="form-group">
+                <label className="form-label">New Password</label>
+                <input type="password" className="form-control form-control-lg" value={newPw}
+                  onChange={(e) => setNewPw(e.target.value)} placeholder="At least 6 characters" />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Confirm Password</label>
+                <input type="password" className="form-control form-control-lg" value={confirmPw}
+                  onChange={(e) => setConfirmPw(e.target.value)} placeholder="Re-enter new password" />
+              </div>
+              <button type="submit" className="btn btn-primary" disabled={busy} style={{ width: '100%', padding: 14 }}>
+                {busy ? 'Resetting…' : 'Reset Password'}
+              </button>
+              <button type="button" className="btn btn-secondary" style={{ width: '100%', marginTop: 10 }}
+                onClick={() => { window.history.replaceState({}, '', window.location.pathname); setMode('login'); }}>
+                Back to Sign In
+              </button>
+            </form>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// --------------------------------------------------------------------------
+// Application shell
+// --------------------------------------------------------------------------
+function AppShell() {
+  const { user, logout } = useAuth();
+  const menu = NAV[user.role] || NAV.Worker;
+
+  const pathView = () => {
+    const p = window.location.pathname.replace(/^\/+/, '').split('/')[0];
+    return menu.find((m) => m.view === p) ? p : null;
+  };
+  const [active, setActive] = useState(pathView() || menu[0].view);
+  const [collapsed, setCollapsed] = useState(false);
+  const [navParams, setNavParams] = useState(null);
+  const [onBreak, setOnBreak] = useState(false);
+  const [confirmLogout, setConfirmLogout] = useState(false);
+
+  // Track idle time while logged in (paused during an explicit break)
+  useIdleTracker(true, onBreak);
+
+  // Keep the URL path in sync with the active view (clean per-page URLs, no #)
+  useEffect(() => {
+    const cur = window.location.pathname.replace(/^\/+/, '').split('/')[0];
+    if (cur !== active) window.history.replaceState(null, '', `/${active}`);
+  }, [active]);
+
+  // React to browser back/forward
+  useEffect(() => {
+    const onNav = () => { const v = pathView(); if (v) { setActive(v); setNavParams(null); } };
+    window.addEventListener('popstate', onNav);
+    return () => window.removeEventListener('popstate', onNav);
+  }, []); // eslint-disable-line
+
+  // Navigation helper passed to views (e.g. open a specific task/project)
+  const navigate = (view, params = null) => {
+    if (menu.find((m) => m.view === view)) {
+      setActive(view);
+      setNavParams(params);
+      window.history.pushState(null, '', `/${view}`);
+    }
+  };
+
+  const ActiveView = VIEWS[active] || (() => null);
+  const activeLabel = (menu.find((m) => m.view === active) || {}).label || '';
+
+  return (
+    <LiveSignalingProvider>
     <div className="app-wrapper">
-      {/* Sidebar navigation */}
-      <aside className={`sidebar ${sidebarCollapsed ? 'collapsed' : ''}`} id="app-sidebar">
+      <LiveView />
+      <aside className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
         <div className="sidebar-brand">
           <span className="sidebar-brand-icon" style={{ fontSize: '1.4rem' }}><i className="ph-fill ph-lightning"></i></span>
-          <span className="sidebar-brand-text">Task Management</span>
+          <span className="sidebar-brand-text">Task <span className="brand-accent">Management</span></span>
         </div>
-
         <nav className="sidebar-menu">
-          {(() => {
-            let currentSection = null;
-            return menuStructure.map((item, idx) => {
-              if (item.section) {
-                currentSection = item.section;
-                if (item.roles.includes(user.role)) {
-                  const sectionName = item.section;
-                  const isExpanded = expandedSections[sectionName] !== false; // Default true if not defined
-                  return (
-                    <div 
-                      key={`sec-${idx}`} 
-                      className="menu-section-header" 
-                      onClick={() => !sidebarCollapsed && toggleSection(sectionName)}
-                    >
-                      <span>{sectionName}</span>
-                      <i className={`ph-bold ph-caret-${isExpanded ? 'up' : 'down'}`}></i>
-                    </div>
-                  );
-                }
-                return null;
-              }
-
-              if (item.roles.includes(user.role)) {
-                if (currentSection && expandedSections[currentSection] === false && !sidebarCollapsed) {
-                  return null;
-                }
-                
-                const viewKey = item.viewKey || item.key.split('-')[0];
-                const subKey = item.sub;
-                const isActive = activePage === viewKey && activeSubPage === subKey;
-
-                return (
-                  <a
-                    key={`item-${idx}`}
-                    className={`menu-item ${isActive ? 'active' : ''}`}
-                    onClick={() => navigateTo(viewKey, subKey)}
-                  >
-                    <span style={{ display: 'inline-block', width: '24px', textAlign: 'center', fontSize: '1.25rem' }}>
-                      <i className={`ph ${item.icon}`}></i>
-                    </span>
-                    <span>{item.label}</span>
-                  </a>
-                );
-              }
-              return null;
-            });
-          })()}
+          <div className="menu-section-header"><span>{user.role} Portal</span></div>
+          {menu.map((m) => (
+            <a key={m.view} className={`menu-item ${active === m.view ? 'active' : ''}`}
+              onClick={() => navigate(m.view)}>
+              <span style={{ display: 'inline-block', width: 24, textAlign: 'center', fontSize: '1.25rem' }}>
+                <i className={`ph ${m.icon}`}></i>
+              </span>
+              <span>{m.label}</span>
+            </a>
+          ))}
         </nav>
-
         <div className="sidebar-user">
-          <div className="user-avatar">{user.name ? user.name.split(' ').map(n=>n[0]).join('') : '?'}</div>
+          <div className="user-avatar">{user.name ? user.name.split(' ').map((n) => n[0]).join('').slice(0, 2) : '?'}</div>
           <div className="user-info">
-            <span className="user-name">{user.name || 'User'}</span>
-            <span className="user-role">{user.role || 'Role'}</span>
+            <span className="user-name">{user.name}</span>
+            <span className="user-role">{user.role}</span>
           </div>
         </div>
       </aside>
 
-      {/* Main content frame */}
       <div className="main-content">
         <header className="header">
           <div className="header-left">
-            <button className="toggle-sidebar-btn" onClick={() => setSidebarCollapsed(!sidebarCollapsed)}>
+            <button className="toggle-sidebar-btn" onClick={() => setCollapsed((c) => !c)}>
               <i className="ph ph-list" style={{ fontSize: '1.25rem' }}></i>
             </button>
-            <div className="view-title-container">
-              <h2 className="view-title">{titleText}</h2>
-            </div>
+            <div className="view-title-container"><h2 className="view-title">{activeLabel}</h2></div>
           </div>
-
           <div className="header-right">
-
-
             <div className="header-actions">
-              <button className="header-btn" onClick={() => navigateTo('notifications')} title="Notifications" style={{ position: 'relative' }}>
-                <i className="ph ph-bell" style={{ fontSize: '1.25rem' }}></i>
-                <span style={{ position: 'absolute', top: '4px', right: '4px', width: '8px', height: '8px', background: 'var(--color-danger)', borderRadius: '50%' }}></span>
+              <button className={`btn btn-sm ${onBreak ? 'btn-primary' : 'btn-secondary'}`}
+                onClick={() => setOnBreak((b) => !b)} title="Toggle break (pauses idle tracking)"
+                style={{ marginRight: 8 }}>
+                <i className={`ph ${onBreak ? 'ph-coffee' : 'ph-pause'}`}></i> {onBreak ? 'On Break' : 'Break'}
               </button>
-              <button className="header-btn" onClick={toggleTheme} title="Toggle Theme">
-                <i className={theme === 'dark' ? 'ph ph-sun' : 'ph ph-moon'} style={{ fontSize: '1.25rem' }}></i>
-              </button>
-              <button className="header-btn" onClick={() => setShowLogoutConfirm(true)} title="Sign Out">
+              {menu.find((m) => m.view === 'notifications') && (
+                <button className="header-btn" onClick={() => navigate('notifications')} title="Notifications">
+                  <i className="ph ph-bell" style={{ fontSize: '1.25rem' }}></i>
+                </button>
+              )}
+              <button className="header-btn" onClick={() => setConfirmLogout(true)} title="Sign Out"
+                style={{ color: 'var(--color-danger, #ef4444)' }}>
                 <i className="ph ph-sign-out" style={{ fontSize: '1.25rem' }}></i>
               </button>
             </div>
           </div>
         </header>
 
-        {/* View renderer viewport */}
         <main className="content-body">
-          <>
-            {activePage === 'dashboard' && <Dashboard navigateTo={navigateTo} />}
-            {activePage === 'tasks' && <Tasks subKey={activeSubPage} />}
-            {activePage === 'projects' && <Projects subKey={activeSubPage} />}
-            {activePage === 'team' && <Team />}
-            {activePage === 'sections' && <Sections />}
-            {activePage === 'labels' && <Labels />}
-            {activePage === 'reports' && <Reports />}
-            {activePage === 'search' && <Search />}
-            {activePage === 'notifications' && <Notifications />}
-            {activePage === 'profile' && <Profile />}
-            {activePage === 'admin' && <Admin subKey={activeSubPage} />}
-            {activePage === 'masters' && <Masters subKey={activeSubPage} />}
-          </>
+          <ActiveView navigate={navigate} navParams={navParams} />
         </main>
       </div>
 
-      {/* Logout Confirmation Modal */}
-      {showLogoutConfirm && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, backdropFilter: 'blur(4px)' }}>
-          <div className="card" style={{ maxWidth: '400px', width: '90%', textAlign: 'center', padding: '32px', animation: 'fadeInScale 0.2s ease-out' }}>
-            <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '60px', height: '60px', borderRadius: '50%', background: 'var(--color-danger-bg)', color: 'var(--color-danger)', fontSize: '2rem', marginBottom: '20px' }}>
-              <i className="ph-fill ph-warning-circle"></i>
-            </div>
-            <h3 style={{ marginBottom: '10px' }}>Sign out?</h3>
-            <p className="text-secondary" style={{ marginBottom: '24px' }}>Are you sure you want to sign out of the Task Management Portal?</p>
-            <div className="flex-row" style={{ justifyContent: 'center' }}>
-              <button className="btn btn-secondary" onClick={() => setShowLogoutConfirm(false)}>Cancel</button>
-              <button className="btn btn-primary" style={{ background: 'var(--color-danger)', borderColor: 'var(--color-danger)' }} onClick={() => {
-                setShowLogoutConfirm(false);
-                logout();
-              }}>Sign Out</button>
-            </div>
-          </div>
-        </div>
+      {confirmLogout && (
+        <ConfirmDialog
+          title="Sign out"
+          message="Are you sure you want to sign out?"
+          confirmLabel="Sign Out"
+          onConfirm={() => { setConfirmLogout(false); logout(); }}
+          onClose={() => setConfirmLogout(false)}
+        />
       )}
     </div>
+    </LiveSignalingProvider>
   );
+}
+
+function AppContent() {
+  const { user } = useAuth();
+  return user ? <AppShell /> : <LoginScreen />;
 }
 
 export default function App() {
   return (
     <AuthProvider>
+      <Toaster />
       <AppContent />
     </AuthProvider>
   );
