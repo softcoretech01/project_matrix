@@ -80,7 +80,8 @@ def get_projects(search: Optional[str] = None, status: Optional[str] = None,
     if search:
         s = search.strip().lower()
         projects = [p for p in projects if s in (p.name or "").lower() or s in (p.id or "").lower()
-                    or s in (p.description or "").lower()]
+                    or s in (p.description or "").lower() or s in (p.status or "").lower()
+                    or s in (p.priority or "").lower()]
     if status and status not in ("All", ""):
         projects = [p for p in projects if p.status == status]
     return [_enrich(db, p) for p in projects]

@@ -91,18 +91,9 @@ function LoginScreen() {
   const urlToken = new URLSearchParams(window.location.search).get('reset_token');
 
   const [mode, setMode] = useState(urlToken ? 'reset' : 'login');
-  const [portal, setPortal] = useState('admin');
-  const [email, setEmail] = useState(PORTAL_DEFAULTS.admin.username);         // username or email
-  const [password, setPassword] = useState(PORTAL_DEFAULTS.admin.password);
+  const [email, setEmail] = useState('');            // username or email
+  const [password, setPassword] = useState('');
   const [showPw, setShowPw] = useState(false);
-
-  // Selecting a portal pre-fills that portal's default credentials
-  const selectPortal = (key) => {
-    setPortal(key);
-    const d = PORTAL_DEFAULTS[key];
-    if (d) { setEmail(d.username); setPassword(d.password); }
-    setError('');
-  };
   const [remember, setRemember] = useState(false);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
@@ -113,10 +104,6 @@ function LoginScreen() {
   const [devLink, setDevLink] = useState('');
   const [resetToken, setResetToken] = useState(urlToken || '');
 
-  useEffect(() => {
-    const rem = getRememberedEmail();
-    if (rem) { setEmail(rem); setRemember(true); }
-  }, [getRememberedEmail]);
 
   const submitLogin = async (e) => {
     e.preventDefault();
@@ -125,7 +112,7 @@ function LoginScreen() {
     if (!password) return setError('Please enter your password.');
     setBusy(true);
     try {
-      await login(email.trim(), password, remember, portal);
+      await login(email.trim(), password, remember);
     } catch (err) {
       setError(err.message || 'Login failed.');
     } finally {
@@ -176,11 +163,11 @@ function LoginScreen() {
     }
   };
 
-  const activePortal = PORTALS.find((p) => p.key === portal) || PORTALS[0];
+  const BRAND = '#059669';
 
   return (
     <div className="auth-wrapper">
-      <div className="auth-visual" style={{ background: `linear-gradient(135deg, ${activePortal.color} 0%, #0f172a 100%)` }}>
+      <div className="auth-visual" style={{ background: `linear-gradient(135deg, ${BRAND} 0%, #0f172a 100%)` }}>
         <div style={{ position: 'relative', zIndex: 10 }}>
           <h1 style={{ fontSize: '3.2rem', fontWeight: 800, marginBottom: '20px', lineHeight: 1.1 }}>
             Master Your Work.<br />Monitor Performance.
@@ -198,7 +185,7 @@ function LoginScreen() {
           <div className="auth-header">
             <h2 className="auth-logo"><i className="ph-fill ph-lightning"></i> Task <span className="brand-accent">Matrix</span></h2>
             <p className="auth-subtitle">
-              {mode === 'login' && 'Select your portal and sign in'}
+              {mode === 'login' && 'Sign in to your account'}
               {mode === 'forgot' && 'Reset your password'}
               {mode === 'reset' && 'Choose a new password'}
             </p>
@@ -208,22 +195,6 @@ function LoginScreen() {
 
           {mode === 'login' && (
             <form onSubmit={submitLogin}>
-              {/* Portal selector */}
-              <div style={{ display: 'grid', gridTemplateColumns: `repeat(${PORTALS.length}, 1fr)`, gap: 10, marginBottom: 22 }}>
-                {PORTALS.map((p) => (
-                  <button type="button" key={p.key} onClick={() => selectPortal(p.key)}
-                    style={{
-                      border: `2px solid ${portal === p.key ? p.color : 'var(--border,#334155)'}`,
-                      background: portal === p.key ? `${p.color}18` : 'transparent',
-                      borderRadius: 12, padding: '12px 6px', cursor: 'pointer', textAlign: 'center',
-                      color: 'inherit', transition: 'all .15s',
-                    }}>
-                    <i className={`ph ${p.icon}`} style={{ fontSize: '1.5rem', color: p.color }}></i>
-                    <div style={{ fontSize: '0.72rem', fontWeight: 700, marginTop: 6 }}>{p.label.replace(' Portal', '')}</div>
-                  </button>
-                ))}
-              </div>
-
               <div className="form-group">
                 <label className="form-label">Username</label>
                 <input type="text" className="form-control form-control-lg" placeholder="username"
@@ -251,14 +222,14 @@ function LoginScreen() {
                   <span className="form-label" style={{ margin: 0 }}>Remember me</span>
                 </label>
                 <a onClick={() => { setMode('forgot'); setError(''); }}
-                  style={{ cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, color: activePortal.color }}>
+                  style={{ cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, color: BRAND }}>
                   Forgot password?
                 </a>
               </div>
 
               <button type="submit" className="btn btn-primary" disabled={busy}
-                style={{ width: '100%', padding: 14, fontSize: '1.05rem', background: activePortal.color, borderColor: activePortal.color }}>
-                {busy ? 'Signing in…' : <>Sign In to {activePortal.label.replace(' Portal', '')} <i className="ph ph-arrow-right" style={{ marginLeft: 8 }}></i></>}
+                style={{ width: '100%', padding: 14, fontSize: '1.05rem', background: BRAND, borderColor: BRAND }}>
+                {busy ? 'Signing in…' : <>Sign In <i className="ph ph-arrow-right" style={{ marginLeft: 8 }}></i></>}
               </button>
             </form>
           )}
@@ -325,11 +296,10 @@ function AppShell() {
   const [active, setActive] = useState(pathView() || menu[0].view);
   const [collapsed, setCollapsed] = useState(false);
   const [navParams, setNavParams] = useState(null);
-  const [onBreak, setOnBreak] = useState(false);
   const [confirmLogout, setConfirmLogout] = useState(false);
 
-  // Track idle time while logged in (paused during an explicit break)
-  useIdleTracker(true, onBreak);
+  // Track idle time while logged in
+  useIdleTracker(true);
 
   // Keep the URL path in sync with the active view (clean per-page URLs, no #)
   useEffect(() => {
@@ -362,11 +332,9 @@ function AppShell() {
       <LiveView />
       <aside className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
         <div className="sidebar-brand">
-          <span className="sidebar-brand-icon" style={{ fontSize: '1.4rem' }}><i className="ph-fill ph-lightning"></i></span>
           <span className="sidebar-brand-text">Task <span className="brand-accent">Matrix</span></span>
         </div>
         <nav className="sidebar-menu">
-          <div className="menu-section-header"><span>{user.role} Portal</span></div>
           {menu.map((m) => (
             <a key={m.view} className={`menu-item ${active === m.view ? 'active' : ''}`}
               onClick={() => navigate(m.view)}>
@@ -396,11 +364,6 @@ function AppShell() {
           </div>
           <div className="header-right">
             <div className="header-actions">
-              <button className={`btn btn-sm ${onBreak ? 'btn-primary' : 'btn-secondary'}`}
-                onClick={() => setOnBreak((b) => !b)} title="Toggle break (pauses idle tracking)"
-                style={{ marginRight: 8 }}>
-                <i className={`ph ${onBreak ? 'ph-coffee' : 'ph-pause'}`}></i> {onBreak ? 'On Break' : 'Break'}
-              </button>
               {menu.find((m) => m.view === 'notifications') && (
                 <button className="header-btn" onClick={() => navigate('notifications')} title="Notifications">
                   <i className="ph ph-bell" style={{ fontSize: '1.25rem' }}></i>

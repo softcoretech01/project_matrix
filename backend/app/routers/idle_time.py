@@ -46,10 +46,14 @@ def log_idle(body: IdleLog, current_user: User = Depends(get_current_user), db: 
     )
     # One alert per qualifying session (dedupe handled by per-session POST)
     if log.duration_seconds >= ALERT_THRESHOLD_SECONDS and (body.reason or "idle") != "break":
-        mins = round(log.duration_seconds / 60)
+        total_m = log.duration_seconds // 60
+        h, m = divmod(total_m, 60)
+        dur = f"{h}h {m}m" if h else f"{m} min"
+        st = start.strftime("%I:%M %p").lstrip("0")
+        window = f"from {st} to {end.strftime('%I:%M %p').lstrip('0')}" if end else f"starting {st}"
         db.add(Notification(
             user_id=None, type="idle", title="Idle-Time Alert",
-            message=f"{current_user.name} was idle for {mins} minutes on {log.log_date}.",
+            message=f"{current_user.name} was idle for {dur} ({window}) on {log.log_date}.",
         ))
         log.notified = True
     db.add(log)

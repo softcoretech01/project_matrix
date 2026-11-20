@@ -113,7 +113,8 @@ def get_tasks(status: Optional[str] = None, projectId: Optional[str] = None,
         q = q.filter(Task.priority == priority)
     if search:
         term = f"%{search.strip()}%"
-        q = q.filter((Task.name.ilike(term)) | (Task.id.ilike(term)) | (Task.description.ilike(term)))
+        q = q.filter((Task.name.ilike(term)) | (Task.id.ilike(term)) | (Task.description.ilike(term))
+                     | (Task.status.ilike(term)) | (Task.priority.ilike(term)) | (Task.category.ilike(term)))
     tasks = q.order_by(Task.created_at.desc()).all()
     out = []
     for t in tasks:

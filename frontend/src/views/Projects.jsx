@@ -317,7 +317,7 @@ export default function Projects({ navigate, navParams }) {
               {sorted.map((p, idx) => (
                 <tr key={p.id} className="clickable-row" onClick={() => setDetailId(p.id)}>
                   <td className="text-muted">{idx + 1}</td>
-                  <td><strong>{p.name}</strong><div className="text-muted" style={{ fontSize: '0.75rem' }}>{p.code}</div></td>
+                  <td><strong>{p.name}</strong></td>
                   <td>{p.ownerName || '—'}</td>
                   <td><PriorityBadge priority={p.priority} /></td>
                   <td><StatusBadge status={p.status} /></td>

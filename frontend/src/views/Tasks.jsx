@@ -10,6 +10,17 @@ import {
 
 const TASK_STATUSES = ['To Do', 'In Progress', 'Pending', 'Completed', 'Overdue'];
 const EDITABLE_STATUSES = ['To Do', 'In Progress', 'Pending', 'Completed'];
+// Simple, uniform set for the task Update-Status dropdown (all categories).
+const TASK_UPDATE_STATUSES = ['To Do', 'In Progress', 'Completed', 'Overdue'];
+// Normalise any category status into one of the 4 buckets for list badges.
+const _DONE_SET = new Set(['Completed', 'Closed', 'Done', 'Won', 'Connected', 'Published', 'Report Submitted', 'Verified']);
+const _TODO_SET = new Set(['To Do', 'To Call', 'Scheduled', 'Planned', 'Pending', 'New']);
+function statusBucket(eff, status) {
+  if (eff === 'Overdue') return 'Overdue';
+  if (_DONE_SET.has(status)) return 'Completed';
+  if (_TODO_SET.has(status)) return 'To Do';
+  return 'In Progress';
+}
 const PRIORITIES = ['Low', 'Medium', 'High', 'Critical'];
 
 function TaskForm({ task, projects, employees, categories = [], onClose, onSaved }) {
@@ -661,7 +672,7 @@ function TaskDetail({ id, projects, employees, categories = [], onBack, onChange
               <div className="form-group">
                 <label className="form-label">Status</label>
                 <select className="form-control" value={statusDraft} onChange={(e) => setStatusDraft(e.target.value)}>
-                  {((categories.find((c) => c.key === (t.category || 'general')) || {}).statuses || EDITABLE_STATUSES).map((s) => <option key={s}>{s}</option>)}
+                  {TASK_UPDATE_STATUSES.map((s) => <option key={s}>{s}</option>)}
                 </select>
               </div>
               <div className="form-group">
@@ -930,9 +941,7 @@ export default function Tasks({ navigate, navParams }) {
                 <th style={{ width: 54 }}>S.NO</th>
                 <th>Task ID</th>
                 <SortHeader label="Task Name" sortKey="name" sort={sort} onToggle={toggle} />
-                <SortHeader label="Category" sortKey="category" sort={sort} onToggle={toggle} />
                 <SortHeader label="Project" sortKey="projectName" sort={sort} onToggle={toggle} />
-                <SortHeader label="Assignee" sortKey="assignedToName" sort={sort} onToggle={toggle} />
                 <SortHeader label="Due Date" sortKey="endDate" sort={sort} onToggle={toggle} />
                 <SortHeader label="Priority" sortKey="priority" sort={sort} onToggle={toggle} />
                 <SortHeader label="Status" sortKey="status" sort={sort} onToggle={toggle} />
@@ -949,18 +958,10 @@ export default function Tasks({ navigate, navParams }) {
                     <td className="text-muted">{idx + 1}</td>
                     <td style={{ fontSize: '0.8rem' }}>{t.code || t.id}</td>
                     <td><strong>{t.name}</strong></td>
-                    <td>
-                      {c ? (
-                        <span className="badge" style={{ background: `${c.color}18`, color: c.color, fontSize: '0.72rem', whiteSpace: 'nowrap' }}>
-                          <i className={`ph ${c.icon}`}></i> {c.name}
-                        </span>
-                      ) : <span className="text-muted">—</span>}
-                    </td>
                     <td>{t.projectName || '—'}</td>
-                    <td>{t.assignedToName || <span className="text-muted">Unassigned</span>}</td>
                     <td><DateCell date={t.endDate} overdue={eff === 'Overdue'} /></td>
                     <td><PriorityBadge priority={t.priority} /></td>
-                    <td><StatusBadge status={eff} /></td>
+                    <td><StatusBadge status={statusBucket(eff, t.status)} /></td>
                     <td style={{ textAlign: 'center' }}>
                       <RowActions actions={[
                         { icon: 'ph-check', title: 'Mark complete', tone: 'success', show: canManage && !done, onClick: () => markComplete(t) },
