@@ -145,11 +145,28 @@ def dashboard(current_user: User = Depends(get_current_user), db: Session = Depe
     idle_alerts = 0
     idle_sessions = 0
     idle_minutes = 0
+    idle_alerts_by_emp = []
     if not is_worker:
+        users_map = {u.id: (u.name or u.email) for u in db.query(User).all()}
         idle_logs = db.query(IdleTimeLog).all()
         idle_sessions = len(idle_logs)
         idle_minutes = round(sum((l.duration_seconds or 0) for l in idle_logs) / 60)
-        idle_alerts = sum(1 for l in idle_logs if (l.duration_seconds or 0) >= 900)
+        alert_logs = [l for l in idle_logs if (l.duration_seconds or 0) >= 900]
+        idle_alerts = len(alert_logs)
+
+        emp_counts = defaultdict(int)
+        for l in alert_logs:
+            emp_name = users_map.get(l.user_id, l.user_id or "Unknown")
+            emp_counts[emp_name] += 1
+        idle_alerts_by_emp = [{"name": k, "alerts": v} for k, v in sorted(emp_counts.items(), key=lambda x: -x[1])]
+    else:
+        my_logs = db.query(IdleTimeLog).filter(IdleTimeLog.user_id == current_user.id).all()
+        idle_sessions = len(my_logs)
+        idle_minutes = round(sum((l.duration_seconds or 0) for l in my_logs) / 60)
+        alert_logs = [l for l in my_logs if (l.duration_seconds or 0) >= 900]
+        idle_alerts = len(alert_logs)
+        if idle_alerts > 0:
+            idle_alerts_by_emp = [{"name": current_user.name or "Me", "alerts": idle_alerts}]
 
     return {
         "role": current_user.role,
@@ -175,6 +192,7 @@ def dashboard(current_user: User = Depends(get_current_user), db: Session = Depe
             "taskStatus": status_dist,
             "projectStatus": proj_status,
             "categoryBreakdown": category_breakdown,
+            "idleAlerts": idle_alerts_by_emp,
         },
         "todayTasks": [light(t) for t in tasks if t.end_date == today],
         "upcomingDeadlines": [light(t) for t in upcoming],
@@ -182,7 +200,7 @@ def dashboard(current_user: User = Depends(get_current_user), db: Session = Depe
         "recentActivity": [n.to_dict() for n in recent],
         "timesheets": {"loggedHours": logged_hours, "count": len(timesheets)},
         "idleAlerts": idle_alerts,
-        "idle": {"alerts": idle_alerts, "sessions": idle_sessions, "minutes": idle_minutes},
+        "idle": {"alerts": idle_alerts, "sessions": idle_sessions, "minutes": idle_minutes, "byEmployee": idle_alerts_by_emp},
     }
 
 

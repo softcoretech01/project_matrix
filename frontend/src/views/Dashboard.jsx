@@ -162,10 +162,7 @@ function TasksOverviewCard({ c, navigate }) {
   return (
     <div className="card" style={{ borderTop: '3px solid #eab308' }}>
       <div className="card-header-flex">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span className="kpi-icon" style={{ background: '#eab30822', color: '#eab308' }}><i className="ph-fill ph-check-square"></i></span>
-          <h3 style={{ margin: 0, fontSize: '1.05rem' }}>Task Overview</h3>
-        </div>
+        <h3 style={{ margin: 0, fontSize: '1.05rem' }}>Tasks</h3>
         <button className="btn btn-sm btn-secondary" onClick={() => navigate('tasks')}>View</button>
       </div>
 
@@ -234,10 +231,7 @@ function ProjectsOverviewCard({ c, navigate }) {
   return (
     <div className="card" style={{ borderTop: '3px solid #059669' }}>
       <div className="card-header-flex">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span className="kpi-icon" style={{ background: '#05966922', color: '#059669' }}><i className="ph-fill ph-folder-open"></i></span>
-          <h3 style={{ margin: 0, fontSize: '1.05rem' }}>Projects Overview</h3>
-        </div>
+        <h3 style={{ margin: 0, fontSize: '1.05rem' }}>Projects</h3>
         <button className="btn btn-sm btn-secondary" onClick={() => navigate('projects')}>View</button>
       </div>
 
@@ -363,13 +357,13 @@ export default function Dashboard({ navigate }) {
       borderWidth: 0,
     }],
   };
-  const projLabels = Object.keys(data.charts.projectStatus);
-  const bar = {
-    labels: projLabels,
+  const idleBreak = data.charts?.idleAlerts || [];
+  const idleChart = {
+    labels: idleBreak.map((i) => i.name),
     datasets: [{
-      label: 'Projects',
-      data: projLabels.map((k) => data.charts.projectStatus[k]),
-      backgroundColor: '#10b981',
+      label: 'Alerts (>15 min)',
+      data: idleBreak.map((i) => i.alerts),
+      backgroundColor: '#ef4444',
       borderRadius: 8,
       maxBarThickness: 54,
       categoryPercentage: 0.7,
@@ -442,25 +436,20 @@ export default function Dashboard({ navigate }) {
               { label: isWorker ? 'Completed' : 'Unassigned', value: isWorker ? c.tasks.completed : c.tasks.unassigned },
             ]} />
         )}
-        {isAdmin ? (
-          <StatCard icon="ph-timer" color="#ef4444" title="Idle-Time Alerts" cta="View"
-            onClick={() => navigate('idletime')}
-            stats={[
-              { label: 'Alerts (>15 min)', value: (data.idle?.alerts ?? data.idleAlerts ?? 0), color: '#ef4444' },
-              { label: 'Idle Sessions', value: data.idle?.sessions ?? 0 },
-              { label: 'Idle Minutes', value: data.idle?.minutes ?? 0, color: '#f59e0b' },
-              { label: 'Logged Hours', value: data.timesheets?.loggedHours ?? 0, color: '#3b82f6' },
-            ]} />
-        ) : (!isWorker && c.employees && (
-          <StatCard icon="ph-users" color="#10b981" title="Employee Overview"
-            cta="View" onClick={() => navigate('employees')}
-            stats={[
-              { label: 'Total', value: c.employees.total },
-              { label: 'Active', value: c.employees.active, color: '#10b981' },
-              { label: 'Working', value: c.employees.working, color: '#3b82f6' },
-              { label: 'With Pending', value: c.employees.withPendingTasks, color: '#f59e0b' },
-            ]} />
-        ))}
+        {!isWorker && c.employees && (
+          isAdmin ? (
+            <EmployeesOverviewCard c={c} navigate={navigate} />
+          ) : (
+            <StatCard icon="ph-users" color="#10b981" title="Employee Overview"
+              cta="View" onClick={() => navigate('employees')}
+              stats={[
+                { label: 'Total', value: c.employees.total },
+                { label: 'Active', value: c.employees.active, color: '#10b981' },
+                { label: 'Working', value: c.employees.working, color: '#3b82f6' },
+                { label: 'With Pending', value: c.employees.withPendingTasks, color: '#f59e0b' },
+              ]} />
+          )
+        )}
       </div>
 
       {/* Charts */}
@@ -471,10 +460,44 @@ export default function Dashboard({ navigate }) {
               : <EmptyState icon="ph-chart-pie" title="No tasks yet" />}
           </div>
         </Card>
-        <Card title="Projects by Status">
+        <Card
+          title={
+            <span>
+              <i className="ph-fill ph-timer" style={{ marginRight: 8, color: '#ef4444' }}></i>
+              Idle-Time Alerts (&gt;15 min)
+            </span>
+          }
+          actions={
+            !isWorker && (
+              <button
+                className="btn btn-sm btn-secondary"
+                style={{ fontSize: '0.78rem', padding: '4px 8px' }}
+                onClick={() => navigate('idletime')}
+              >
+                View Monitoring →
+              </button>
+            )
+          }
+        >
           <div style={{ height: 200 }}>
-            {projLabels.length ? <Bar data={bar} options={chartOpts} />
-              : <EmptyState icon="ph-chart-bar" title="No projects yet" />}
+            {idleBreak.length ? (
+              <Bar
+                data={idleChart}
+                options={{
+                  ...chartOpts,
+                  plugins: {
+                    ...chartOpts.plugins,
+                    legend: { display: false },
+                  },
+                }}
+              />
+            ) : (
+              <EmptyState
+                icon="ph-check-circle"
+                title="No idle alerts"
+                message="No employee sessions exceeded 15 minutes."
+              />
+            )}
           </div>
         </Card>
       </div>
@@ -553,14 +576,16 @@ export default function Dashboard({ navigate }) {
               </div>
 
               {/* Page-wise navigation: 10 per page */}
-              <Pager
-                page={activityPage}
-                pageCount={totalActivityPages}
-                total={filteredActivities.length}
-                start={activityStart}
-                per={ACTIVITY_PER_PAGE}
-                onPage={setActivityPage}
-              />
+              <div style={{ marginTop: 12, paddingTop: 10, borderTop: '1px solid var(--border-color, #e2e8f0)' }}>
+                <Pager
+                  page={activityPage}
+                  pageCount={totalActivityPages}
+                  total={filteredActivities.length}
+                  start={activityStart}
+                  per={ACTIVITY_PER_PAGE}
+                  onPage={setActivityPage}
+                />
+              </div>
             </>
           )}
         </Card>
@@ -571,10 +596,13 @@ export default function Dashboard({ navigate }) {
             <div className="text-muted" style={{ fontSize: '0.8rem' }}>{data.timesheets.count} timesheet(s)</div>
           </div>
           {!isWorker && (
-            <div className="card" style={{ borderLeft: '3px solid #ef4444' }}>
-              <div className="text-secondary" style={{ fontSize: '0.85rem' }}>Idle-Time Alerts (&gt;15 min)</div>
-              <div style={{ fontSize: '2rem', fontWeight: 800, color: data.idleAlerts ? '#ef4444' : 'inherit' }}>{data.idleAlerts}</div>
-              <a className="text-secondary" style={{ fontSize: '0.8rem', cursor: 'pointer' }} onClick={() => navigate('idletime')}>View monitoring →</a>
+            <div className="card" style={{ borderLeft: '3px solid #f59e0b' }}>
+              <div className="text-secondary" style={{ fontSize: '0.85rem' }}>Total Idle Time Logged</div>
+              <div style={{ fontSize: '2rem', fontWeight: 800 }}>{data.idle?.minutes ?? 0}<span style={{ fontSize: '1rem' }}> min</span></div>
+              <div className="text-muted" style={{ fontSize: '0.8rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 }}>
+                <span>{data.idle?.sessions ?? 0} idle session(s)</span>
+                <a className="text-secondary" style={{ fontSize: '0.8rem', cursor: 'pointer' }} onClick={() => navigate('idletime')}>View monitoring →</a>
+              </div>
             </div>
           )}
         </div>
