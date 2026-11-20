@@ -104,8 +104,6 @@ export default function Camera() {
                 <SortHeader label="Employee" sortKey="employeeName" sort={sort} onToggle={toggle} />
                 <SortHeader label="Date" sortKey="capturedAt" sort={sort} onToggle={toggle} />
                 <th>Capture Time</th>
-                <SortHeader label="Project ID" sortKey="projectId" sort={sort} onToggle={toggle} />
-                <SortHeader label="Task ID" sortKey="taskId" sort={sort} onToggle={toggle} />
                 <SortHeader label="Activity Type" sortKey="activityType" sort={sort} onToggle={toggle} />
                 <th style={{ textAlign: 'center' }}>Action</th>
               </tr>
@@ -140,12 +138,13 @@ export default function Camera() {
                   <td><strong>{l.employeeName}</strong></td>
                   <td><DateCell date={l.capturedAt} /></td>
                   <td>{fmtTime(l.capturedAt)}</td>
-                  <td>{l.projectId || '—'}</td>
-                  <td>{l.taskId || '—'}</td>
                   <td><span className="badge" style={{ background: 'rgba(16,185,129,.12)', color: '#059669' }}>{l.activityType}</span></td>
                   <td style={{ textAlign: 'center' }}>
                     <RowActions actions={[
                       { icon: 'ph-eye', title: 'View', tone: 'primary', show: l.activityType !== 'live-view', onClick: () => setPreview(l) },
+                      { icon: 'ph-video-camera', title: 'Open live view', tone: 'primary',
+                        show: canLive && l.activityType === 'live-view' && !!l.userId,
+                        onClick: () => live?.requestView({ id: l.userId, name: l.employeeName }) },
                     ]} />
                   </td>
                 </tr>
