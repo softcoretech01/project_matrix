@@ -33,6 +33,84 @@ function StatCard({ icon, color, title, stats, onClick, cta }) {
   );
 }
 
+// Admin-only overview card: the task stats PLUS a searchable grid of all tasks.
+function TasksOverviewCard({ c, navigate }) {
+  const [search, setSearch] = useState('');
+  const [tasks, setTasks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    let alive = true;
+    const h = setTimeout(async () => {
+      try {
+        const tl = await api.get(`/tasks?search=${encodeURIComponent(search)}&status=All&priority=All&category=All`);
+        if (alive) setTasks(Array.isArray(tl) ? tl : []);
+      } catch { /* ignore */ }
+      finally { if (alive) setLoading(false); }
+    }, 250);
+    return () => { alive = false; clearTimeout(h); };
+  }, [search]);
+
+  const stats = [
+    { label: 'Pending', value: c.tasks.totalPending },
+    { label: 'Overdue', value: c.tasks.overdue, color: '#ef4444' },
+    { label: 'Due Today', value: c.tasks.dueToday, color: '#f59e0b' },
+    { label: 'Unassigned', value: c.tasks.unassigned },
+  ];
+
+  return (
+    <div className="card" style={{ borderTop: '3px solid #eab308' }}>
+      <div className="card-header-flex">
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span className="kpi-icon" style={{ background: '#eab30822', color: '#eab308' }}><i className="ph-fill ph-check-square"></i></span>
+          <h3 style={{ margin: 0, fontSize: '1.05rem' }}>Task Overview</h3>
+        </div>
+        <button className="btn btn-sm btn-secondary" onClick={() => navigate('tasks')}>View</button>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 12, marginTop: 8 }}>
+        {stats.map((s) => (
+          <div key={s.label} style={{ padding: '10px 12px', background: 'var(--surface-2, rgba(148,163,184,.07))', borderRadius: 10 }}>
+            <div style={{ fontSize: '1.6rem', fontWeight: 800, color: s.color || 'inherit' }}>{s.value}</div>
+            <div className="text-secondary" style={{ fontSize: '0.8rem' }}>{s.label}</div>
+          </div>
+        ))}
+      </div>
+
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10,
+        margin: '16px 0 10px', paddingTop: 14, borderTop: '1px solid var(--border-color,#e2e8f0)', flexWrap: 'wrap' }}>
+        <strong style={{ fontSize: '0.9rem' }}>All Tasks ({tasks.length})</strong>
+        <SearchBox value={search} onChange={setSearch} placeholder="Search tasks…" width="220px" />
+      </div>
+
+      {loading ? <Spinner /> : tasks.length === 0 ? (
+        <EmptyState icon="ph-check-square" title="No tasks found" message={search ? 'Try a different search.' : 'No tasks yet.'} />
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 12 }}>
+          {tasks.map((t) => (
+            <div key={t.id} className="clickable-row" onClick={() => navigate('tasks', { taskId: t.id })}
+              style={{ border: '1px solid var(--border-color,#e2e8f0)', borderRadius: 10, padding: 12, cursor: 'pointer' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
+                <div style={{ minWidth: 0 }}>
+                  <strong style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.name}</strong>
+                  <div className="text-muted" style={{ fontSize: '0.72rem' }}>{t.code || t.id}</div>
+                </div>
+                <StatusBadge status={t.status} />
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 8 }}>
+                <PriorityBadge priority={t.priority} />
+              </div>
+              <div className="text-secondary" style={{ fontSize: '0.75rem', marginTop: 8, display: 'flex', justifyContent: 'space-between', gap: 6 }}>
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.assignedToName || 'Unassigned'}</span>
+                <span style={{ whiteSpace: 'nowrap' }}>{t.endDate ? fmtDate(t.endDate) : '—'}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // Admin-only overview card: the project stats PLUS a searchable grid of all
 // projects, together inside one card.
 function ProjectsOverviewCard({ c, navigate }) {
@@ -239,14 +317,18 @@ export default function Dashboard({ navigate }) {
               { label: 'Pending', value: c.projects.pending, color: '#f59e0b' },
             ]} />
         )}
-        <StatCard icon="ph-check-square" color="#eab308" title={isWorker ? 'My Tasks' : 'Pending Tasks'}
-          cta="View" onClick={() => navigate('tasks')}
-          stats={[
-            { label: 'Pending', value: c.tasks.totalPending },
-            { label: 'Overdue', value: c.tasks.overdue, color: '#ef4444' },
-            { label: 'Due Today', value: c.tasks.dueToday, color: '#f59e0b' },
-            { label: isWorker ? 'Completed' : 'Unassigned', value: isWorker ? c.tasks.completed : c.tasks.unassigned },
-          ]} />
+        {isAdmin ? (
+          <TasksOverviewCard c={c} navigate={navigate} />
+        ) : (
+          <StatCard icon="ph-check-square" color="#eab308" title={isWorker ? 'My Tasks' : 'Pending Tasks'}
+            cta="View" onClick={() => navigate('tasks')}
+            stats={[
+              { label: 'Pending', value: c.tasks.totalPending },
+              { label: 'Overdue', value: c.tasks.overdue, color: '#ef4444' },
+              { label: 'Due Today', value: c.tasks.dueToday, color: '#f59e0b' },
+              { label: isWorker ? 'Completed' : 'Unassigned', value: isWorker ? c.tasks.completed : c.tasks.unassigned },
+            ]} />
+        )}
         {!isWorker && c.employees && (
           <StatCard icon="ph-users" color="#10b981" title="Employee Overview"
             cta="View" onClick={() => navigate('employees')}
