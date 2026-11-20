@@ -397,7 +397,9 @@ class Timesheet(Base):
             "createdAt": _dt(self.created_at),
         }
         if include_images:
-            d["images"] = [a.to_dict() for a in self.attachments]
+            atts = [a.to_dict() for a in self.attachments]
+            d["images"] = [a for a in atts if a["source"] != "file"]
+            d["files"] = [a for a in atts if a["source"] == "file"]
         return d
 
 
@@ -408,13 +410,15 @@ class TimesheetAttachment(Base):
     timesheet_id = Column(String(50), ForeignKey("pm_timesheets.id", ondelete="CASCADE"))
     filename = Column(String(255))
     filepath = Column(String(500))
-    source = Column(String(20), default="upload")   # upload / camera
+    original_name = Column(String(255))             # user's file name (docs get a uuid filename on disk)
+    source = Column(String(20), default="upload")   # upload / camera / file
     uploaded_at = Column(DateTime, default=datetime.utcnow)
 
     timesheet = relationship("Timesheet", back_populates="attachments")
 
     def to_dict(self):
         return {"id": self.id, "timesheetId": self.timesheet_id, "filename": self.filename,
+                "originalName": self.original_name or self.filename,
                 "url": f"/uploads/timesheets/{self.filename}", "source": self.source,
                 "uploadedAt": _dt(self.uploaded_at)}
 

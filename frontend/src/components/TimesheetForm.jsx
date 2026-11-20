@@ -5,9 +5,20 @@ import CameraCapture from './CameraCapture';
 
 const HOURS = Array.from({ length: 12 }, (_, i) => i + 1);
 const MINUTES = ['00', '15', '30', '45'];
-const MAX_WORDS = 3000;
+const MAX_CHARS = 3000;
 const MAX_IMAGES = 5;
+const MAX_DOCS = 5;
 const IMG_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+const DOC_EXTS = ['xlsx', 'xls', 'csv', 'pdf', 'doc', 'docx', 'txt'];
+const DOC_ACCEPT = '.xlsx,.xls,.csv,.pdf,.doc,.docx,.txt';
+const docExt = (name) => (name.includes('.') ? name.split('.').pop().toLowerCase() : '');
+const docIcon = (name) => {
+  const e = docExt(name);
+  if (['xlsx', 'xls', 'csv'].includes(e)) return 'ph-file-xls';
+  if (e === 'pdf') return 'ph-file-pdf';
+  if (['doc', 'docx'].includes(e)) return 'ph-file-doc';
+  return 'ph-file-text';
+};
 
 function to24(h, m, ap) {
   let hh = parseInt(h, 10) % 12;
@@ -45,6 +56,7 @@ export default function TimesheetForm({ initialTaskId = '', onClose, onSaved }) 
   const [to, setTo] = useState({ h: 5, m: '00', ap: 'PM' });
   const [remarks, setRemarks] = useState('');
   const [images, setImages] = useState([]);   // {id, kind:'file'|'camera', file?, dataUrl?, preview}
+  const [docs, setDocs] = useState([]);        // {id, file}
   const [showCam, setShowCam] = useState(false);
   const [busy, setBusy] = useState(false);
 
@@ -60,8 +72,8 @@ export default function TimesheetForm({ initialTaskId = '', onClose, onSaved }) 
     return Math.round(diff * 100) / 100;
   }, [from, to]);
 
-  const wordCount = remarks.trim() ? remarks.trim().split(/\s+/).length : 0;
-  const overLimit = wordCount > MAX_WORDS;
+  const charCount = remarks.length;
+  const overLimit = charCount > MAX_CHARS;
 
   const addFiles = (fileList) => {
     const files = Array.from(fileList);
@@ -82,9 +94,20 @@ export default function TimesheetForm({ initialTaskId = '', onClose, onSaved }) 
   };
   const removeImg = (id) => setImages((p) => p.filter((i) => i.id !== id));
 
+  const addDocs = (fileList) => {
+    const files = Array.from(fileList);
+    for (const f of files) {
+      if (docs.length >= MAX_DOCS) { toast.error(`Max ${MAX_DOCS} files`); break; }
+      if (!DOC_EXTS.includes(docExt(f.name))) { toast.error(`${f.name}: use Excel, PDF, Word, CSV or TXT`); continue; }
+      if (f.size > 20 * 1024 * 1024) { toast.error(`${f.name}: max 20MB`); continue; }
+      setDocs((p) => [...p, { id: Date.now() + Math.random(), file: f }]);
+    }
+  };
+  const removeDoc = (id) => setDocs((p) => p.filter((d) => d.id !== id));
+
   const submit = async () => {
     if (!taskId) return toast.error('Please select a task');
-    if (overLimit) return toast.error(`Remarks exceed ${MAX_WORDS} words`);
+    if (overLimit) return toast.error(`Remarks exceed ${MAX_CHARS} characters`);
     setBusy(true);
     try {
       const ts = await api.post('/timesheets', {
@@ -102,6 +125,13 @@ export default function TimesheetForm({ initialTaskId = '', onClose, onSaved }) 
             await api.post(`/timesheets/${ts.id}/camera`, { image: img.dataUrl, taskId, projectId: task?.projectId || '' });
           }
         } catch (e) { toast.error('Image upload failed: ' + e.message); }
+      }
+      // upload documents (Excel / PDF / Word / CSV …)
+      for (const d of docs) {
+        try {
+          const fd = new FormData(); fd.append('file', d.file);
+          await api.upload(`/timesheets/${ts.id}/files`, fd);
+        } catch (e) { toast.error('File upload failed: ' + e.message); }
       }
       toast.success('Timesheet submitted');
       onSaved && onSaved(ts);
@@ -153,7 +183,7 @@ export default function TimesheetForm({ initialTaskId = '', onClose, onSaved }) 
           placeholder="Describe the work done…" />
         <div style={{ textAlign: 'right', fontSize: '0.78rem', marginTop: 4,
           color: overLimit ? '#ef4444' : 'var(--text-secondary,#94a3b8)' }}>
-          {wordCount} / {MAX_WORDS} words {overLimit && '— exceeds limit'}
+          {charCount} / {MAX_CHARS} characters {overLimit && '— exceeds limit'}
         </div>
       </div>
 
@@ -178,6 +208,28 @@ export default function TimesheetForm({ initialTaskId = '', onClose, onSaved }) 
             <i className="ph ph-camera"></i> Camera
           </button>
         </div>
+      </div>
+
+      <div className="form-group">
+        <label className="form-label">Files (max {MAX_DOCS}) — Excel, PDF, Word, CSV</label>
+        {docs.length > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 10 }}>
+            {docs.map((d) => (
+              <div key={d.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px',
+                border: '1px solid var(--border-color,#e2e8f0)', borderRadius: 8, fontSize: '0.85rem' }}>
+                <i className={`ph ${docIcon(d.file.name)}`} style={{ color: '#059669', fontSize: '1.1rem' }}></i>
+                <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.file.name}</span>
+                <span className="text-muted" style={{ fontSize: '0.75rem' }}>{(d.file.size / 1024 / 1024).toFixed(2)} MB</span>
+                <button type="button" className="icon-btn danger" title="Remove" style={{ width: 28, height: 28, minWidth: 28 }}
+                  onClick={() => removeDoc(d.id)}><i className="ph ph-x"></i></button>
+              </div>
+            ))}
+          </div>
+        )}
+        <label className="btn btn-sm btn-secondary" style={{ cursor: 'pointer' }}>
+          <i className="ph ph-file-arrow-up"></i> Attach File
+          <input type="file" hidden multiple accept={DOC_ACCEPT} onChange={(e) => { addDocs(e.target.files); e.target.value = ''; }} />
+        </label>
       </div>
 
       {showCam && <CameraCapture onCapture={addCamera} onClose={() => setShowCam(false)} allowVideo={false} />}

@@ -45,6 +45,28 @@ function TimesheetDetail({ ts, canReview, onClose, onChanged }) {
           </div>
         </div>
       )}
+      {ts.files && ts.files.length > 0 && (
+        <div style={{ marginTop: 12 }}>
+          <div className="text-secondary" style={{ fontSize: '0.78rem', marginBottom: 6 }}>Files ({ts.files.length})</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {ts.files.map((fl) => {
+              const ext = (fl.originalName || fl.filename || '').split('.').pop().toLowerCase();
+              const icon = ['xlsx', 'xls', 'csv'].includes(ext) ? 'ph-file-xls'
+                : ext === 'pdf' ? 'ph-file-pdf'
+                : ['doc', 'docx'].includes(ext) ? 'ph-file-doc' : 'ph-file-text';
+              return (
+                <a key={fl.id} href={assetUrl(fl.url)} target="_blank" rel="noreferrer" download
+                  style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px',
+                    border: '1px solid var(--border-color,#e2e8f0)', borderRadius: 8, fontSize: '0.85rem', textDecoration: 'none' }}>
+                  <i className={`ph ${icon}`} style={{ color: '#059669', fontSize: '1.1rem' }}></i>
+                  <span style={{ flex: 1, color: 'var(--text,#0f172a)' }}>{fl.originalName || fl.filename}</span>
+                  <i className="ph ph-download-simple" style={{ color: '#64748b' }}></i>
+                </a>
+              );
+            })}
+          </div>
+        </div>
+      )}
       <div style={{ marginTop: 14, paddingTop: 12, borderTop: '1px solid var(--border-color,#e2e8f0)' }}>
         <LinksPanel parentType="timesheet" parentId={ts.id} compact />
       </div>

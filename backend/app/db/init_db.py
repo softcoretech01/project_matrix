@@ -7,6 +7,8 @@ dashboard, calendar and reports have live data to show.
 import os
 from datetime import datetime
 
+from sqlalchemy import text, inspect
+
 from backend.app.db.database import engine, Base, SessionLocal
 from backend.app.core.security import get_password_hash
 from backend.app.models.models import (
@@ -23,8 +25,26 @@ def _ensure_upload_dirs():
         os.makedirs(os.path.join(UPLOAD_ROOT, sub), exist_ok=True)
 
 
+def _run_lightweight_migrations():
+    """Idempotent ADD COLUMNs for tables that were created before a column existed.
+    create_all() never alters existing tables, so new nullable columns are added here."""
+    adds = [
+        ("pm_timesheet_attachments", "original_name", "VARCHAR(255) NULL"),
+    ]
+    insp = inspect(engine)
+    existing_tables = set(insp.get_table_names())
+    with engine.begin() as conn:
+        for table, col, coldef in adds:
+            if table not in existing_tables:
+                continue
+            cols = {c["name"] for c in insp.get_columns(table)}
+            if col not in cols:
+                conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {col} {coldef}"))
+
+
 def init_db():
     Base.metadata.create_all(bind=engine)
+    _run_lightweight_migrations()
     _ensure_upload_dirs()
 
     db = SessionLocal()

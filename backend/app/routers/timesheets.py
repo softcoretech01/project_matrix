@@ -12,11 +12,13 @@ from backend.app.models.models import (
     Timesheet, TimesheetAttachment, Task, Project, User, Notification, CameraActivityLog,
 )
 from backend.app.core.deps import get_current_user
-from backend.app.core.storage import save_upload, save_base64_image, delete_file, IMAGE_EXTS
+from backend.app.core.storage import save_upload, save_base64_image, delete_file, IMAGE_EXTS, DOC_EXTS
 
 router = APIRouter(prefix="/api/timesheets", tags=["timesheets"])
 
 MAX_IMAGES = 5
+MAX_DOCS = 5
+IMAGE_SOURCES = ("upload", "camera")
 MAX_REMARK_WORDS = 3000
 
 
@@ -171,7 +173,8 @@ def upload_image(ts_id: str, file: UploadFile = File(...),
     ts = db.query(Timesheet).filter(Timesheet.id == ts_id).first()
     if not ts:
         raise HTTPException(status_code=404, detail="Timesheet not found")
-    if db.query(TimesheetAttachment).filter(TimesheetAttachment.timesheet_id == ts_id).count() >= MAX_IMAGES:
+    if db.query(TimesheetAttachment).filter(TimesheetAttachment.timesheet_id == ts_id,
+                                             TimesheetAttachment.source.in_(IMAGE_SOURCES)).count() >= MAX_IMAGES:
         raise HTTPException(status_code=400, detail=f"Maximum {MAX_IMAGES} images per timesheet")
     saved = save_upload(file, "timesheets", allowed=IMAGE_EXTS)
     att = TimesheetAttachment(timesheet_id=ts_id, filename=saved["filename"],
@@ -188,7 +191,8 @@ def capture_camera(ts_id: str, body: CameraCapture,
     ts = db.query(Timesheet).filter(Timesheet.id == ts_id).first()
     if not ts:
         raise HTTPException(status_code=404, detail="Timesheet not found")
-    if db.query(TimesheetAttachment).filter(TimesheetAttachment.timesheet_id == ts_id).count() >= MAX_IMAGES:
+    if db.query(TimesheetAttachment).filter(TimesheetAttachment.timesheet_id == ts_id,
+                                             TimesheetAttachment.source.in_(IMAGE_SOURCES)).count() >= MAX_IMAGES:
         raise HTTPException(status_code=400, detail=f"Maximum {MAX_IMAGES} images per timesheet")
     saved = save_base64_image(body.image, "timesheets")
     att = TimesheetAttachment(timesheet_id=ts_id, filename=saved["filename"],
@@ -198,6 +202,26 @@ def capture_camera(ts_id: str, body: CameraCapture,
     db.add(CameraActivityLog(user_id=current_user.id, project_id=ts.project_id, task_id=ts.task_id,
                              timesheet_id=ts_id, filename=saved["filename"], filepath=saved["filepath"],
                              activity_type="timesheet-capture", captured_at=datetime.utcnow()))
+    db.commit()
+    db.refresh(att)
+    return att.to_dict()
+
+
+# ---------- documents (Excel / PDF / Word / CSV …) ----------
+@router.post("/{ts_id}/files")
+def upload_document(ts_id: str, file: UploadFile = File(...),
+                    current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    ts = db.query(Timesheet).filter(Timesheet.id == ts_id).first()
+    if not ts:
+        raise HTTPException(status_code=404, detail="Timesheet not found")
+    if db.query(TimesheetAttachment).filter(TimesheetAttachment.timesheet_id == ts_id,
+                                            TimesheetAttachment.source == "file").count() >= MAX_DOCS:
+        raise HTTPException(status_code=400, detail=f"Maximum {MAX_DOCS} files per timesheet")
+    saved = save_upload(file, "timesheets", allowed=DOC_EXTS)
+    att = TimesheetAttachment(timesheet_id=ts_id, filename=saved["filename"],
+                              filepath=saved["filepath"], source="file",
+                              original_name=file.filename or saved["filename"])
+    db.add(att)
     db.commit()
     db.refresh(att)
     return att.to_dict()
