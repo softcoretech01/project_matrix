@@ -122,7 +122,7 @@ def dashboard(current_user: User = Depends(get_current_user), db: Session = Depe
     notif_q = db.query(Notification)
     if is_worker:
         notif_q = notif_q.filter((Notification.user_id == current_user.id) | (Notification.user_id.is_(None)))
-    recent = notif_q.order_by(Notification.created_at.desc()).limit(6).all()
+    recent = notif_q.order_by(Notification.created_at.desc()).limit(300).all()
 
     # ---- Timesheet status + working hours ----
     ts_q = db.query(Timesheet)
