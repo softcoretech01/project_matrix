@@ -75,6 +75,24 @@ def _log(db, task, user, utype, old, new, remark=None):
                          new_value=str(new) if new is not None else None, remark=remark))
 
 
+def _supervisor_ids(db, task):
+    """Everyone who should hear about activity on a task: its creator, its
+    reviewer, and all Admins (so the Admin is always notified)."""
+    ids = {task.created_by, task.reviewer_id}
+    ids.update(uid for (uid,) in db.query(User.id).filter(User.role == "Admin").all())
+    return ids
+
+
+def _notify(db, recipient_ids, actor, title, message, task_id):
+    """Create one notification per distinct recipient, skipping the actor."""
+    seen = set()
+    for uid in recipient_ids:
+        if not uid or uid == actor.id or uid in seen:
+            continue
+        seen.add(uid)
+        db.add(Notification(user_id=uid, type="task", title=title, message=message, task_id=task_id))
+
+
 @router.get("")
 def get_tasks(status: Optional[str] = None, projectId: Optional[str] = None,
               assignedTo: Optional[str] = None, search: Optional[str] = None,
@@ -232,12 +250,16 @@ def update_task(task_id: str, data: TaskPatch, current_user: User = Depends(get_
         else:
             task.completed_at = None
         _log(db, task, current_user, "status", old_status, data.status, data.remark)
-        if task.assigned_to:
-            db.add(Notification(user_id=task.assigned_to, type="task", title="Task Status Updated",
-                                message=f"'{task.name}' is now {task.status}.", task_id=task.id))
+        _msg = f"{current_user.name} set '{task.name}' to {task.status}."
+        if data.remark:
+            _msg += f" Remark: {data.remark}"
+        _notify(db, {task.assigned_to} | _supervisor_ids(db, task), current_user,
+                "Task Status Updated", _msg, task.id)
     if data.progress is not None and data.progress != old_progress:
         task.progress = data.progress
         _log(db, task, current_user, "progress", old_progress, data.progress, data.remark)
+        _notify(db, _supervisor_ids(db, task), current_user, "Task Progress Updated",
+                f"{current_user.name} set '{task.name}' progress to {data.progress}%.", task.id)
     if data.assignedTo is not None and data.assignedTo != old_assignee:
         task.assigned_to = data.assignedTo or None
         _log(db, task, current_user, "assignment", old_assignee, data.assignedTo)
@@ -246,6 +268,8 @@ def update_task(task_id: str, data: TaskPatch, current_user: User = Depends(get_
                                 message=f"You have been assigned to '{task.name}'.", task_id=task.id))
     if data.remark and not status_changed:
         _log(db, task, current_user, "remark", None, None, data.remark)
+        _notify(db, {task.assigned_to} | _supervisor_ids(db, task), current_user,
+                "New Remark", f"{current_user.name} added a remark on '{task.name}': {data.remark}", task.id)
 
     db.commit()
     db.refresh(task)
@@ -343,9 +367,10 @@ def add_comment(task_id: str, data: CommentCreate, current_user: User = Depends(
         raise HTTPException(status_code=404, detail="Task not found")
     comment = Comment(task_id=task_id, user_id=current_user.id, user_name=current_user.name, text=data.text)
     db.add(comment)
-    if task.assigned_to and task.assigned_to != current_user.id:
-        db.add(Notification(user_id=task.assigned_to, type="task", title="New Comment",
-                            message=f"{current_user.name} commented on '{task.name}'.", task_id=task.id))
+    snippet = (data.text or "").strip()
+    snippet = snippet if len(snippet) <= 120 else snippet[:117] + "…"
+    _notify(db, {task.assigned_to} | _supervisor_ids(db, task), current_user,
+            "New Comment", f"{current_user.name} commented on '{task.name}': {snippet}", task.id)
     db.commit()
     db.refresh(comment)
     return comment.to_dict()
