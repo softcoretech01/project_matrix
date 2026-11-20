@@ -11,6 +11,15 @@ const MAX_DOCS = 5;
 const IMG_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
 const DOC_EXTS = ['xlsx', 'xls', 'csv', 'pdf', 'doc', 'docx', 'txt'];
 const DOC_ACCEPT = '.xlsx,.xls,.csv,.pdf,.doc,.docx,.txt';
+// Local (not UTC) YYYY-MM-DD so "today's work" matches the user's calendar day
+const todayLocal = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
+const prettyDate = (iso) => {
+  const [y, m, d] = iso.split('-');
+  return `${d}-${m}-${y}`;
+};
 const docExt = (name) => (name.includes('.') ? name.split('.').pop().toLowerCase() : '');
 const docIcon = (name) => {
   const e = docExt(name);
@@ -51,7 +60,7 @@ function TimePicker({ label, value, onChange }) {
 export default function TimesheetForm({ initialTaskId = '', onClose, onSaved }) {
   const [tasks, setTasks] = useState([]);
   const [taskId, setTaskId] = useState(initialTaskId);
-  const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
+  const [date] = useState(todayLocal());   // timesheet is always for today's work — not editable
   const [from, setFrom] = useState({ h: 9, m: '00', ap: 'AM' });
   const [to, setTo] = useState({ h: 5, m: '00', ap: 'PM' });
   const [remarks, setRemarks] = useState('');
@@ -165,8 +174,10 @@ export default function TimesheetForm({ initialTaskId = '', onClose, onSaved }) 
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12 }}>
         <div className="form-group">
-          <label className="form-label">Date</label>
-          <input type="date" className="form-control" value={date} onChange={(e) => setDate(e.target.value)} />
+          <label className="form-label">Date <span className="text-muted" style={{ fontWeight: 400, fontSize: '0.75rem' }}>(today)</span></label>
+          <input className="form-control" value={prettyDate(date)} readOnly tabIndex={-1}
+            title="Timesheets are logged for today's work"
+            style={{ background: 'var(--surface-2, rgba(148,163,184,.08))', cursor: 'not-allowed', fontWeight: 600 }} />
         </div>
         <TimePicker label="From Time" value={from} onChange={setFrom} />
         <TimePicker label="To Time" value={to} onChange={setTo} />
