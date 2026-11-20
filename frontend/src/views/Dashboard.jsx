@@ -356,8 +356,9 @@ export default function Dashboard({ navigate }) {
       data: projLabels.map((k) => data.charts.projectStatus[k]),
       backgroundColor: '#10b981',
       borderRadius: 8,
-      maxBarThickness: 44,
-      barThickness: 40,
+      maxBarThickness: 90,
+      categoryPercentage: 0.7,
+      barPercentage: 0.9,
     }],
   };
   const catBreak = data.charts.categoryBreakdown || [];
@@ -368,8 +369,9 @@ export default function Dashboard({ navigate }) {
       data: catBreak.map((c) => c.count),
       backgroundColor: catBreak.map((c) => c.color || '#3b82f6'),
       borderRadius: 8,
-      maxBarThickness: 44,
-      barThickness: 40,
+      maxBarThickness: 90,
+      categoryPercentage: 0.7,
+      barPercentage: 0.9,
     }],
   };
   const chartOpts = {
