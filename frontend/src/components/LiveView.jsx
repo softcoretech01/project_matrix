@@ -1,6 +1,6 @@
 // Global live-view UI: worker consent prompt + "LIVE" banner, and admin viewer.
 // Rendered once in the app shell; driven entirely by useLive().
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Modal } from './ui';
 import { useLive } from './useLiveSignaling';
 
@@ -15,6 +15,9 @@ function StreamVideo({ stream, muted, style }) {
 
 export default function LiveView() {
   const live = useLive();
+  const [minimized, setMinimized] = useState(false);
+  const workerLive = live?.session?.role === 'worker';
+  useEffect(() => { if (!workerLive) setMinimized(false); }, [workerLive]);
   if (!live) return null;
   const { incoming, session, remoteStream, localStream, acceptIncoming, rejectIncoming, endSession } = live;
 
@@ -37,30 +40,55 @@ export default function LiveView() {
         </Modal>
       )}
 
-      {/* ---- Worker: persistent LIVE banner while streaming ---- */}
+      {/* ---- Worker: persistent LIVE indicator while streaming ---- */}
       {session?.role === 'worker' && (
-        <div style={{
-          position: 'fixed', right: 18, bottom: 18, zIndex: 4000, width: 230,
-          background: '#0f172a', color: '#fff', borderRadius: 12, overflow: 'hidden',
-          boxShadow: '0 10px 30px rgba(0,0,0,.35)', border: '1px solid rgba(255,255,255,.1)',
-        }}>
-          <div style={{ position: 'relative', background: '#000' }}>
-            <StreamVideo stream={localStream} muted style={{ width: '100%', display: 'block', maxHeight: 150, objectFit: 'cover' }} />
-            <div style={{ position: 'absolute', top: 8, left: 8, display: 'flex', alignItems: 'center', gap: 6,
-              background: 'rgba(0,0,0,.55)', padding: '3px 9px', borderRadius: 20, fontSize: '0.72rem', fontWeight: 700 }}>
-              <span style={{ width: 9, height: 9, borderRadius: '50%', background: '#ef4444', animation: 'pulse 1s infinite' }}></span>
-              LIVE
-            </div>
-          </div>
-          <div style={{ padding: '8px 10px' }}>
-            <div style={{ fontSize: '0.78rem', lineHeight: 1.3 }}>
-              <strong>{session.peerName}</strong> is viewing your camera &amp; mic.
-            </div>
-            <button className="btn btn-sm btn-danger" style={{ width: '100%', marginTop: 8 }} onClick={endSession}>
-              <i className="ph ph-stop"></i> Stop sharing
+        minimized ? (
+          // Collapsed pill — still clearly shows the camera is live; expand or stop.
+          <div style={{
+            position: 'fixed', right: 18, bottom: 18, zIndex: 4000, display: 'flex', alignItems: 'center', gap: 8,
+            background: '#0f172a', color: '#fff', borderRadius: 20, padding: '6px 8px 6px 12px',
+            boxShadow: '0 10px 30px rgba(0,0,0,.35)', border: '1px solid rgba(255,255,255,.1)',
+          }}>
+            <span style={{ width: 9, height: 9, borderRadius: '50%', background: '#ef4444', animation: 'pulse 1s infinite' }}></span>
+            <span style={{ fontSize: '0.74rem', fontWeight: 700 }}>LIVE</span>
+            <button title="Show preview" onClick={() => setMinimized(false)}
+              style={{ background: 'rgba(255,255,255,.12)', border: 'none', color: '#fff', borderRadius: 14, width: 26, height: 26, cursor: 'pointer' }}>
+              <i className="ph ph-arrows-out-simple"></i>
+            </button>
+            <button title="Stop sharing" onClick={endSession}
+              style={{ background: '#ef4444', border: 'none', color: '#fff', borderRadius: 14, width: 26, height: 26, cursor: 'pointer' }}>
+              <i className="ph ph-stop"></i>
             </button>
           </div>
-        </div>
+        ) : (
+          <div style={{
+            position: 'fixed', right: 18, bottom: 18, zIndex: 4000, width: 230,
+            background: '#0f172a', color: '#fff', borderRadius: 12, overflow: 'hidden',
+            boxShadow: '0 10px 30px rgba(0,0,0,.35)', border: '1px solid rgba(255,255,255,.1)',
+          }}>
+            <div style={{ position: 'relative', background: '#000' }}>
+              <StreamVideo stream={localStream} muted style={{ width: '100%', display: 'block', maxHeight: 150, objectFit: 'cover' }} />
+              <div style={{ position: 'absolute', top: 8, left: 8, display: 'flex', alignItems: 'center', gap: 6,
+                background: 'rgba(0,0,0,.55)', padding: '3px 9px', borderRadius: 20, fontSize: '0.72rem', fontWeight: 700 }}>
+                <span style={{ width: 9, height: 9, borderRadius: '50%', background: '#ef4444', animation: 'pulse 1s infinite' }}></span>
+                LIVE
+              </div>
+              <button title="Hide preview" onClick={() => setMinimized(true)}
+                style={{ position: 'absolute', top: 6, right: 6, background: 'rgba(0,0,0,.55)', border: 'none',
+                  color: '#fff', borderRadius: 14, width: 26, height: 26, cursor: 'pointer' }}>
+                <i className="ph ph-minus"></i>
+              </button>
+            </div>
+            <div style={{ padding: '8px 10px' }}>
+              <div style={{ fontSize: '0.78rem', lineHeight: 1.3 }}>
+                <strong>{session.peerName}</strong> is viewing your camera &amp; mic.
+              </div>
+              <button className="btn btn-sm btn-danger" style={{ width: '100%', marginTop: 8 }} onClick={endSession}>
+                <i className="ph ph-stop"></i> Stop sharing
+              </button>
+            </div>
+          </div>
+        )
       )}
 
       {/* ---- Admin: live viewer ---- */}
