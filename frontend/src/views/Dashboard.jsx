@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { Doughnut, Bar } from 'react-chartjs-2';
 import {
   Chart as ChartJS, CategoryScale, LinearScale, BarElement, ArcElement, Title, Tooltip, Legend,
@@ -332,12 +332,45 @@ export default function Dashboard({ navigate }) {
     })();
   }, []);
 
+  // Recent-activity filtering/pagination state (declared before any early return).
+  const [activityMonth, setActivityMonth] = useState('All');
+  const [activityPage, setActivityPage] = useState(1);
+  const ACTIVITY_PER_PAGE = 10;
+
+  const availableMonths = useMemo(() => {
+    const list = data?.recentActivity || [];
+    const seen = new Set();
+    const months = [];
+    for (const n of list) {
+      if (!n.createdAt) continue;
+      const mKey = n.createdAt.slice(0, 7);
+      if (/^\d{4}-\d{2}$/.test(mKey) && !seen.has(mKey)) {
+        seen.add(mKey);
+        const [y, m] = mKey.split('-');
+        const dateObj = new Date(parseInt(y, 10), parseInt(m, 10) - 1, 1);
+        months.push({ key: mKey, label: dateObj.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) });
+      }
+    }
+    months.sort((a, b) => b.key.localeCompare(a.key));
+    return months;
+  }, [data?.recentActivity]);
+
+  const filteredActivities = useMemo(() => {
+    const list = data?.recentActivity || [];
+    if (activityMonth === 'All') return list;
+    return list.filter((n) => n.createdAt && n.createdAt.startsWith(activityMonth));
+  }, [data?.recentActivity, activityMonth]);
+
   if (loading) return <Spinner label="Loading dashboard…" />;
   if (err) return <EmptyState icon="ph-warning" title="Could not load dashboard" message={err} />;
 
   const isWorker = user.role === 'Worker';
   const isAdmin = user.role === 'Admin';
   const c = data.cards;
+
+  const totalActivityPages = Math.max(1, Math.ceil(filteredActivities.length / ACTIVITY_PER_PAGE));
+  const activityStart = (Math.min(activityPage, totalActivityPages) - 1) * ACTIVITY_PER_PAGE;
+  const pagedActivities = filteredActivities.slice(activityStart, activityStart + ACTIVITY_PER_PAGE);
 
   const statusLabels = Object.keys(data.charts.taskStatus);
   const doughnut = {
@@ -356,7 +389,7 @@ export default function Dashboard({ navigate }) {
       data: projLabels.map((k) => data.charts.projectStatus[k]),
       backgroundColor: '#10b981',
       borderRadius: 8,
-      maxBarThickness: 90,
+      maxBarThickness: 54,
       categoryPercentage: 0.7,
       barPercentage: 0.9,
     }],
@@ -369,7 +402,7 @@ export default function Dashboard({ navigate }) {
       data: catBreak.map((c) => c.count),
       backgroundColor: catBreak.map((c) => c.color || '#3b82f6'),
       borderRadius: 8,
-      maxBarThickness: 90,
+      maxBarThickness: 54,
       categoryPercentage: 0.7,
       barPercentage: 0.9,
     }],
@@ -446,13 +479,13 @@ export default function Dashboard({ navigate }) {
       {/* Charts */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
         <Card title="Task Status Distribution">
-          <div style={{ height: 260 }}>
+          <div style={{ height: 200 }}>
             {statusLabels.length ? <Doughnut data={doughnut} options={{ ...chartOpts, scales: {} }} />
               : <EmptyState icon="ph-chart-pie" title="No tasks yet" />}
           </div>
         </Card>
         <Card title="Projects by Status">
-          <div style={{ height: 260 }}>
+          <div style={{ height: 200 }}>
             {projLabels.length ? <Bar data={bar} options={chartOpts} />
               : <EmptyState icon="ph-chart-bar" title="No projects yet" />}
           </div>
@@ -461,7 +494,7 @@ export default function Dashboard({ navigate }) {
 
       {/* Tasks by work category */}
       <Card title="Tasks by Work Category">
-        <div style={{ height: 240 }}>
+        <div style={{ height: 180 }}>
           {catBreak.length ? <Bar data={catChart} options={{ ...chartOpts, plugins: { legend: { display: false } } }} />
             : <EmptyState icon="ph-squares-four" title="No tasks yet" message="Tasks will group by their work category here." />}
         </div>
@@ -479,19 +512,70 @@ export default function Dashboard({ navigate }) {
 
       {/* Bottom row */}
       <div style={{ display: 'grid', gridTemplateColumns: !isWorker ? '2fr 1fr' : '1fr', gap: 16 }}>
-        <Card title={<span><i className="ph ph-activity" style={{ marginRight: 8 }}></i>Recent Activity</span>}>
-          {(!data.recentActivity || data.recentActivity.length === 0)
-            ? <EmptyState icon="ph-activity" title="No recent activity" />
-            : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {data.recentActivity.map((n) => (
-                  <div key={n.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid var(--border,#334155)' }}>
-                    <span><strong>{n.title}</strong> — <span className="text-secondary">{n.message}</span></span>
-                    <span className="text-muted" style={{ fontSize: '0.75rem', whiteSpace: 'nowrap' }}>{n.createdAt}</span>
+        <Card
+          title={<span><i className="ph ph-activity" style={{ marginRight: 8, color: '#059669' }}></i>Recent Activity</span>}
+          actions={
+            availableMonths.length > 0 && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span className="text-secondary" style={{ fontSize: '0.78rem' }}>Month:</span>
+                <select
+                  className="form-control"
+                  style={{ width: 155, padding: '4px 8px', fontSize: '0.78rem', height: 32 }}
+                  value={activityMonth}
+                  onChange={(e) => {
+                    setActivityMonth(e.target.value);
+                    setActivityPage(1);
+                  }}
+                >
+                  <option value="All">All Months</option>
+                  {availableMonths.map((m) => (
+                    <option key={m.key} value={m.key}>{m.label}</option>
+                  ))}
+                </select>
+              </div>
+            )
+          }
+        >
+          {filteredActivities.length === 0 ? (
+            <EmptyState icon="ph-activity" title="No recent activity" message={activityMonth !== 'All' ? 'No activity found for this month.' : undefined} />
+          ) : (
+            <>
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                {pagedActivities.map((n) => (
+                  <div
+                    key={n.id}
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      padding: '9px 2px',
+                      borderBottom: '1px solid var(--border-color, #e2e8f0)',
+                      fontSize: '0.84rem',
+                      gap: 12,
+                    }}
+                  >
+                    <span style={{ lineHeight: 1.45, color: '#0f172a' }}>
+                      <strong style={{ fontWeight: 600 }}>{n.title}</strong>
+                      <span className="text-secondary"> — {n.message}</span>
+                    </span>
+                    <span className="text-muted" style={{ fontSize: '0.75rem', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                      {n.createdAt ? n.createdAt.replace('T', ' ').slice(0, 16) : '—'}
+                    </span>
                   </div>
                 ))}
               </div>
-            )}
+
+              {/* Page-wise navigation: 10 per page */}
+              <Pager
+                page={activityPage}
+                pageCount={totalActivityPages}
+                total={filteredActivities.length}
+                start={activityStart}
+                per={ACTIVITY_PER_PAGE}
+                onPage={setActivityPage}
+              />
+            </>
+          )}
         </Card>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div className="card">
