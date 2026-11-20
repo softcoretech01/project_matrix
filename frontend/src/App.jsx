@@ -196,7 +196,7 @@ function LoginScreen() {
       <div className="auth-form-container">
         <div className="auth-card">
           <div className="auth-header">
-            <h2 className="auth-logo"><i className="ph-fill ph-lightning"></i> Task <span className="brand-accent">Management</span></h2>
+            <h2 className="auth-logo"><i className="ph-fill ph-lightning"></i> Task <span className="brand-accent">Matrix</span></h2>
             <p className="auth-subtitle">
               {mode === 'login' && 'Select your portal and sign in'}
               {mode === 'forgot' && 'Reset your password'}
@@ -363,7 +363,7 @@ function AppShell() {
       <aside className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
         <div className="sidebar-brand">
           <span className="sidebar-brand-icon" style={{ fontSize: '1.4rem' }}><i className="ph-fill ph-lightning"></i></span>
-          <span className="sidebar-brand-text">Task <span className="brand-accent">Management</span></span>
+          <span className="sidebar-brand-text">Task <span className="brand-accent">Matrix</span></span>
         </div>
         <nav className="sidebar-menu">
           <div className="menu-section-header"><span>{user.role} Portal</span></div>

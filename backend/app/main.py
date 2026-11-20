@@ -38,9 +38,9 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="ProjectMatrix Task Management API",
+    title="ProjectMatrix Task Matrix API",
     version="3.0.0",
-    description="Admin / Master / Worker portals — Task Management & Employee Performance Monitoring",
+    description="Admin / Master / Worker portals — Task Matrix & Employee Performance Monitoring",
     lifespan=lifespan,
 )
 
@@ -91,7 +91,7 @@ app.include_router(master.router, dependencies=[Depends(require_roles(["Admin", 
 
 @app.get("/api/health")
 def health():
-    return {"status": "online", "service": "ProjectMatrix Task Management Backend",
+    return {"status": "online", "service": "ProjectMatrix Task Matrix Backend",
             "version": "3.0.0", "portals": ["Admin", "Master", "Worker"]}
 
 
@@ -117,6 +117,6 @@ if os.path.isdir(FRONTEND_DIST):
 else:
     @app.get("/")
     def read_root():
-        return {"status": "online", "service": "ProjectMatrix Task Management Backend",
+        return {"status": "online", "service": "ProjectMatrix Task Matrix Backend",
                 "message": "Frontend not built. Run `npm run build` in frontend/ to serve the app here.",
                 "docs": "/docs"}
