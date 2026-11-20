@@ -21,6 +21,20 @@ const VIDEO_CONSTRAINTS = {
   audio: true,
 };
 
+// Camera/mic only work in a secure context (HTTPS or localhost). On plain http://
+// browsers hide navigator.mediaDevices entirely, so explain that rather than "denied".
+function cameraUnavailable() {
+  return !window.isSecureContext || !(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+}
+function cameraErrorMessage(e) {
+  if (cameraUnavailable())
+    return 'Camera needs a secure (HTTPS) connection. Open the app over https:// — http:// by IP is blocked by the browser.';
+  if (e && (e.name === 'NotAllowedError' || e.name === 'SecurityError'))
+    return 'Camera/microphone was blocked. Allow it in the browser’s site permissions and try again.';
+  if (e && e.name === 'NotFoundError') return 'No camera/microphone found on this device.';
+  return 'Could not access the camera/microphone.';
+}
+
 export function LiveSignalingProvider({ children }) {
   const { user } = useAuth();
   const wsRef = useRef(null);
@@ -106,9 +120,10 @@ export function LiveSignalingProvider({ children }) {
     if (!req) return;
     let stream;
     try {
+      if (cameraUnavailable()) throw new Error('insecure');
       stream = await navigator.mediaDevices.getUserMedia(VIDEO_CONSTRAINTS);
-    } catch {
-      toast.error('Camera/microphone permission denied.');
+    } catch (e) {
+      toast.error(cameraErrorMessage(e));
       send({ type: 'reject', to: req.from, sessionId: req.sessionId });
       setIncoming(null);
       return;
@@ -148,12 +163,13 @@ export function LiveSignalingProvider({ children }) {
     setCapturing(true);
     let stream;
     try {
+      if (cameraUnavailable()) throw new Error('insecure');
       stream = await navigator.mediaDevices.getUserMedia({
         video: { width: { ideal: 640 }, height: { ideal: 480 } },
         audio: req.mode === 'video',
       });
-    } catch {
-      toast.error('Camera permission denied.');
+    } catch (e) {
+      toast.error(cameraErrorMessage(e));
       send({ type: 'capture-done', to: req.from, sessionId: req.sessionId, status: 'denied' });
       setCapturing(false);
       return;

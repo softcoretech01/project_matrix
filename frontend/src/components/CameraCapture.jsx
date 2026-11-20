@@ -27,6 +27,9 @@ export default function CameraCapture({ onCapture, onClose, allowVideo = true })
     let active = true;
     (async () => {
       try {
+        if (!window.isSecureContext || !(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)) {
+          throw new Error('insecure');
+        }
         const stream = await navigator.mediaDevices.getUserMedia({
           video: { facingMode: 'user', width: { ideal: 320 }, height: { ideal: 240 }, frameRate: { ideal: 15 } },
           audio: allowVideo,       // only need audio when video recording is enabled
@@ -36,7 +39,11 @@ export default function CameraCapture({ onCapture, onClose, allowVideo = true })
         if (videoRef.current) { videoRef.current.srcObject = stream; await videoRef.current.play().catch(() => {}); }
         setReady(true);
       } catch (e) {
-        setError('Camera access was denied or is unavailable. Please allow camera permission.');
+        if (!window.isSecureContext || !(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)) {
+          setError('Camera needs a secure (HTTPS) connection. Open the app over https:// — an http:// address by IP is blocked by the browser.');
+        } else {
+          setError('Camera access was denied or is unavailable. Please allow camera permission in your browser.');
+        }
       }
     })();
     return () => {
