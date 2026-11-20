@@ -44,3 +44,7 @@ __pycache__/
 
 *.db
 **/*.db
+
+# Runtime file uploads (camera captures, task/project/timesheet attachments)
+backend/uploads/
+backend/app/uploads/

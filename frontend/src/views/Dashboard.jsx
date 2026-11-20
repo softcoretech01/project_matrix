@@ -1,150 +1,212 @@
-import React, { useState, useEffect } from 'react';
-import { useAuth, API_BASE_URL } from '../context/AuthContext';
+import React, { useEffect, useState } from 'react';
 import { Doughnut, Bar } from 'react-chartjs-2';
-import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement } from 'chart.js';
+import {
+  Chart as ChartJS, CategoryScale, LinearScale, BarElement, ArcElement, Title, Tooltip, Legend,
+} from 'chart.js';
+import { api } from '../services/api';
+import { useAuth } from '../context/AuthContext';
+import { Spinner, Card, EmptyState, StatusBadge, PriorityBadge, STATUS_COLORS, fmtDate } from '../components/ui';
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement);
+ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Title, Tooltip, Legend);
 
-export default function Dashboard({ navigateTo }) {
+function StatCard({ icon, color, title, stats, onClick, cta }) {
+  return (
+    <div className="card" style={{ borderTop: `3px solid ${color}` }}>
+      <div className="card-header-flex">
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span className="kpi-icon" style={{ background: `${color}22`, color }}>
+            <i className={`ph-fill ${icon}`}></i>
+          </span>
+          <h3 style={{ margin: 0, fontSize: '1.05rem' }}>{title}</h3>
+        </div>
+        {cta && <button className="btn btn-sm btn-secondary" onClick={onClick}>{cta}</button>}
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 12, marginTop: 8 }}>
+        {stats.map((s) => (
+          <div key={s.label} style={{ padding: '10px 12px', background: 'var(--surface-2, rgba(148,163,184,.07))', borderRadius: 10 }}>
+            <div style={{ fontSize: '1.6rem', fontWeight: 800, color: s.color || 'inherit' }}>{s.value}</div>
+            <div className="text-secondary" style={{ fontSize: '0.8rem' }}>{s.label}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function TaskList({ title, icon, tasks, emptyMsg, navigate }) {
+  return (
+    <Card title={<span><i className={`ph ${icon}`} style={{ marginRight: 8 }}></i>{title}</span>}>
+      {(!tasks || tasks.length === 0) ? (
+        <EmptyState icon={icon} title="Nothing here" message={emptyMsg} />
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {tasks.map((t) => (
+            <div key={t.id} onClick={() => navigate && navigate('tasks', { taskId: t.id })}
+              className="clickable-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                padding: '10px 12px', borderRadius: 8, border: '1px solid var(--border,#334155)' }}>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t.name}</div>
+                <div className="text-secondary" style={{ fontSize: '0.78rem' }}>
+                  {t.projectName || '—'} · {t.assignedToName || 'Unassigned'}
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexShrink: 0 }}>
+                <span className="text-muted" style={{ fontSize: '0.75rem' }}>{fmtDate(t.endDate)}</span>
+                <StatusBadge status={t.status} />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </Card>
+  );
+}
+
+export default function Dashboard({ navigate }) {
   const { user } = useAuth();
-  const [data, setData] = useState({ tasks: [], projects: [] });
+  const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [err, setErr] = useState('');
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const headers = { 'x-user-id': user.id };
-        const [taskRes, projRes] = await Promise.all([
-          fetch(`${API_BASE_URL}/tasks`, { headers }).catch(() => ({ ok: false })),
-          fetch(`${API_BASE_URL}/projects`, { headers }).catch(() => ({ ok: false }))
-        ]);
+    (async () => {
+      try { setData(await api.get('/dashboard')); }
+      catch (e) { setErr(e.message); }
+      finally { setLoading(false); }
+    })();
+  }, []);
 
-        setData({
-          tasks: taskRes.ok ? await taskRes.json() : [],
-          projects: projRes.ok ? await projRes.json() : []
-        });
-      } catch (e) {
-        console.error('Failed to load dashboard data:', e);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, [user.id]);
+  if (loading) return <Spinner label="Loading dashboard…" />;
+  if (err) return <EmptyState icon="ph-warning" title="Could not load dashboard" message={err} />;
 
-  if (loading) {
-    return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px' }}>
-        <div className="spin" style={{ width: '40px', height: '40px', border: '4px solid var(--border-color)', borderTopColor: 'var(--color-primary)', borderRadius: '50%' }} />
-      </div>
-    );
-  }
+  const isWorker = user.role === 'Worker';
+  const c = data.cards;
 
-  const { tasks, projects } = data;
-  const activeProjects = projects.filter(p => p.status === 'Active').length;
-  
-  // Tasks specifically for this user if they aren't admin
-  const userTasks = user.role === 'Admin' ? tasks : tasks.filter(t => t.assignedTo === user.id);
-  const pendingTasks = userTasks.filter(t => ['Open', 'Assigned', 'In Progress'].includes(t.status)).length;
-  const completedTasks = userTasks.filter(t => ['Completed', 'Closed'].includes(t.status)).length;
-
-  const taskStatusCounts = {};
-  userTasks.forEach(t => {
-    taskStatusCounts[t.status] = (taskStatusCounts[t.status] || 0) + 1;
-  });
-
-  const taskChart = {
-    labels: Object.keys(taskStatusCounts),
+  const statusLabels = Object.keys(data.charts.taskStatus);
+  const doughnut = {
+    labels: statusLabels,
     datasets: [{
-      data: Object.values(taskStatusCounts),
-      backgroundColor: ['#3b82f6', '#f59e0b', '#8b5cf6', '#10b981', '#64748b', '#ec4899'],
-      borderWidth: 1
-    }]
+      data: statusLabels.map((k) => data.charts.taskStatus[k]),
+      backgroundColor: statusLabels.map((k) => STATUS_COLORS[k] || '#64748b'),
+      borderWidth: 0,
+    }],
   };
+  const projLabels = Object.keys(data.charts.projectStatus);
+  const bar = {
+    labels: projLabels,
+    datasets: [{
+      label: 'Projects',
+      data: projLabels.map((k) => data.charts.projectStatus[k]),
+      backgroundColor: '#10b981',
+      borderRadius: 6,
+    }],
+  };
+  const catBreak = data.charts.categoryBreakdown || [];
+  const catChart = {
+    labels: catBreak.map((c) => c.name),
+    datasets: [{ label: 'Tasks', data: catBreak.map((c) => c.count),
+      backgroundColor: catBreak.map((c) => c.color), borderRadius: 6 }],
+  };
+  const chartOpts = { responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { labels: { color: '#94a3b8' } } },
+    scales: { x: { ticks: { color: '#94a3b8' }, grid: { display: false } },
+              y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(148,163,184,.1)' }, beginAtZero: true } } };
 
   return (
-    <div>
-      <div style={{ marginBottom: '24px', padding: '32px', background: 'linear-gradient(135deg, var(--color-primary-glow), transparent)', border: '1px solid var(--border-glow)', borderRadius: 'var(--radius-lg)', position: 'relative', overflow: 'hidden' }}>
-        <div style={{ position: 'relative', zIndex: 1 }}>
-          <h2 style={{ fontSize: '1.8rem', marginBottom: '8px', fontWeight: 700 }}>Welcome back, {user.name.split(' ')[0]}!</h2>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '1.05rem' }}>Here is what's happening with your projects and tasks today.</p>
-        </div>
-        <i className="ph-fill ph-rocket" style={{ position: 'absolute', right: '30px', top: '50%', transform: 'translateY(-50%)', fontSize: '8rem', color: 'var(--border-glow)', opacity: 0.5 }}></i>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+      {/* Primary cards */}
+      <div style={{ display: 'grid', gridTemplateColumns: isWorker ? 'repeat(2,1fr)' : 'repeat(3,1fr)', gap: 14 }}>
+        <StatCard icon="ph-folder-open" color="#059669" title={isWorker ? 'My Projects' : 'Projects Overview'}
+          cta="View" onClick={() => navigate('projects')}
+          stats={[
+            { label: 'Total', value: c.projects.total },
+            { label: 'In Progress', value: c.projects.inProgress, color: '#3b82f6' },
+            { label: 'Completed', value: c.projects.completed, color: '#10b981' },
+            { label: 'Pending', value: c.projects.pending, color: '#f59e0b' },
+          ]} />
+        <StatCard icon="ph-check-square" color="#eab308" title={isWorker ? 'My Tasks' : 'Pending Tasks'}
+          cta="View" onClick={() => navigate('tasks')}
+          stats={[
+            { label: 'Pending', value: c.tasks.totalPending },
+            { label: 'Overdue', value: c.tasks.overdue, color: '#ef4444' },
+            { label: 'Due Today', value: c.tasks.dueToday, color: '#f59e0b' },
+            { label: isWorker ? 'Completed' : 'Unassigned', value: isWorker ? c.tasks.completed : c.tasks.unassigned },
+          ]} />
+        {!isWorker && c.employees && (
+          <StatCard icon="ph-users" color="#10b981" title="Employee Overview"
+            cta="View" onClick={() => navigate('employees')}
+            stats={[
+              { label: 'Total', value: c.employees.total },
+              { label: 'Active', value: c.employees.active, color: '#10b981' },
+              { label: 'Working', value: c.employees.working, color: '#3b82f6' },
+              { label: 'With Pending', value: c.employees.withPendingTasks, color: '#f59e0b' },
+            ]} />
+        )}
       </div>
 
-      <div className="kpi-grid" style={{ marginBottom: '32px' }}>
-        <div className="kpi-card clickable-row" onClick={() => navigateTo('projects', 'list')}>
-          <div className="kpi-icon primary" style={{ fontSize: '1.5rem' }}><i className="ph-fill ph-folder-open"></i></div>
-          <div className="kpi-info">
-            <span className="kpi-label">{user.role === 'Admin' ? 'Total Projects' : 'Active Projects'}</span>
-            <span className="kpi-value">{user.role === 'Admin' ? projects.length : activeProjects}</span>
+      {/* Charts */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+        <Card title="Task Status Distribution">
+          <div style={{ height: 260 }}>
+            {statusLabels.length ? <Doughnut data={doughnut} options={{ ...chartOpts, scales: {} }} />
+              : <EmptyState icon="ph-chart-pie" title="No tasks yet" />}
           </div>
-        </div>
-        <div className="kpi-card clickable-row" onClick={() => navigateTo('tasks', 'my')}>
-          <div className="kpi-icon warning" style={{ fontSize: '1.5rem' }}><i className="ph-fill ph-notebook"></i></div>
-          <div className="kpi-info">
-            <span className="kpi-label">Pending Tasks</span>
-            <span className="kpi-value">{pendingTasks}</span>
+        </Card>
+        <Card title="Projects by Status">
+          <div style={{ height: 260 }}>
+            {projLabels.length ? <Bar data={bar} options={chartOpts} />
+              : <EmptyState icon="ph-chart-bar" title="No projects yet" />}
           </div>
-        </div>
-        <div className="kpi-card clickable-row" onClick={() => navigateTo('tasks', 'list')}>
-          <div className="kpi-icon success" style={{ fontSize: '1.5rem' }}><i className="ph-fill ph-check-circle"></i></div>
-          <div className="kpi-info">
-            <span className="kpi-label">Completed Tasks</span>
-            <span className="kpi-value">{completedTasks}</span>
-          </div>
-        </div>
+        </Card>
       </div>
 
-      <div className="grid-cols-2" style={{ marginBottom: '32px' }}>
-        <div className="card">
-          <div className="card-header-flex">
-            <h3>Task Overview</h3>
-          </div>
-          <div className="chart-container" style={{ position: 'relative', height: '250px' }}>
-            {userTasks.length > 0 ? (
-              <Doughnut
-                data={taskChart}
-                options={{
-                  responsive: true,
-                  maintainAspectRatio: false,
-                  plugins: { legend: { position: 'right', labels: { color: 'var(--text-secondary)' } } }
-                }}
-              />
-            ) : (
-              <div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>
-                No task data available.
+      {/* Tasks by work category */}
+      <Card title="Tasks by Work Category">
+        <div style={{ height: 240 }}>
+          {catBreak.length ? <Bar data={catChart} options={{ ...chartOpts, plugins: { legend: { display: false } } }} />
+            : <EmptyState icon="ph-squares-four" title="No tasks yet" message="Tasks will group by their work category here." />}
+        </div>
+      </Card>
+
+      {/* Operational sections */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16 }}>
+        <TaskList title="Today's Scheduled Tasks" icon="ph-calendar-check" tasks={data.todayTasks}
+          emptyMsg="No tasks scheduled for today." navigate={navigate} />
+        <TaskList title="Upcoming Deadlines" icon="ph-hourglass" tasks={data.upcomingDeadlines}
+          emptyMsg="No upcoming deadlines." navigate={navigate} />
+        <TaskList title="Overdue Tasks" icon="ph-warning-circle" tasks={data.overdueTasks}
+          emptyMsg="Nothing overdue — great!" navigate={navigate} />
+      </div>
+
+      {/* Bottom row */}
+      <div style={{ display: 'grid', gridTemplateColumns: !isWorker ? '2fr 1fr' : '1fr', gap: 16 }}>
+        <Card title={<span><i className="ph ph-activity" style={{ marginRight: 8 }}></i>Recent Activity</span>}>
+          {(!data.recentActivity || data.recentActivity.length === 0)
+            ? <EmptyState icon="ph-activity" title="No recent activity" />
+            : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {data.recentActivity.map((n) => (
+                  <div key={n.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid var(--border,#334155)' }}>
+                    <span><strong>{n.title}</strong> — <span className="text-secondary">{n.message}</span></span>
+                    <span className="text-muted" style={{ fontSize: '0.75rem', whiteSpace: 'nowrap' }}>{n.createdAt}</span>
+                  </div>
+                ))}
               </div>
             )}
+        </Card>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div className="card">
+            <div className="text-secondary" style={{ fontSize: '0.85rem' }}>{isWorker ? 'My Logged Hours' : 'Total Logged Hours'}</div>
+            <div style={{ fontSize: '2rem', fontWeight: 800 }}>{data.timesheets.loggedHours}<span style={{ fontSize: '1rem' }}> hrs</span></div>
+            <div className="text-muted" style={{ fontSize: '0.8rem' }}>{data.timesheets.count} timesheet(s)</div>
           </div>
-        </div>
-
-        <div className="card">
-          <div className="card-header-flex">
-            <h3>Recent Tasks</h3>
-            <button className="btn btn-primary btn-sm" onClick={() => navigateTo('tasks', 'create')}>Add Task</button>
-          </div>
-          <div className="table-responsive">
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>Task Name</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {userTasks.slice(0, 5).map(t => (
-                  <tr key={t.id}>
-                    <td><strong>{t.name}</strong></td>
-                    <td><span className={`badge badge-${t.status.toLowerCase().replace(' ', '-')}`}>{t.status}</span></td>
-                  </tr>
-                ))}
-                {userTasks.length === 0 && (
-                  <tr><td colSpan="2" className="text-center text-muted">No tasks available.</td></tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+          {!isWorker && (
+            <div className="card" style={{ borderLeft: '3px solid #ef4444' }}>
+              <div className="text-secondary" style={{ fontSize: '0.85rem' }}>Idle-Time Alerts (&gt;15 min)</div>
+              <div style={{ fontSize: '2rem', fontWeight: 800, color: data.idleAlerts ? '#ef4444' : 'inherit' }}>{data.idleAlerts}</div>
+              <a className="text-secondary" style={{ fontSize: '0.8rem', cursor: 'pointer' }} onClick={() => navigate('idletime')}>View monitoring →</a>
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -1,56 +1,74 @@
 # backend/app/routers/reports.py
+from collections import OrderedDict
+from datetime import datetime
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from backend.app.db.database import get_db
-from backend.app.models.models import Task, Project, User
+from backend.app.models.models import Task, Project, User, Timesheet
+from backend.app.core.deps import require_roles
+from backend.app.core.work_categories import DONE_STATUSES
 
-router = APIRouter(prefix="/reports", tags=["Reports"])
+router = APIRouter(prefix="/api/reports", tags=["Reports"])
+
+DONE = DONE_STATUSES
+
 
 @router.get("/effort")
-def get_project_effort_report(db: Session = Depends(get_db)):
-    projects = db.query(Project).all()
+def get_project_effort_report(current_user: User = Depends(require_roles(["Admin", "Master"])),
+                              db: Session = Depends(get_db)):
     result = []
-    for p in projects:
+    for p in db.query(Project).all():
         tasks = db.query(Task).filter(Task.project_id == p.id).all()
-        total_tasks = len(tasks)
-        completed_tasks = len([t for t in tasks if t.status in ["Completed", "Closed"]])
-        rate = int((completed_tasks / total_tasks * 100)) if total_tasks > 0 else 0
+        total = len(tasks)
+        completed = len([t for t in tasks if t.status in DONE])
+        planned = sum((t.estimated_hours or 0) for t in tasks)
+        actual = sum((ts.total_hours or 0) for ts in
+                     db.query(Timesheet).filter(Timesheet.project_id == p.id).all())
+        rate = int(completed / total * 100) if total else 0
         result.append({
             "projectName": p.name,
-            "plannedHours": total_tasks * 20,
-            "actualHours": completed_tasks * 18,
-            "completionRate": rate
+            "plannedHours": round(planned, 1),
+            "actualHours": round(actual, 1),
+            "completionRate": rate,
         })
     return result
 
+
 @router.get("/utilization")
-def get_utilization_report(db: Session = Depends(get_db)):
-    users = db.query(User).all()
+def get_utilization_report(current_user: User = Depends(require_roles(["Admin", "Master"])),
+                           db: Session = Depends(get_db)):
     result = []
-    for u in users:
+    for u in db.query(User).filter(User.role == "Worker").all():
         tasks = db.query(Task).filter(Task.assigned_to == u.id).all()
         total = len(tasks)
-        completed = len([t for t in tasks if t.status in ["Completed", "Closed"]])
+        completed = len([t for t in tasks if t.status in DONE])
         in_progress = len([t for t in tasks if t.status == "In Progress"])
-        open_tasks = total - completed - in_progress
-        rate = 85 if total > 0 else 0
+        logged = sum((ts.total_hours or 0) for ts in
+                     db.query(Timesheet).filter(Timesheet.user_id == u.id).all())
+        # Utilization = logged hours vs a nominal 40h/week capacity (transparent formula)
+        rate = min(100, int(logged / 40 * 100)) if logged else 0
         result.append({
             "employeeName": u.name,
             "role": u.role,
             "totalTasks": total,
-            "openTasks": max(0, open_tasks),
+            "openTasks": max(0, total - completed - in_progress),
             "inProgressTasks": in_progress,
             "completedTasks": completed,
-            "utilizationRate": rate
+            "loggedHours": round(logged, 1),
+            "utilizationRate": rate,
         })
     return result
 
+
 @router.get("/productivity")
-def get_productivity_report(db: Session = Depends(get_db)):
-    return [
-        {"period": "Sprint 1", "completedTasks": 12, "storyPoints": 36},
-        {"period": "Sprint 2", "completedTasks": 18, "storyPoints": 54},
-        {"period": "Sprint 3", "completedTasks": 25, "storyPoints": 75},
-        {"period": "Sprint 4", "completedTasks": 21, "storyPoints": 63}
-    ]
+def get_productivity_report(current_user: User = Depends(require_roles(["Admin", "Master"])),
+                            db: Session = Depends(get_db)):
+    # Real monthly completed-task counts from completed_at (last 6 months present in data)
+    buckets = OrderedDict()
+    for t in db.query(Task).filter(Task.completed_at.isnot(None)).all():
+        key = t.completed_at.strftime("%Y-%m")
+        buckets[key] = buckets.get(key, 0) + 1
+    if not buckets:
+        buckets[datetime.utcnow().strftime("%Y-%m")] = 0
+    return [{"period": k, "completedTasks": v} for k, v in sorted(buckets.items())]

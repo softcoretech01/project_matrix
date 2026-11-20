@@ -7,7 +7,7 @@ from pydantic import BaseModel
 from backend.app.db.database import get_db
 from backend.app.models.models import Client, Department, Designation
 
-router = APIRouter(prefix="/masters", tags=["Master Portal"])
+router = APIRouter(prefix="/api/masters", tags=["Master Portal"])
 
 class ClientCreate(BaseModel):
     name: str

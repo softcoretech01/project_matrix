@@ -7,7 +7,7 @@ from pydantic import BaseModel
 from backend.app.db.database import get_db
 from backend.app.models.models import Module
 
-router = APIRouter(prefix="/modules", tags=["Modules / Sections"])
+router = APIRouter(prefix="/api/modules", tags=["Modules / Sections"])
 
 class ModuleCreate(BaseModel):
     projectId: str

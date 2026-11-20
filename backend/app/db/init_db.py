@@ -1,284 +1,222 @@
+"""Create all tables and seed initial data (idempotent).
+
+Roles: Admin / Master / Worker.
+Seeds 1 Admin, 1 Master, 3 Workers + sample projects/tasks/timesheets so the
+dashboard, calendar and reports have live data to show.
+"""
+import os
+from datetime import datetime
+
 from backend.app.db.database import engine, Base, SessionLocal
+from backend.app.core.security import get_password_hash
 from backend.app.models.models import (
-    User,
-    Project,
-    ProjectMember,
-    Section,
-    Label,
-    Task,
-    Subtask,
-    Comment,
-    Notification,
-    Client,
-    Department,
-    Designation,
-    Module
+    Role, User, Project, ProjectMember, Section, Module, Label,
+    Task, Subtask, Comment, Timesheet, Notification,
+    Client, Department, Designation,
 )
+
+UPLOAD_ROOT = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "..", "uploads")
+
+
+def _ensure_upload_dirs():
+    for sub in ("timesheets", "tasks", "projects", "camera"):
+        os.makedirs(os.path.join(UPLOAD_ROOT, sub), exist_ok=True)
+
 
 def init_db():
     Base.metadata.create_all(bind=engine)
+    _ensure_upload_dirs()
+
     db = SessionLocal()
     try:
-        # Check if users already exist
+        # ---- Roles ----
+        if db.query(Role).count() == 0:
+            db.add_all([
+                Role(name="Admin", description="Full application access"),
+                Role(name="Master", description="Operational oversight and monitoring"),
+                Role(name="Worker", description="Assigned work, timesheets, personal performance"),
+            ])
+            db.commit()
+        roles = {r.name: r.id for r in db.query(Role).all()}
+
+        # ---- Users ----
         if db.query(User).count() == 0:
             users = [
-                User(
-                    id="1",
-                    code="EMP-001",
-                    name="Admin User",
-                    email="admin@taskmanagement.com",
-                    password="admin123",
-                    role="Admin",
-                    designation="System Administrator",
-                    department="Management",
-                    status="Active"
-                ),
-                User(
-                    id="2",
-                    code="EMP-002",
-                    name="Project Manager",
-                    email="pm@taskmanagement.com",
-                    password="admin123",
-                    role="PM",
-                    designation="Lead Project Manager",
-                    department="Management",
-                    status="Active"
-                ),
-                User(
-                    id="3",
-                    code="EMP-003",
-                    name="Ravi Kumar",
-                    email="ravi@taskmanagement.com",
-                    password="admin123",
-                    role="Team Lead",
-                    designation="Senior Tech Lead",
-                    department="Engineering",
-                    status="Active"
-                ),
-                User(
-                    id="4",
-                    code="EMP-004",
-                    name="Anita Sharma",
-                    email="anita@taskmanagement.com",
-                    password="admin123",
-                    role="Employee",
-                    designation="Full Stack Engineer",
-                    department="Engineering",
-                    status="Active"
-                ),
-                User(
-                    id="5",
-                    code="EMP-005",
-                    name="Sachin Verma",
-                    email="sachin@taskmanagement.com",
-                    password="admin123",
-                    role="Employee",
-                    designation="UI/UX Designer",
-                    department="Design",
-                    status="Active"
-                )
+                User(id="U-ADMIN", code="EMP-001", name="System Administrator",
+                     email="admin@taskmanagement.com", password=get_password_hash("admin123"),
+                     role="Admin", role_id=roles["Admin"], designation="System Administrator",
+                     department="Management", status="Active"),
+                User(id="U-MASTER", code="EMP-002", name="Priya Menon",
+                     email="master@taskmanagement.com", password=get_password_hash("master123"),
+                     role="Master", role_id=roles["Master"], designation="Operations Manager",
+                     department="Management", status="Active"),
+                User(id="U-W1", code="EMP-003", name="Ravi Kumar",
+                     email="ravi@taskmanagement.com", password=get_password_hash("worker123"),
+                     role="Worker", role_id=roles["Worker"], designation="Senior Engineer",
+                     department="Engineering", status="Active"),
+                User(id="U-W2", code="EMP-004", name="Anita Sharma",
+                     email="anita@taskmanagement.com", password=get_password_hash("worker123"),
+                     role="Worker", role_id=roles["Worker"], designation="Full Stack Engineer",
+                     department="Engineering", status="Active"),
+                User(id="U-W3", code="EMP-005", name="Sachin Verma",
+                     email="sachin@taskmanagement.com", password=get_password_hash("worker123"),
+                     role="Worker", role_id=roles["Worker"], designation="UI/UX Designer",
+                     department="Design", status="Active"),
             ]
             db.add_all(users)
+            db.commit()
 
-            projects = [
-                Project(
-                    id="PRJ-01",
-                    code="PRJ-01",
-                    name="Task Management Portal MVP",
-                    description="Enterprise multi-portal task management system with Kanban and realtime flows.",
-                    owner_id="1",
-                    status="Active",
-                    review_required=True
-                ),
-                Project(
-                    id="PRJ-02",
-                    code="PRJ-02",
-                    name="Mobile App Redesign",
-                    description="Next generation mobile workflow and dashboard experience.",
-                    owner_id="2",
-                    status="Active",
-                    review_required=True
-                )
-            ]
-            db.add_all(projects)
-
-            members = [
-                ProjectMember(id="MEM-01", project_id="PRJ-01", employee_id="1", role="Lead"),
-                ProjectMember(id="MEM-02", project_id="PRJ-01", employee_id="2", role="Manager"),
-                ProjectMember(id="MEM-03", project_id="PRJ-01", employee_id="3", role="Tech Lead"),
-                ProjectMember(id="MEM-04", project_id="PRJ-01", employee_id="4", role="Developer")
-            ]
-            db.add_all(members)
-
-            sections = [
-                Section(id="SEC-01", project_id="PRJ-01", name="Frontend Components", sort_order=1),
-                Section(id="SEC-02", project_id="PRJ-01", name="Backend & Database APIs", sort_order=2),
-                Section(id="SEC-03", project_id="PRJ-02", name="UI/UX Wireframes", sort_order=1),
-                Section(id="SEC-04", project_id="PRJ-02", name="QA & Testing", sort_order=2)
-            ]
-            db.add_all(sections)
-
-            labels = [
+        # ---- Masters data ----
+        if db.query(Client).count() == 0:
+            db.add_all([
+                Client(id="CLI-01", name="Acme Corp", email="contact@acme.com", status="Active"),
+                Client(id="CLI-02", name="Global Industries", email="info@global.com", status="Active"),
+            ])
+        if db.query(Department).count() == 0:
+            db.add_all([
+                Department(id="DEP-01", name="Engineering", status="Active"),
+                Department(id="DEP-02", name="Design", status="Active"),
+                Department(id="DEP-03", name="Management", status="Active"),
+            ])
+        if db.query(Designation).count() == 0:
+            db.add_all([
+                Designation(id="DSG-01", name="System Administrator", status="Active"),
+                Designation(id="DSG-02", name="Operations Manager", status="Active"),
+                Designation(id="DSG-03", name="Senior Engineer", status="Active"),
+                Designation(id="DSG-04", name="Full Stack Engineer", status="Active"),
+                Designation(id="DSG-05", name="UI/UX Designer", status="Active"),
+            ])
+        if db.query(Label).count() == 0:
+            db.add_all([
                 Label(id="LBL-01", name="Bug", color="#ef4444"),
                 Label(id="LBL-02", name="Feature", color="#3b82f6"),
                 Label(id="LBL-03", name="High Priority", color="#f59e0b"),
                 Label(id="LBL-04", name="Design", color="#8b5cf6"),
-                Label(id="LBL-05", name="Documentation", color="#10b981")
-            ]
-            db.add_all(labels)
+                Label(id="LBL-05", name="Documentation", color="#10b981"),
+            ])
+        db.commit()
 
-            modules = [
+        # ---- Projects ---- (sample business data disabled: app runs on live data only)
+        if False:
+            db.add_all([
+                Project(id="PRJ-01", code="PRJ-01", name="Customer Portal Revamp",
+                        description="Rebuild the customer-facing portal with a modern SaaS UI and secure APIs.",
+                        owner_id="U-MASTER", priority="High", status="In Progress", progress=45,
+                        review_required=True, start_date="2026-11-01", end_date="2026-12-20"),
+                Project(id="PRJ-02", code="PRJ-02", name="Mobile App Redesign",
+                        description="Next generation mobile workflow and dashboard experience.",
+                        owner_id="U-MASTER", priority="Medium", status="In Progress", progress=25,
+                        review_required=True, start_date="2026-11-05", end_date="2027-01-15"),
+                Project(id="PRJ-03", code="PRJ-03", name="Internal Analytics Platform",
+                        description="Centralized analytics and performance reporting for operations.",
+                        owner_id="U-ADMIN", priority="Medium", status="Not Started", progress=0,
+                        review_required=False, start_date="2026-12-01", end_date="2027-02-28"),
+            ])
+            db.commit()  # projects must exist before FK children
+            db.add_all([
+                ProjectMember(id="MEM-01", project_id="PRJ-01", employee_id="U-W1", role="Developer"),
+                ProjectMember(id="MEM-02", project_id="PRJ-01", employee_id="U-W2", role="Developer"),
+                ProjectMember(id="MEM-03", project_id="PRJ-02", employee_id="U-W3", role="Designer"),
+                ProjectMember(id="MEM-04", project_id="PRJ-02", employee_id="U-W2", role="Developer"),
+            ])
+            db.add_all([
+                Section(id="SEC-01", project_id="PRJ-01", name="Frontend", sort_order=1),
+                Section(id="SEC-02", project_id="PRJ-01", name="Backend & APIs", sort_order=2),
+                Section(id="SEC-03", project_id="PRJ-02", name="Wireframes", sort_order=1),
+            ])
+            db.add_all([
                 Module(id="MOD-01", project_id="PRJ-01", name="Frontend Core", sort_order=1),
-                Module(id="MOD-02", project_id="PRJ-01", name="Backend API", sort_order=2)
-            ]
-            db.add_all(modules)
+                Module(id="MOD-02", project_id="PRJ-01", name="Backend API", sort_order=2),
+            ])
+            db.commit()
 
-            clients = [
-                Client(id="CLI-01", name="Acme Corp", email="contact@acme.com", status="Active"),
-                Client(id="CLI-02", name="Global Industries", email="info@global.com", status="Active")
-            ]
-            db.add_all(clients)
-
-            departments = [
-                Department(id="DEP-01", name="Engineering", status="Active"),
-                Department(id="DEP-02", name="Design", status="Active"),
-                Department(id="DEP-03", name="Management", status="Active")
-            ]
-            db.add_all(departments)
-
-            designations = [
-                Designation(id="DSG-01", name="System Administrator", status="Active"),
-                Designation(id="DSG-02", name="Lead Project Manager", status="Active"),
-                Designation(id="DSG-03", name="Senior Tech Lead", status="Active"),
-                Designation(id="DSG-04", name="Full Stack Engineer", status="Active"),
-                Designation(id="DSG-05", name="UI/UX Designer", status="Active")
-            ]
-            db.add_all(designations)
-
+        # ---- Tasks ---- (sample data disabled)
+        if False:
             tasks = [
-                Task(
-                    id="TSK-101",
-                    name="Design Database Schema & Models",
-                    description="Define SQLite/SQLAlchemy schema for users, tasks, projects, sections, comments, and subtasks.",
-                    project_id="PRJ-01",
-                    section_id="SEC-02",
-                    module_id="MOD-02",
-                    priority="High",
-                    status="In Progress",
-                    progress=60,
-                    assigned_to="1",
-                    reviewer_id="2",
-                    start_date="2026-10-01",
-                    end_date="2026-10-25",
-                    label="Feature"
-                ),
-                Task(
-                    id="TSK-102",
-                    name="Setup FastAPI Backend & Routers",
-                    description="Implement RESTful modular routers for auth, tasks, projects, employees, and notifications.",
-                    project_id="PRJ-01",
-                    section_id="SEC-02",
-                    module_id="MOD-02",
-                    priority="High",
-                    status="Completed",
-                    progress=100,
-                    assigned_to="1",
-                    reviewer_id="2",
-                    start_date="2026-10-01",
-                    end_date="2026-10-15",
-                    label="Feature"
-                ),
-                Task(
-                    id="TSK-103",
-                    name="Build Kanban Drag and Drop View",
-                    description="Integrate interactive kanban board with column dropping and live progress calculation.",
-                    project_id="PRJ-01",
-                    section_id="SEC-01",
-                    module_id="MOD-01",
-                    priority="Medium",
-                    status="In Progress",
-                    progress=45,
-                    assigned_to="3",
-                    reviewer_id="2",
-                    start_date="2026-10-10",
-                    end_date="2026-10-28",
-                    label="UI/UX"
-                ),
-                Task(
-                    id="TSK-104",
-                    name="Mobile UI Dark Mode Consistency Testing",
-                    description="Verify color contrast, theme variables, and responsive layout across mobile viewports.",
-                    project_id="PRJ-02",
-                    section_id="SEC-03",
-                    priority="Low",
-                    status="Open",
-                    progress=0,
-                    assigned_to="5",
-                    reviewer_id="3",
-                    start_date="2026-10-15",
-                    end_date="2026-11-05",
-                    label="Design"
-                ),
-                Task(
-                    id="TSK-105",
-                    name="Security & Role Access Review",
-                    description="Verify that Admin, PM, Team Lead, and Employee roles receive appropriate API responses.",
-                    project_id="PRJ-01",
-                    section_id="SEC-02",
-                    module_id="MOD-02",
-                    priority="Critical",
-                    status="Review",
-                    progress=90,
-                    assigned_to="2",
-                    reviewer_id="1",
-                    start_date="2026-10-12",
-                    end_date="2026-10-30",
-                    label="High Priority"
-                )
+                Task(id="TSK-1001", code="TSK-1001", name="Design database schema",
+                     description="Define SQLAlchemy models, relationships and migrations.",
+                     project_id="PRJ-01", section_id="SEC-02", module_id="MOD-02",
+                     priority="High", status="In Progress", progress=40,
+                     assigned_to="U-W1", reviewer_id="U-MASTER",
+                     start_date="2026-11-10", end_date="2026-11-25", estimated_hours=24, label="Feature",
+                     created_by="U-MASTER"),
+                Task(id="TSK-1002", code="TSK-1002", name="Build authentication service",
+                     description="JWT auth, bcrypt hashing and RBAC across all portals.",
+                     project_id="PRJ-01", section_id="SEC-02", module_id="MOD-02",
+                     priority="High", status="Completed", progress=100,
+                     assigned_to="U-W2", reviewer_id="U-MASTER",
+                     start_date="2026-11-01", end_date="2026-11-15", estimated_hours=20, label="Feature",
+                     created_by="U-MASTER", completed_at=datetime(2026, 11, 14, 16, 30)),
+                Task(id="TSK-1003", code="TSK-1003", name="Create dashboard layout",
+                     description="Grid-based dashboard with KPI cards and charts.",
+                     project_id="PRJ-01", section_id="SEC-01", module_id="MOD-01",
+                     priority="Medium", status="To Do", progress=0,
+                     assigned_to="U-W1", reviewer_id="U-MASTER",
+                     start_date="2026-11-20", end_date="2026-11-20", estimated_hours=16, label="Feature",
+                     created_by="U-MASTER"),
+                Task(id="TSK-1004", code="TSK-1004", name="Mobile wireframes",
+                     description="High-fidelity wireframes for the mobile redesign.",
+                     project_id="PRJ-02", section_id="SEC-03",
+                     priority="High", status="In Progress", progress=55,
+                     assigned_to="U-W3", reviewer_id="U-MASTER",
+                     start_date="2026-11-05", end_date="2026-11-12", estimated_hours=30, label="Design",
+                     created_by="U-MASTER"),  # overdue (due in the past, not completed)
+                Task(id="TSK-1005", code="TSK-1005", name="API integration tests",
+                     description="End-to-end tests for all portal endpoints.",
+                     project_id="PRJ-01", section_id="SEC-02",
+                     priority="Medium", status="Pending", progress=10,
+                     assigned_to="U-W2", reviewer_id="U-MASTER",
+                     start_date="2026-11-18", end_date="2026-12-05", estimated_hours=18, label="Documentation",
+                     created_by="U-MASTER"),
+                Task(id="TSK-1006", code="TSK-1006", name="Design component library",
+                     description="Reusable UI components and style tokens.",
+                     project_id="PRJ-02", section_id="SEC-03",
+                     priority="Low", status="To Do", progress=0,
+                     assigned_to="U-W3", reviewer_id="U-MASTER",
+                     start_date="2026-11-22", end_date="2026-11-28", estimated_hours=12, label="Design",
+                     created_by="U-MASTER"),
             ]
             db.add_all(tasks)
+            db.commit()  # tasks must exist before subtasks/comments FK children
+            db.add_all([
+                Subtask(task_id="TSK-1001", title="Define User and Role entities", is_done=True, sort_order=1),
+                Subtask(task_id="TSK-1001", title="Add Timesheet and Attachment tables", is_done=True, sort_order=2),
+                Subtask(task_id="TSK-1001", title="Wire foreign-key relationships", is_done=False, sort_order=3),
+                Subtask(task_id="TSK-1004", title="Low-fidelity flows", is_done=True, sort_order=1),
+                Subtask(task_id="TSK-1004", title="High-fidelity screens", is_done=False, sort_order=2),
+            ])
+            db.add_all([
+                Comment(task_id="TSK-1001", user_id="U-MASTER", user_name="Priya Menon",
+                        text="Please keep the relationships normalized."),
+                Comment(task_id="TSK-1004", user_id="U-W3", user_name="Sachin Verma",
+                        text="First draft of the flows is ready for review."),
+            ])
+            db.commit()
 
-            subtasks = [
-                Subtask(task_id="TSK-101", title="Define User and Project entities", is_done=True, sort_order=1),
-                Subtask(task_id="TSK-101", title="Define Task and Subtask tables", is_done=True, sort_order=2),
-                Subtask(task_id="TSK-101", title="Configure foreign key relationships", is_done=False, sort_order=3),
-                Subtask(task_id="TSK-103", title="Implement HTML5 drag and drop handlers", is_done=True, sort_order=1),
-                Subtask(task_id="TSK-103", title="Add backend status update synchronization", is_done=False, sort_order=2)
-            ]
-            db.add_all(subtasks)
+        # ---- Timesheets ---- (sample data disabled)
+        if False:
+            db.add_all([
+                Timesheet(id="TS-0001", code="TS-0001", user_id="U-W1", project_id="PRJ-01",
+                          task_id="TSK-1001", work_date="2026-11-18", from_time="09:00 AM",
+                          to_time="01:00 PM", total_hours=4.0, status="Submitted",
+                          remarks="Worked on the schema design and relationship mapping."),
+                Timesheet(id="TS-0002", code="TS-0002", user_id="U-W2", project_id="PRJ-01",
+                          task_id="TSK-1002", work_date="2026-11-14", from_time="10:00 AM",
+                          to_time="05:30 PM", total_hours=7.5, status="Approved",
+                          remarks="Completed JWT auth and RBAC wiring."),
+            ])
+            db.commit()
 
-            comments = [
-                Comment(
-                    task_id="TSK-101",
-                    user_id="1",
-                    user_name="Admin User",
-                    text="Initial SQLite database configured. Tables created cleanly."
-                ),
-                Comment(
-                    task_id="TSK-103",
-                    user_id="3",
-                    user_name="Ravi Kumar",
-                    text="Kanban columns updated with CSS gradients and hover effects."
-                )
-            ]
-            db.add_all(comments)
-
-            notifications = [
-                Notification(
-                    user_id="1",
-                    title="Task Assigned",
-                    message="You were assigned to 'Design Database Schema & Models'.",
-                    is_read=False
-                ),
-                Notification(
-                    user_id="1",
-                    title="System Deployment",
-                    message="FastAPI backend v2.0 initialized with full persistence.",
-                    is_read=False
-                )
-            ]
-            db.add_all(notifications)
-
+        # ---- Notifications ---- (sample data disabled)
+        if False:
+            db.add_all([
+                Notification(user_id="U-W1", type="task", title="Task Assigned",
+                             message="You were assigned 'Design database schema'.",
+                             task_id="TSK-1001", is_read=False),
+                Notification(user_id=None, type="system", title="System Ready",
+                             message="ProjectMatrix backend initialized with full persistence.",
+                             is_read=False),
+            ])
             db.commit()
     finally:
         db.close()

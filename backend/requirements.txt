@@ -1,5 +1,11 @@
 fastapi
-uvicorn
+uvicorn[standard]
 python-dotenv
-sqlalchemy
+sqlalchemy>=2.0
 pymysql
+cryptography
+bcrypt
+python-jose[cryptography]
+python-multipart
+openpyxl
+email-validator
