@@ -33,8 +33,9 @@ function StatCard({ icon, color, title, stats, onClick, cta }) {
   );
 }
 
-// Admin-only: searchable grid of all projects, right on the dashboard.
-function ProjectsGrid({ navigate }) {
+// Admin-only overview card: the project stats PLUS a searchable grid of all
+// projects, together inside one card.
+function ProjectsOverviewCard({ c, navigate }) {
   const [search, setSearch] = useState('');
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -50,12 +51,40 @@ function ProjectsGrid({ navigate }) {
     return () => { alive = false; clearTimeout(h); };
   }, [search]);
 
+  const stats = [
+    { label: 'Total', value: c.projects.total },
+    { label: 'In Progress', value: c.projects.inProgress, color: '#3b82f6' },
+    { label: 'Completed', value: c.projects.completed, color: '#10b981' },
+    { label: 'Pending', value: c.projects.pending, color: '#f59e0b' },
+  ];
+
   return (
-    <Card title={<span><i className="ph ph-folder-open" style={{ marginRight: 8 }}></i>Projects ({projects.length})</span>}
-      actions={<SearchBox value={search} onChange={setSearch} placeholder="Search projects…" width="220px" />}>
+    <div className="card" style={{ borderTop: '3px solid #059669' }}>
+      <div className="card-header-flex">
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span className="kpi-icon" style={{ background: '#05966922', color: '#059669' }}><i className="ph-fill ph-folder-open"></i></span>
+          <h3 style={{ margin: 0, fontSize: '1.05rem' }}>Projects Overview</h3>
+        </div>
+        <button className="btn btn-sm btn-secondary" onClick={() => navigate('projects')}>View</button>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 12, marginTop: 8 }}>
+        {stats.map((s) => (
+          <div key={s.label} style={{ padding: '10px 12px', background: 'var(--surface-2, rgba(148,163,184,.07))', borderRadius: 10 }}>
+            <div style={{ fontSize: '1.6rem', fontWeight: 800, color: s.color || 'inherit' }}>{s.value}</div>
+            <div className="text-secondary" style={{ fontSize: '0.8rem' }}>{s.label}</div>
+          </div>
+        ))}
+      </div>
+
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10,
+        margin: '16px 0 10px', paddingTop: 14, borderTop: '1px solid var(--border-color,#e2e8f0)', flexWrap: 'wrap' }}>
+        <strong style={{ fontSize: '0.9rem' }}>All Projects ({projects.length})</strong>
+        <SearchBox value={search} onChange={setSearch} placeholder="Search projects…" width="220px" />
+      </div>
+
       {loading ? <Spinner /> : projects.length === 0 ? (
-        <EmptyState icon="ph-folder-open" title="No projects found"
-          message={search ? 'Try a different search.' : 'No projects yet.'} />
+        <EmptyState icon="ph-folder-open" title="No projects found" message={search ? 'Try a different search.' : 'No projects yet.'} />
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 12 }}>
           {projects.map((p) => (
@@ -82,7 +111,7 @@ function ProjectsGrid({ navigate }) {
           ))}
         </div>
       )}
-    </Card>
+    </div>
   );
 }
 
@@ -133,6 +162,7 @@ export default function Dashboard({ navigate }) {
   if (err) return <EmptyState icon="ph-warning" title="Could not load dashboard" message={err} />;
 
   const isWorker = user.role === 'Worker';
+  const isAdmin = user.role === 'Admin';
   const c = data.cards;
 
   const statusLabels = Object.keys(data.charts.taskStatus);
@@ -194,15 +224,21 @@ export default function Dashboard({ navigate }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
       {/* Primary cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: isWorker ? 'repeat(2,1fr)' : 'repeat(3,1fr)', gap: 14 }}>
-        <StatCard icon="ph-folder-open" color="#059669" title={isWorker ? 'My Projects' : 'Projects Overview'}
-          cta="View" onClick={() => navigate('projects')}
-          stats={[
-            { label: 'Total', value: c.projects.total },
-            { label: 'In Progress', value: c.projects.inProgress, color: '#3b82f6' },
-            { label: 'Completed', value: c.projects.completed, color: '#10b981' },
-            { label: 'Pending', value: c.projects.pending, color: '#f59e0b' },
-          ]} />
+      {/* Projects / Tasks / Employees in one row. For Admin the Projects card
+          also holds the searchable project grid inside it. */}
+      <div style={{ display: 'grid', gridTemplateColumns: isWorker ? 'repeat(2,1fr)' : 'repeat(3,1fr)', gap: 14, alignItems: 'start' }}>
+        {isAdmin ? (
+          <ProjectsOverviewCard c={c} navigate={navigate} />
+        ) : (
+          <StatCard icon="ph-folder-open" color="#059669" title={isWorker ? 'My Projects' : 'Projects Overview'}
+            cta="View" onClick={() => navigate('projects')}
+            stats={[
+              { label: 'Total', value: c.projects.total },
+              { label: 'In Progress', value: c.projects.inProgress, color: '#3b82f6' },
+              { label: 'Completed', value: c.projects.completed, color: '#10b981' },
+              { label: 'Pending', value: c.projects.pending, color: '#f59e0b' },
+            ]} />
+        )}
         <StatCard icon="ph-check-square" color="#eab308" title={isWorker ? 'My Tasks' : 'Pending Tasks'}
           cta="View" onClick={() => navigate('tasks')}
           stats={[
@@ -222,9 +258,6 @@ export default function Dashboard({ navigate }) {
             ]} />
         )}
       </div>
-
-      {/* Admin-only: searchable projects grid */}
-      {user.role === 'Admin' && <ProjectsGrid navigate={navigate} />}
 
       {/* Charts */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
