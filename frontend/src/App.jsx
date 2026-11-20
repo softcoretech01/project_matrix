@@ -104,10 +104,6 @@ function LoginScreen() {
   const [devLink, setDevLink] = useState('');
   const [resetToken, setResetToken] = useState(urlToken || '');
 
-  useEffect(() => {
-    const rem = getRememberedEmail();
-    if (rem) { setEmail(rem); setRemember(true); }
-  }, [getRememberedEmail]);
 
   const submitLogin = async (e) => {
     e.preventDefault();
@@ -336,11 +332,9 @@ function AppShell() {
       <LiveView />
       <aside className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
         <div className="sidebar-brand">
-          <span className="sidebar-brand-icon" style={{ fontSize: '1.4rem' }}><i className="ph-fill ph-lightning"></i></span>
           <span className="sidebar-brand-text">Task <span className="brand-accent">Matrix</span></span>
         </div>
         <nav className="sidebar-menu">
-          <div className="menu-section-header"><span>{user.role} Portal</span></div>
           {menu.map((m) => (
             <a key={m.view} className={`menu-item ${active === m.view ? 'active' : ''}`}
               onClick={() => navigate(m.view)}>

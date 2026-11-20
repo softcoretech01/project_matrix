@@ -164,12 +164,21 @@ export default function TimesheetForm({ initialTaskId = '', onClose, onSaved }) 
     <Modal title="Create Timesheet" onClose={onClose} size="lg"
       footer={<><button className="btn btn-secondary" onClick={onClose} disabled={busy}>Cancel</button>
         <button className="btn btn-primary" onClick={submit} disabled={busy || overLimit}>{busy ? 'Submitting…' : 'Submit Timesheet'}</button></>}>
-      <div className="form-group">
-        <label className="form-label">Task *</label>
-        <select className="form-control" value={taskId} onChange={(e) => setTaskId(e.target.value)}>
-          <option value="">— Select a task —</option>
-          {tasks.map((t) => <option key={t.id} value={t.id}>{t.code || t.id} · {t.name}</option>)}
-        </select>
+      {/* Row 1: Task (reduced width) and Date (second field) */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1.8fr 1.2fr', gap: 12 }}>
+        <div className="form-group">
+          <label className="form-label">Task *</label>
+          <select className="form-control" value={taskId} onChange={(e) => setTaskId(e.target.value)}>
+            <option value="">— Select a task —</option>
+            {tasks.map((t) => <option key={t.id} value={t.id}>{t.code || t.id} · {t.name}</option>)}
+          </select>
+        </div>
+        <div className="form-group">
+          <label className="form-label">Date <span className="text-muted" style={{ fontWeight: 400, fontSize: '0.75rem' }}>(today)</span></label>
+          <input className="form-control" value={prettyDate(date)} readOnly tabIndex={-1}
+            title="Timesheets are logged for today's work"
+            style={{ background: 'var(--surface-2, rgba(148,163,184,.08))', cursor: 'not-allowed', fontWeight: 600 }} />
+        </div>
       </div>
 
       {task && (
@@ -184,20 +193,14 @@ export default function TimesheetForm({ initialTaskId = '', onClose, onSaved }) 
         </div>
       )}
 
+      {/* Row 2: From Time, To Time, and Total Hours */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12 }}>
-        <div className="form-group">
-          <label className="form-label">Date <span className="text-muted" style={{ fontWeight: 400, fontSize: '0.75rem' }}>(today)</span></label>
-          <input className="form-control" value={prettyDate(date)} readOnly tabIndex={-1}
-            title="Timesheets are logged for today's work"
-            style={{ background: 'var(--surface-2, rgba(148,163,184,.08))', cursor: 'not-allowed', fontWeight: 600 }} />
-        </div>
         <TimePicker label="From Time" value={from} onChange={setFrom} />
         <TimePicker label="To Time" value={to} onChange={setTo} />
-      </div>
-
-      <div className="form-group">
-        <label className="form-label">Total Hours (auto)</label>
-        <input className="form-control" value={`${totalHours} hrs`} readOnly style={{ fontWeight: 700 }} />
+        <div className="form-group">
+          <label className="form-label">Total Hours (auto)</label>
+          <input className="form-control" value={`${totalHours} hrs`} readOnly style={{ fontWeight: 700 }} />
+        </div>
       </div>
 
       <div className="form-group">

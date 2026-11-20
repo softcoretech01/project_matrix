@@ -1,6 +1,7 @@
 # backend/app/routers/dashboard.py
 """Live dashboard aggregations. Role-aware: Admin/Master see everything,
 Worker sees only their own assigned work."""
+from collections import defaultdict
 from datetime import datetime, date, timedelta
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
@@ -126,7 +127,7 @@ def dashboard(current_user: User = Depends(get_current_user), db: Session = Depe
         [t for t in tasks if t.end_date and t.status not in DONE and
          (datetime.strptime(t.end_date, "%Y-%m-%d").date() >= date.today()
           if _safe_date(t.end_date) else False)],
-        key=lambda t: t.end_date)[:6]
+        key=lambda t: t.end_date)[:100]
 
     # ---- Recent activity (notifications) ----
     notif_q = db.query(Notification)
@@ -146,9 +147,13 @@ def dashboard(current_user: User = Depends(get_current_user), db: Session = Depe
     idle_sessions = 0
     idle_minutes = 0
     idle_alerts_by_emp = []
+    recent_idle_alerts = []
     if not is_worker:
-        users_map = {u.id: (u.name or u.email) for u in db.query(User).all()}
-        idle_logs = db.query(IdleTimeLog).all()
+        # Exclude Admin and Master roles from employee idle alerts (workers only)
+        workers = {u.id: u for u in db.query(User).filter(User.role == "Worker").all()}
+        worker_ids = list(workers.keys())
+
+        idle_logs = db.query(IdleTimeLog).filter(IdleTimeLog.user_id.in_(worker_ids)).order_by(IdleTimeLog.idle_start.desc()).all()
         idle_sessions = len(idle_logs)
         idle_minutes = round(sum((l.duration_seconds or 0) for l in idle_logs) / 60)
         alert_logs = [l for l in idle_logs if (l.duration_seconds or 0) >= 900]
@@ -156,17 +161,40 @@ def dashboard(current_user: User = Depends(get_current_user), db: Session = Depe
 
         emp_counts = defaultdict(int)
         for l in alert_logs:
-            emp_name = users_map.get(l.user_id, l.user_id or "Unknown")
+            w = workers.get(l.user_id)
+            emp_name = w.name if w else (l.user_id or "Worker")
             emp_counts[emp_name] += 1
         idle_alerts_by_emp = [{"name": k, "alerts": v} for k, v in sorted(emp_counts.items(), key=lambda x: -x[1])]
+
+        for l in alert_logs[:6]:
+            w = workers.get(l.user_id)
+            recent_idle_alerts.append({
+                "id": l.id,
+                "userId": l.user_id,
+                "employeeName": w.name if w else (l.user_id or "Worker"),
+                "designation": (w.designation if w else "") or "Worker",
+                "minutes": round((l.duration_seconds or 0) / 60),
+                "date": l.log_date,
+                "time": l.idle_start.strftime("%I:%M %p") if l.idle_start else "",
+            })
     else:
-        my_logs = db.query(IdleTimeLog).filter(IdleTimeLog.user_id == current_user.id).all()
+        my_logs = db.query(IdleTimeLog).filter(IdleTimeLog.user_id == current_user.id).order_by(IdleTimeLog.idle_start.desc()).all()
         idle_sessions = len(my_logs)
         idle_minutes = round(sum((l.duration_seconds or 0) for l in my_logs) / 60)
         alert_logs = [l for l in my_logs if (l.duration_seconds or 0) >= 900]
         idle_alerts = len(alert_logs)
         if idle_alerts > 0:
             idle_alerts_by_emp = [{"name": current_user.name or "Me", "alerts": idle_alerts}]
+            for l in alert_logs[:6]:
+                recent_idle_alerts.append({
+                    "id": l.id,
+                    "userId": l.user_id,
+                    "employeeName": current_user.name or "Me",
+                    "designation": current_user.designation or "Worker",
+                    "minutes": round((l.duration_seconds or 0) / 60),
+                    "date": l.log_date,
+                    "time": l.idle_start.strftime("%I:%M %p") if l.idle_start else "",
+                })
 
     return {
         "role": current_user.role,
@@ -196,11 +224,17 @@ def dashboard(current_user: User = Depends(get_current_user), db: Session = Depe
         },
         "todayTasks": [light(t) for t in tasks if t.end_date == today],
         "upcomingDeadlines": [light(t) for t in upcoming],
-        "overdueTasks": [light(t) for t in overdue][:6],
+        "overdueTasks": [light(t) for t in overdue][:100],
         "recentActivity": [n.to_dict() for n in recent],
         "timesheets": {"loggedHours": logged_hours, "count": len(timesheets)},
         "idleAlerts": idle_alerts,
-        "idle": {"alerts": idle_alerts, "sessions": idle_sessions, "minutes": idle_minutes, "byEmployee": idle_alerts_by_emp},
+        "idle": {
+            "alerts": idle_alerts,
+            "sessions": idle_sessions,
+            "minutes": idle_minutes,
+            "byEmployee": idle_alerts_by_emp,
+            "recentAlerts": recent_idle_alerts,
+        },
     }
 
 

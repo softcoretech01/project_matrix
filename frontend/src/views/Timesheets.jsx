@@ -94,6 +94,12 @@ export default function Timesheets() {
 
   const shown = statusF === 'All' ? list : list.filter((t) => t.status === statusF);
   const { sorted, sort, toggle } = useSortable(shown);
+  const [page, setPage] = useState(1);
+  useEffect(() => { setPage(1); }, [search, statusF]);
+  const PER = 10;
+  const pageCount = Math.max(1, Math.ceil(sorted.length / PER));
+  const start = (page - 1) * PER;
+  const pageItems = sorted.slice(start, start + PER);
   const openDetail = async (id) => {
     try { setDetail(await api.get(`/timesheets/${id}`)); } catch (e) { toast.error(e.message); }
   };
@@ -122,6 +128,7 @@ export default function Timesheets() {
         <EmptyState icon="ph-clock" title="No timesheets" message="Log your work hours with a new timesheet."
           action={<button className="btn btn-primary" onClick={() => setCreating(true)}>New Timesheet</button>} />
       ) : (
+        <>
         <div className="table-responsive card" style={{ padding: 0 }}>
           <table className="table">
             <thead>
@@ -139,9 +146,9 @@ export default function Timesheets() {
               </tr>
             </thead>
             <tbody>
-              {sorted.map((t, idx) => (
+              {pageItems.map((t, idx) => (
                 <tr key={t.id} className="clickable-row" onClick={() => openDetail(t.id)}>
-                  <td className="text-muted">{idx + 1}</td>
+                  <td className="text-muted">{start + idx + 1}</td>
                   <td><DateCell date={t.workDate} /></td>
                   <td>{t.employeeName}</td>
                   <td>{t.projectName || t.projectId || '—'}</td>
@@ -163,6 +170,17 @@ export default function Timesheets() {
             </tbody>
           </table>
         </div>
+        {sorted.length > PER && (
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 10, fontSize: '0.82rem' }}>
+            <span className="text-secondary">Showing {start + 1}–{Math.min(start + PER, sorted.length)} of {sorted.length}</span>
+            <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+              <button className="btn btn-sm btn-secondary" disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}><i className="ph ph-caret-left"></i> Prev</button>
+              <span className="text-secondary">{page} / {pageCount}</span>
+              <button className="btn btn-sm btn-secondary" disabled={page >= pageCount} onClick={() => setPage((p) => Math.min(pageCount, p + 1))}>Next <i className="ph ph-caret-right"></i></button>
+            </div>
+          </div>
+        )}
+        </>
       )}
 
       {creating && <TimesheetForm onClose={() => setCreating(false)} onSaved={() => { setCreating(false); load(); }} />}

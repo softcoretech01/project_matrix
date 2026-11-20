@@ -292,11 +292,14 @@ button, input, select, textarea {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 20px 12px;
+  padding: 10px 12px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
+  scrollbar-width: none;        /* Firefox */
+  -ms-overflow-style: none;     /* IE / Edge */
 }
+.sidebar-menu::-webkit-scrollbar { width: 0; height: 0; display: none; }  /* Chrome / Safari */
 
 .menu-section-header {
   font-size: 0.7rem;
@@ -336,7 +339,7 @@ button, input, select, textarea {
 .menu-item {
   display: flex;
   align-items: center;
-  padding: 12px 14px;
+  padding: 8px 14px;
   color: var(--text-secondary);
   border-radius: var(--radius-md);
   font-size: 0.9rem;
@@ -851,6 +854,7 @@ textarea.form-control {
   padding: 10px 16px;
   border-bottom: 1px solid var(--border-color);
   vertical-align: middle;
+  white-space: nowrap;      /* keep every row to a single line (table scrolls horizontally) */
 }
 .table th {
   background: rgba(255,255,255,0.02);
