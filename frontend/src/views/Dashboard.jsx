@@ -5,7 +5,7 @@ import {
 } from 'chart.js';
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { Spinner, Card, EmptyState, StatusBadge, PriorityBadge, STATUS_COLORS, fmtDate } from '../components/ui';
+import { Spinner, Card, EmptyState, StatusBadge, PriorityBadge, SearchBox, STATUS_COLORS, fmtDate } from '../components/ui';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Title, Tooltip, Legend);
 
@@ -30,6 +30,59 @@ function StatCard({ icon, color, title, stats, onClick, cta }) {
         ))}
       </div>
     </div>
+  );
+}
+
+// Admin-only: searchable grid of all projects, right on the dashboard.
+function ProjectsGrid({ navigate }) {
+  const [search, setSearch] = useState('');
+  const [projects, setProjects] = useState([]);
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    let alive = true;
+    const h = setTimeout(async () => {
+      try {
+        const pl = await api.get(`/projects?search=${encodeURIComponent(search)}&status=All`);
+        if (alive) setProjects(Array.isArray(pl) ? pl : []);
+      } catch { /* ignore */ }
+      finally { if (alive) setLoading(false); }
+    }, 250);
+    return () => { alive = false; clearTimeout(h); };
+  }, [search]);
+
+  return (
+    <Card title={<span><i className="ph ph-folder-open" style={{ marginRight: 8 }}></i>Projects ({projects.length})</span>}
+      actions={<SearchBox value={search} onChange={setSearch} placeholder="Search projects…" width="220px" />}>
+      {loading ? <Spinner /> : projects.length === 0 ? (
+        <EmptyState icon="ph-folder-open" title="No projects found"
+          message={search ? 'Try a different search.' : 'No projects yet.'} />
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 12 }}>
+          {projects.map((p) => (
+            <div key={p.id} className="clickable-row" onClick={() => navigate('projects', { projectId: p.id })}
+              style={{ border: '1px solid var(--border-color,#e2e8f0)', borderRadius: 10, padding: 12, cursor: 'pointer' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
+                <div style={{ minWidth: 0 }}>
+                  <strong style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</strong>
+                  <div className="text-muted" style={{ fontSize: '0.72rem' }}>{p.code}</div>
+                </div>
+                <StatusBadge status={p.status} />
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 10 }}>
+                <div style={{ flex: 1, height: 6, borderRadius: 4, background: 'var(--border-color,#e2e8f0)' }}>
+                  <div style={{ width: `${p.progress || 0}%`, height: '100%', borderRadius: 4, background: (p.progress || 0) >= 100 ? '#10b981' : '#6366f1' }}></div>
+                </div>
+                <span className="text-secondary" style={{ fontSize: '0.72rem', width: 32 }}>{p.progress || 0}%</span>
+              </div>
+              <div className="text-secondary" style={{ fontSize: '0.75rem', marginTop: 8, display: 'flex', justifyContent: 'space-between' }}>
+                <span>{p.ownerName || '—'}</span>
+                <span>{p.completedTasksCount}/{p.tasksCount} tasks</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </Card>
   );
 }
 
@@ -98,19 +151,45 @@ export default function Dashboard({ navigate }) {
       label: 'Projects',
       data: projLabels.map((k) => data.charts.projectStatus[k]),
       backgroundColor: '#10b981',
-      borderRadius: 6,
+      borderRadius: 8,
+      maxBarThickness: 44,
+      barThickness: 40,
     }],
   };
   const catBreak = data.charts.categoryBreakdown || [];
   const catChart = {
     labels: catBreak.map((c) => c.name),
-    datasets: [{ label: 'Tasks', data: catBreak.map((c) => c.count),
-      backgroundColor: catBreak.map((c) => c.color), borderRadius: 6 }],
+    datasets: [{
+      label: 'Tasks',
+      data: catBreak.map((c) => c.count),
+      backgroundColor: catBreak.map((c) => c.color || '#3b82f6'),
+      borderRadius: 8,
+      maxBarThickness: 44,
+      barThickness: 40,
+    }],
   };
-  const chartOpts = { responsive: true, maintainAspectRatio: false,
-    plugins: { legend: { labels: { color: '#94a3b8' } } },
-    scales: { x: { ticks: { color: '#94a3b8' }, grid: { display: false } },
-              y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(148,163,184,.1)' }, beginAtZero: true } } };
+  const chartOpts = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { labels: { color: '#64748b', boxWidth: 12, padding: 10 } },
+      tooltip: {
+        backgroundColor: '#0f172a',
+        titleColor: '#ffffff',
+        bodyColor: '#e2e8f0',
+        padding: 10,
+        cornerRadius: 8,
+      },
+    },
+    scales: {
+      x: { ticks: { color: '#64748b' }, grid: { display: false } },
+      y: {
+        ticks: { color: '#64748b', stepSize: 1, precision: 0 },
+        grid: { color: 'rgba(148,163,184,.12)' },
+        beginAtZero: true,
+      },
+    },
+  };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -143,6 +222,9 @@ export default function Dashboard({ navigate }) {
             ]} />
         )}
       </div>
+
+      {/* Admin-only: searchable projects grid */}
+      {user.role === 'Admin' && <ProjectsGrid navigate={navigate} />}
 
       {/* Charts */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
