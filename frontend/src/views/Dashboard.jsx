@@ -169,17 +169,8 @@ function TasksOverviewCard({ c, navigate }) {
         <button className="btn btn-sm btn-secondary" onClick={() => navigate('tasks')}>View</button>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 10, marginTop: 8 }}>
-        {stats.map((s) => (
-          <div key={s.label} style={{ padding: '8px 10px', background: 'var(--surface-2, rgba(148,163,184,.07))', borderRadius: 10 }}>
-            <div style={{ fontSize: '1.3rem', fontWeight: 800, color: s.color || 'inherit' }}>{s.value}</div>
-            <div className="text-secondary" style={{ fontSize: '0.75rem' }}>{s.label}</div>
-          </div>
-        ))}
-      </div>
-
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10,
-        margin: '16px 0 10px', paddingTop: 14, borderTop: '1px solid var(--border-color,#e2e8f0)', flexWrap: 'wrap' }}>
+        margin: '4px 0 10px', flexWrap: 'wrap' }}>
         <strong style={{ fontSize: '0.9rem' }}>All Tasks ({tasks.length})</strong>
         <SearchBox value={search} onChange={setSearch} placeholder="Search tasks…" width="220px" />
       </div>
@@ -250,17 +241,8 @@ function ProjectsOverviewCard({ c, navigate }) {
         <button className="btn btn-sm btn-secondary" onClick={() => navigate('projects')}>View</button>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 10, marginTop: 8 }}>
-        {stats.map((s) => (
-          <div key={s.label} style={{ padding: '8px 10px', background: 'var(--surface-2, rgba(148,163,184,.07))', borderRadius: 10 }}>
-            <div style={{ fontSize: '1.3rem', fontWeight: 800, color: s.color || 'inherit' }}>{s.value}</div>
-            <div className="text-secondary" style={{ fontSize: '0.75rem' }}>{s.label}</div>
-          </div>
-        ))}
-      </div>
-
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10,
-        margin: '16px 0 10px', paddingTop: 14, borderTop: '1px solid var(--border-color,#e2e8f0)', flexWrap: 'wrap' }}>
+        margin: '4px 0 10px', flexWrap: 'wrap' }}>
         <strong style={{ fontSize: '0.9rem' }}>All Projects ({projects.length})</strong>
         <SearchBox value={search} onChange={setSearch} placeholder="Search projects…" width="220px" />
       </div>
