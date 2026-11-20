@@ -211,9 +211,13 @@ def update_task(task_id: str, data: TaskPatch, current_user: User = Depends(get_
               "sectionId": "section_id", "moduleId": "module_id", "priority": "priority",
               "startDate": "start_date", "endDate": "end_date", "estimatedHours": "estimated_hours",
               "label": "label", "reviewerId": "reviewer_id", "category": "category"}
+    # These map to nullable foreign keys — an empty string is not a valid key, so store NULL.
+    fk_fields = {"projectId", "sectionId", "moduleId", "reviewerId"}
     for field, col in simple.items():
         val = getattr(data, field)
         if val is not None:
+            if field in fk_fields and val == "":
+                val = None
             setattr(task, col, val)
     if data.customData is not None:
         task.custom_data = json.dumps(data.customData)
