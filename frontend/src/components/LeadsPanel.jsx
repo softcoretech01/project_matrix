@@ -3,11 +3,13 @@ import { api, download } from '../services/api';
 import { Card, EmptyState, StatusBadge, toast } from './ui';
 
 const LEAD_STATUSES = ['New', 'Contacted', 'Interested', 'Converted', 'Lost'];
+const PER_PAGE = 10;
 
 export default function LeadsPanel({ taskId, canEdit = true }) {
   const [leads, setLeads] = useState([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const [page, setPage] = useState(1);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -41,6 +43,11 @@ export default function LeadsPanel({ taskId, canEdit = true }) {
   };
 
   const summary = LEAD_STATUSES.reduce((a, s) => ({ ...a, [s]: leads.filter((l) => l.status === s).length }), {});
+
+  const pageCount = Math.max(1, Math.ceil(leads.length / PER_PAGE));
+  useEffect(() => { if (page > pageCount) setPage(pageCount); }, [pageCount, page]);
+  const start = (page - 1) * PER_PAGE;
+  const pageLeads = leads.slice(start, start + PER_PAGE);
 
   return (
     <Card title={<span><i className="ph ph-users-three" style={{ marginRight: 6 }}></i>Lead Contacts ({leads.length})</span>}
@@ -78,9 +85,9 @@ export default function LeadsPanel({ taskId, canEdit = true }) {
               <tr><th>#</th><th>Name</th><th>Company</th><th>Phone</th><th>Email</th><th>Status</th>{canEdit && <th></th>}</tr>
             </thead>
             <tbody>
-              {leads.map((l, i) => (
+              {pageLeads.map((l, i) => (
                 <tr key={l.id}>
-                  <td className="text-muted">{i + 1}</td>
+                  <td className="text-muted">{start + i + 1}</td>
                   <td><strong>{l.name}</strong></td>
                   <td>{l.company || '—'}</td>
                   <td>{l.phone || '—'}</td>
@@ -103,6 +110,23 @@ export default function LeadsPanel({ taskId, canEdit = true }) {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {leads.length > PER_PAGE && (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 12, fontSize: '0.85rem' }}>
+          <span className="text-secondary">
+            Showing {start + 1}–{Math.min(start + PER_PAGE, leads.length)} of {leads.length}
+          </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <button className="btn btn-sm btn-secondary" disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>
+              <i className="ph ph-caret-left"></i> Prev
+            </button>
+            <span className="text-secondary">Page <strong>{page}</strong> / {pageCount}</span>
+            <button className="btn btn-sm btn-secondary" disabled={page >= pageCount} onClick={() => setPage((p) => Math.min(pageCount, p + 1))}>
+              Next <i className="ph ph-caret-right"></i>
+            </button>
+          </div>
         </div>
       )}
     </Card>
