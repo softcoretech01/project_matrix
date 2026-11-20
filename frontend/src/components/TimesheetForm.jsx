@@ -29,6 +29,18 @@ const docIcon = (name) => {
   return 'ph-file-text';
 };
 
+// Current local time as the picker uses it (hour 1–12, minute snapped to 00/15/30/45, AM/PM)
+function nowTime() {
+  const d = new Date();
+  let h = d.getHours();
+  let min = Math.round(d.getMinutes() / 15) * 15;
+  if (min === 60) { min = 0; h = (h + 1) % 24; }
+  const ap = h >= 12 ? 'PM' : 'AM';
+  let h12 = h % 12;
+  if (h12 === 0) h12 = 12;
+  return { h: h12, m: String(min).padStart(2, '0'), ap };
+}
+
 function to24(h, m, ap) {
   let hh = parseInt(h, 10) % 12;
   if (ap === 'PM') hh += 12;
@@ -62,7 +74,7 @@ export default function TimesheetForm({ initialTaskId = '', onClose, onSaved }) 
   const [taskId, setTaskId] = useState(initialTaskId);
   const [date] = useState(todayLocal());   // timesheet is always for today's work — not editable
   const [from, setFrom] = useState({ h: 9, m: '00', ap: 'AM' });
-  const [to, setTo] = useState({ h: 5, m: '00', ap: 'PM' });
+  const [to, setTo] = useState(nowTime());   // default end time = current time
   const [remarks, setRemarks] = useState('');
   const [images, setImages] = useState([]);   // {id, kind:'file'|'camera', file?, dataUrl?, preview}
   const [docs, setDocs] = useState([]);        // {id, file}
