@@ -2,6 +2,8 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { api, assetUrl } from '../services/api';
 import { Spinner, EmptyState, SearchBox, Modal, ExportButton, toast, fmtDate, SortHeader, RowActions, DateCell, useSortable } from '../components/ui';
 import CameraCapture from '../components/CameraCapture';
+import { useLive } from '../components/useLiveSignaling';
+import { useAuth } from '../context/AuthContext';
 
 function fmtTime(s) {
   if (!s) return '—';
@@ -27,6 +29,15 @@ export default function Camera() {
   const [dateF, setDateF] = useState('');
   const [preview, setPreview] = useState(null);
   const [capturing, setCapturing] = useState(false);
+  const live = useLive();
+  const { user } = useAuth();
+  const canLive = user && (user.role === 'Admin' || user.role === 'Master');
+
+  const startLive = () => {
+    const emp = employees.find((e) => String(e.id) === String(empF));
+    if (!emp) { toast.error('Select an employee first'); return; }
+    live?.requestView(emp);
+  };
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -68,6 +79,12 @@ export default function Camera() {
         </select>
         <input type="date" className="form-control" style={{ width: 150 }} value={dateF} onChange={(e) => setDateF(e.target.value)} />
         <div style={{ flex: 1 }} />
+        {canLive && (
+          <button className="btn btn-secondary" onClick={startLive} disabled={!empF}
+            title={empF ? 'Request a live camera view (employee must allow)' : 'Select an employee first'}>
+            <i className="ph ph-video-camera"></i> Live View
+          </button>
+        )}
         <ExportButton path="/exports/camera" filename="Camera_Activity_Report.xlsx" />
         <button className="btn btn-primary" onClick={() => setCapturing(true)}><i className="ph ph-camera"></i> Capture Photo</button>
       </div>

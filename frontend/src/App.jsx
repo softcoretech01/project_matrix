@@ -3,6 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { Toaster, toast } from './components/ui';
 import useIdleTracker from './components/useIdleTracker';
+import { LiveSignalingProvider } from './components/useLiveSignaling';
+import LiveView from './components/LiveView';
 
 import Dashboard from './views/Dashboard';
 import Projects from './views/Projects';
@@ -354,7 +356,9 @@ function AppShell() {
   const activeLabel = (menu.find((m) => m.view === active) || {}).label || '';
 
   return (
+    <LiveSignalingProvider>
     <div className="app-wrapper">
+      <LiveView />
       <aside className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
         <div className="sidebar-brand">
           <span className="sidebar-brand-icon" style={{ fontSize: '1.4rem' }}><i className="ph-fill ph-lightning"></i></span>
@@ -415,6 +419,7 @@ function AppShell() {
       </div>
 
     </div>
+    </LiveSignalingProvider>
   );
 }
 

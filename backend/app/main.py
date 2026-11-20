@@ -24,6 +24,7 @@ from backend.app.routers import (
     auth, tasks, projects, sections, labels, employees, notifications,
     search, admin, master, modules, personal, reports, dashboard, timesheets,
     idle_time, camera, performance, exports, profile, categories, links, leads,
+    live,
 )
 
 UPLOAD_DIR = os.path.join(backend_dir, "uploads")
@@ -77,6 +78,7 @@ app.include_router(profile.router)
 app.include_router(categories.router)
 app.include_router(links.router)
 app.include_router(leads.router)
+app.include_router(live.router)
 app.include_router(employees.router)
 app.include_router(notifications.router)
 app.include_router(personal.router)
