@@ -1,7 +1,7 @@
 // src/App.jsx — ProjectMatrix: Admin / Master / Worker portals
 import React, { useState, useEffect } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import { Toaster, toast } from './components/ui';
+import { Toaster, toast, ConfirmDialog } from './components/ui';
 import useIdleTracker from './components/useIdleTracker';
 import { LiveSignalingProvider } from './components/useLiveSignaling';
 import LiveView from './components/LiveView';
@@ -326,6 +326,7 @@ function AppShell() {
   const [collapsed, setCollapsed] = useState(false);
   const [navParams, setNavParams] = useState(null);
   const [onBreak, setOnBreak] = useState(false);
+  const [confirmLogout, setConfirmLogout] = useState(false);
 
   // Track idle time while logged in (paused during an explicit break)
   useIdleTracker(true, onBreak);
@@ -405,7 +406,7 @@ function AppShell() {
                   <i className="ph ph-bell" style={{ fontSize: '1.25rem' }}></i>
                 </button>
               )}
-              <button className="header-btn" onClick={logout} title="Sign Out"
+              <button className="header-btn" onClick={() => setConfirmLogout(true)} title="Sign Out"
                 style={{ color: 'var(--color-danger, #ef4444)' }}>
                 <i className="ph ph-sign-out" style={{ fontSize: '1.25rem' }}></i>
               </button>
@@ -418,6 +419,15 @@ function AppShell() {
         </main>
       </div>
 
+      {confirmLogout && (
+        <ConfirmDialog
+          title="Sign out"
+          message="Are you sure you want to sign out?"
+          confirmLabel="Sign Out"
+          onConfirm={() => { setConfirmLogout(false); logout(); }}
+          onClose={() => setConfirmLogout(false)}
+        />
+      )}
     </div>
     </LiveSignalingProvider>
   );
