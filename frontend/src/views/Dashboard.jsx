@@ -33,9 +33,9 @@ function StatCard({ icon, color, title, stats, onClick, cta }) {
   );
 }
 
-// Compact pager shown inside the overview cards when a list exceeds one page.
+// Compact pager shown under each overview list (arrows disable on a single page).
 function Pager({ page, pageCount, total, start, per, onPage }) {
-  if (total <= per) return null;
+  if (!total) return null;
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 10, fontSize: '0.76rem' }}>
       <span className="text-secondary">{start + 1}–{Math.min(start + per, total)} of {total}</span>
