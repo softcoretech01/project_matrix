@@ -65,6 +65,14 @@ def dashboard(current_user: User = Depends(get_current_user), db: Session = Depe
     for p in projects:
         proj_status[p.status] = proj_status.get(p.status, 0) + 1
 
+    # A project counts as completed by a done-status OR full progress.
+    PROJECT_DONE = {"Completed", "Closed", "Done"}
+    def _proj_done(p):
+        return (p.status in PROJECT_DONE) or ((p.progress or 0) >= 100)
+    proj_completed = sum(1 for p in projects if _proj_done(p))
+    proj_in_progress = sum(1 for p in projects if not _proj_done(p) and p.status == "In Progress")
+    proj_pending = len(projects) - proj_completed - proj_in_progress
+
     # ---- Employees (admin/master only) ----
     employees_card = None
     if not is_worker:
@@ -133,9 +141,9 @@ def dashboard(current_user: User = Depends(get_current_user), db: Session = Depe
         "cards": {
             "projects": {
                 "total": len(projects),
-                "inProgress": proj_status.get("In Progress", 0),
-                "completed": proj_status.get("Completed", 0),
-                "pending": proj_status.get("Not Started", 0) + proj_status.get("On Hold", 0),
+                "inProgress": proj_in_progress,
+                "completed": proj_completed,
+                "pending": proj_pending,
             },
             "tasks": {
                 "totalPending": len(pending),

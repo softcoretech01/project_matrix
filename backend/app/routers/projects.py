@@ -144,6 +144,12 @@ def update_project(project_id: str, data: ProjectPatch,
         val = getattr(data, field)
         if val is not None:
             setattr(proj, col, val)
+    # Keep status and progress in sync so a finished project reads as Completed.
+    if data.status is not None and data.status in DONE:
+        proj.progress = 100
+    elif data.progress is not None and data.progress >= 100:
+        proj.status = "Completed"
+        proj.progress = 100
     db.commit()
     db.refresh(proj)
     return _enrich(db, proj)
