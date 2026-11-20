@@ -21,14 +21,111 @@ function StatCard({ icon, color, title, stats, onClick, cta }) {
         </div>
         {cta && <button className="btn btn-sm btn-secondary" onClick={onClick}>{cta}</button>}
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 12, marginTop: 8 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 10, marginTop: 8 }}>
         {stats.map((s) => (
-          <div key={s.label} style={{ padding: '10px 12px', background: 'var(--surface-2, rgba(148,163,184,.07))', borderRadius: 10 }}>
-            <div style={{ fontSize: '1.6rem', fontWeight: 800, color: s.color || 'inherit' }}>{s.value}</div>
-            <div className="text-secondary" style={{ fontSize: '0.8rem' }}>{s.label}</div>
+          <div key={s.label} style={{ padding: '8px 10px', background: 'var(--surface-2, rgba(148,163,184,.07))', borderRadius: 10 }}>
+            <div style={{ fontSize: '1.3rem', fontWeight: 800, color: s.color || 'inherit' }}>{s.value}</div>
+            <div className="text-secondary" style={{ fontSize: '0.75rem' }}>{s.label}</div>
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+// Compact pager shown inside the overview cards when a list exceeds one page.
+function Pager({ page, pageCount, total, start, per, onPage }) {
+  if (total <= per) return null;
+  return (
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 10, fontSize: '0.76rem' }}>
+      <span className="text-secondary">{start + 1}–{Math.min(start + per, total)} of {total}</span>
+      <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+        <button className="btn btn-sm btn-secondary" style={{ padding: '2px 8px' }} disabled={page <= 1} onClick={() => onPage((p) => Math.max(1, p - 1))}>
+          <i className="ph ph-caret-left"></i>
+        </button>
+        <span className="text-secondary">{page}/{pageCount}</span>
+        <button className="btn btn-sm btn-secondary" style={{ padding: '2px 8px' }} disabled={page >= pageCount} onClick={() => onPage((p) => Math.min(pageCount, p + 1))}>
+          <i className="ph ph-caret-right"></i>
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// Admin-only overview card: the employee stats PLUS a searchable list of employees.
+function EmployeesOverviewCard({ c, navigate }) {
+  const [search, setSearch] = useState('');
+  const [employees, setEmployees] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  useEffect(() => {
+    let alive = true;
+    const h = setTimeout(async () => {
+      try {
+        const el = await api.get(`/employees?search=${encodeURIComponent(search)}`);
+        if (alive) { setEmployees(Array.isArray(el) ? el : []); setPage(1); }
+      } catch { /* ignore */ }
+      finally { if (alive) setLoading(false); }
+    }, 250);
+    return () => { alive = false; clearTimeout(h); };
+  }, [search]);
+  const PER = 5;
+  const pageCount = Math.max(1, Math.ceil(employees.length / PER));
+  const start = (page - 1) * PER;
+  const pageItems = employees.slice(start, start + PER);
+
+  const stats = [
+    { label: 'Total', value: c.employees.total },
+    { label: 'Active', value: c.employees.active, color: '#10b981' },
+    { label: 'Working', value: c.employees.working, color: '#3b82f6' },
+    { label: 'With Pending', value: c.employees.withPendingTasks, color: '#f59e0b' },
+  ];
+
+  return (
+    <div className="card" style={{ borderTop: '3px solid #10b981' }}>
+      <div className="card-header-flex">
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span className="kpi-icon" style={{ background: '#10b98122', color: '#10b981' }}><i className="ph-fill ph-users"></i></span>
+          <h3 style={{ margin: 0, fontSize: '1.05rem' }}>Employee Overview</h3>
+        </div>
+        <button className="btn btn-sm btn-secondary" onClick={() => navigate('employees')}>View</button>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 10, marginTop: 8 }}>
+        {stats.map((s) => (
+          <div key={s.label} style={{ padding: '8px 10px', background: 'var(--surface-2, rgba(148,163,184,.07))', borderRadius: 10 }}>
+            <div style={{ fontSize: '1.3rem', fontWeight: 800, color: s.color || 'inherit' }}>{s.value}</div>
+            <div className="text-secondary" style={{ fontSize: '0.75rem' }}>{s.label}</div>
+          </div>
+        ))}
+      </div>
+
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10,
+        margin: '16px 0 10px', paddingTop: 14, borderTop: '1px solid var(--border-color,#e2e8f0)', flexWrap: 'wrap' }}>
+        <strong style={{ fontSize: '0.9rem' }}>All Employees ({employees.length})</strong>
+        <SearchBox value={search} onChange={setSearch} placeholder="Search employees…" width="200px" />
+      </div>
+
+      {loading ? <Spinner /> : employees.length === 0 ? (
+        <EmptyState icon="ph-users" title="No employees found" message={search ? 'Try a different search.' : 'No employees yet.'} />
+      ) : (
+        <>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {pageItems.map((e) => (
+              <div key={e.id} className="clickable-row" onClick={() => navigate('employees')}
+                style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 10px',
+                  border: '1px solid var(--border-color,#e2e8f0)', borderRadius: 8, cursor: 'pointer' }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontWeight: 600, fontSize: '0.85rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.name}</div>
+                  <div className="text-muted" style={{ fontSize: '0.68rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.role} · {e.designation || '—'}</div>
+                </div>
+                <StatusBadge status={e.status} />
+              </div>
+            ))}
+          </div>
+          <Pager page={page} pageCount={pageCount} total={employees.length} start={start} per={PER} onPage={setPage} />
+        </>
+      )}
     </div>
   );
 }
@@ -38,17 +135,22 @@ function TasksOverviewCard({ c, navigate }) {
   const [search, setSearch] = useState('');
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
   useEffect(() => {
     let alive = true;
     const h = setTimeout(async () => {
       try {
         const tl = await api.get(`/tasks?search=${encodeURIComponent(search)}&status=All&priority=All&category=All`);
-        if (alive) setTasks(Array.isArray(tl) ? tl : []);
+        if (alive) { setTasks(Array.isArray(tl) ? tl : []); setPage(1); }
       } catch { /* ignore */ }
       finally { if (alive) setLoading(false); }
     }, 250);
     return () => { alive = false; clearTimeout(h); };
   }, [search]);
+  const PER = 5;
+  const pageCount = Math.max(1, Math.ceil(tasks.length / PER));
+  const start = (page - 1) * PER;
+  const pageItems = tasks.slice(start, start + PER);
 
   const stats = [
     { label: 'Pending', value: c.tasks.totalPending },
@@ -67,11 +169,11 @@ function TasksOverviewCard({ c, navigate }) {
         <button className="btn btn-sm btn-secondary" onClick={() => navigate('tasks')}>View</button>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 12, marginTop: 8 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 10, marginTop: 8 }}>
         {stats.map((s) => (
-          <div key={s.label} style={{ padding: '10px 12px', background: 'var(--surface-2, rgba(148,163,184,.07))', borderRadius: 10 }}>
-            <div style={{ fontSize: '1.6rem', fontWeight: 800, color: s.color || 'inherit' }}>{s.value}</div>
-            <div className="text-secondary" style={{ fontSize: '0.8rem' }}>{s.label}</div>
+          <div key={s.label} style={{ padding: '8px 10px', background: 'var(--surface-2, rgba(148,163,184,.07))', borderRadius: 10 }}>
+            <div style={{ fontSize: '1.3rem', fontWeight: 800, color: s.color || 'inherit' }}>{s.value}</div>
+            <div className="text-secondary" style={{ fontSize: '0.75rem' }}>{s.label}</div>
           </div>
         ))}
       </div>
@@ -85,27 +187,24 @@ function TasksOverviewCard({ c, navigate }) {
       {loading ? <Spinner /> : tasks.length === 0 ? (
         <EmptyState icon="ph-check-square" title="No tasks found" message={search ? 'Try a different search.' : 'No tasks yet.'} />
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 12 }}>
-          {tasks.map((t) => (
-            <div key={t.id} className="clickable-row" onClick={() => navigate('tasks', { taskId: t.id })}
-              style={{ border: '1px solid var(--border-color,#e2e8f0)', borderRadius: 10, padding: 12, cursor: 'pointer' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
-                <div style={{ minWidth: 0 }}>
-                  <strong style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.name}</strong>
-                  <div className="text-muted" style={{ fontSize: '0.72rem' }}>{t.code || t.id}</div>
+        <>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {pageItems.map((t) => (
+              <div key={t.id} className="clickable-row" onClick={() => navigate('tasks', { taskId: t.id })}
+                style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 10px',
+                  border: '1px solid var(--border-color,#e2e8f0)', borderRadius: 8, cursor: 'pointer' }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontWeight: 600, fontSize: '0.85rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.name}</div>
+                  <div className="text-muted" style={{ fontSize: '0.68rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {t.assignedToName || 'Unassigned'} · {t.endDate ? fmtDate(t.endDate) : 'no due date'}
+                  </div>
                 </div>
                 <StatusBadge status={t.status} />
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 8 }}>
-                <PriorityBadge priority={t.priority} />
-              </div>
-              <div className="text-secondary" style={{ fontSize: '0.75rem', marginTop: 8, display: 'flex', justifyContent: 'space-between', gap: 6 }}>
-                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.assignedToName || 'Unassigned'}</span>
-                <span style={{ whiteSpace: 'nowrap' }}>{t.endDate ? fmtDate(t.endDate) : '—'}</span>
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+          <Pager page={page} pageCount={pageCount} total={tasks.length} start={start} per={PER} onPage={setPage} />
+        </>
       )}
     </div>
   );
@@ -117,17 +216,22 @@ function ProjectsOverviewCard({ c, navigate }) {
   const [search, setSearch] = useState('');
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
   useEffect(() => {
     let alive = true;
     const h = setTimeout(async () => {
       try {
         const pl = await api.get(`/projects?search=${encodeURIComponent(search)}&status=All`);
-        if (alive) setProjects(Array.isArray(pl) ? pl : []);
+        if (alive) { setProjects(Array.isArray(pl) ? pl : []); setPage(1); }
       } catch { /* ignore */ }
       finally { if (alive) setLoading(false); }
     }, 250);
     return () => { alive = false; clearTimeout(h); };
   }, [search]);
+  const PER = 5;
+  const pageCount = Math.max(1, Math.ceil(projects.length / PER));
+  const start = (page - 1) * PER;
+  const pageItems = projects.slice(start, start + PER);
 
   const stats = [
     { label: 'Total', value: c.projects.total },
@@ -146,11 +250,11 @@ function ProjectsOverviewCard({ c, navigate }) {
         <button className="btn btn-sm btn-secondary" onClick={() => navigate('projects')}>View</button>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 12, marginTop: 8 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 10, marginTop: 8 }}>
         {stats.map((s) => (
-          <div key={s.label} style={{ padding: '10px 12px', background: 'var(--surface-2, rgba(148,163,184,.07))', borderRadius: 10 }}>
-            <div style={{ fontSize: '1.6rem', fontWeight: 800, color: s.color || 'inherit' }}>{s.value}</div>
-            <div className="text-secondary" style={{ fontSize: '0.8rem' }}>{s.label}</div>
+          <div key={s.label} style={{ padding: '8px 10px', background: 'var(--surface-2, rgba(148,163,184,.07))', borderRadius: 10 }}>
+            <div style={{ fontSize: '1.3rem', fontWeight: 800, color: s.color || 'inherit' }}>{s.value}</div>
+            <div className="text-secondary" style={{ fontSize: '0.75rem' }}>{s.label}</div>
           </div>
         ))}
       </div>
@@ -164,30 +268,22 @@ function ProjectsOverviewCard({ c, navigate }) {
       {loading ? <Spinner /> : projects.length === 0 ? (
         <EmptyState icon="ph-folder-open" title="No projects found" message={search ? 'Try a different search.' : 'No projects yet.'} />
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 12 }}>
-          {projects.map((p) => (
-            <div key={p.id} className="clickable-row" onClick={() => navigate('projects', { projectId: p.id })}
-              style={{ border: '1px solid var(--border-color,#e2e8f0)', borderRadius: 10, padding: 12, cursor: 'pointer' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
-                <div style={{ minWidth: 0 }}>
-                  <strong style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</strong>
-                  <div className="text-muted" style={{ fontSize: '0.72rem' }}>{p.code}</div>
+        <>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {pageItems.map((p) => (
+              <div key={p.id} className="clickable-row" onClick={() => navigate('projects', { projectId: p.id })}
+                style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 10px',
+                  border: '1px solid var(--border-color,#e2e8f0)', borderRadius: 8, cursor: 'pointer' }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontWeight: 600, fontSize: '0.85rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</div>
+                  <div className="text-muted" style={{ fontSize: '0.68rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.code} · {p.progress || 0}% · {p.completedTasksCount}/{p.tasksCount} tasks</div>
                 </div>
                 <StatusBadge status={p.status} />
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 10 }}>
-                <div style={{ flex: 1, height: 6, borderRadius: 4, background: 'var(--border-color,#e2e8f0)' }}>
-                  <div style={{ width: `${p.progress || 0}%`, height: '100%', borderRadius: 4, background: (p.progress || 0) >= 100 ? '#10b981' : '#6366f1' }}></div>
-                </div>
-                <span className="text-secondary" style={{ fontSize: '0.72rem', width: 32 }}>{p.progress || 0}%</span>
-              </div>
-              <div className="text-secondary" style={{ fontSize: '0.75rem', marginTop: 8, display: 'flex', justifyContent: 'space-between' }}>
-                <span>{p.ownerName || '—'}</span>
-                <span>{p.completedTasksCount}/{p.tasksCount} tasks</span>
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+          <Pager page={page} pageCount={pageCount} total={projects.length} start={start} per={PER} onPage={setPage} />
+        </>
       )}
     </div>
   );
@@ -330,14 +426,18 @@ export default function Dashboard({ navigate }) {
             ]} />
         )}
         {!isWorker && c.employees && (
-          <StatCard icon="ph-users" color="#10b981" title="Employee Overview"
-            cta="View" onClick={() => navigate('employees')}
-            stats={[
-              { label: 'Total', value: c.employees.total },
-              { label: 'Active', value: c.employees.active, color: '#10b981' },
-              { label: 'Working', value: c.employees.working, color: '#3b82f6' },
-              { label: 'With Pending', value: c.employees.withPendingTasks, color: '#f59e0b' },
-            ]} />
+          isAdmin ? (
+            <EmployeesOverviewCard c={c} navigate={navigate} />
+          ) : (
+            <StatCard icon="ph-users" color="#10b981" title="Employee Overview"
+              cta="View" onClick={() => navigate('employees')}
+              stats={[
+                { label: 'Total', value: c.employees.total },
+                { label: 'Active', value: c.employees.active, color: '#10b981' },
+                { label: 'Working', value: c.employees.working, color: '#3b82f6' },
+                { label: 'With Pending', value: c.employees.withPendingTasks, color: '#f59e0b' },
+              ]} />
+          )
         )}
       </div>
 
