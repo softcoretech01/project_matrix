@@ -1,5 +1,5 @@
 """
-Single source of truth for all ORM models (ProjectMatrix Task Management System).
+Single source of truth for all ORM models (ProjectMatrix Task Matrix System).
 All tables are namespaced with the `pm_` prefix so the app is isolated from any
 other tables that may live in the same (shared) database.
 

@@ -148,14 +148,14 @@ def forgot_password(req: ForgotPasswordRequest, db: Session = Depends(get_db)):
     html = f"""
     <div style="font-family:Arial,sans-serif;max-width:480px;margin:auto">
       <h2>Reset your password</h2>
-      <p>Hi {user.name}, we received a request to reset your Task Management password.</p>
+      <p>Hi {user.name}, we received a request to reset your Task Matrix password.</p>
       <p><a href="{reset_link}" style="background:#4f46e5;color:#fff;padding:12px 20px;
          border-radius:8px;text-decoration:none;display:inline-block">Reset Password</a></p>
       <p>This link expires in 1 hour. If you didn't request this, you can ignore this email.</p>
       <p style="color:#888;font-size:12px">{reset_link}</p>
     </div>"""
     text = f"Reset your password: {reset_link} (expires in 1 hour)"
-    result = send_email(user.email, "Reset your Task Management password", html, text)
+    result = send_email(user.email, "Reset your Task Matrix password", html, text)
 
     resp = dict(generic)
     if result["fallback"]:
