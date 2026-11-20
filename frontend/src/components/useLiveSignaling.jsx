@@ -32,6 +32,9 @@ export function LiveSignalingProvider({ children }) {
   const reconnectRef = useRef(null);
 
   const [incoming, setIncoming] = useState(null);   // worker: { from, fromName, sessionId }
+  const [captureReq, setCaptureReq] = useState(null); // worker: { from, fromName, mode, sessionId }
+  const [capturing, setCapturing] = useState(false); // worker: a capture is in progress
+  const [captureTick, setCaptureTick] = useState(0);  // admin: bumps when a capture lands
   const [session, setSession] = useState(null);     // active session (admin or worker)
   const [remoteStream, setRemoteStream] = useState(null);
   const [localStream, setLocalStream] = useState(null);
@@ -128,6 +131,76 @@ export function LiveSignalingProvider({ children }) {
     setIncoming(null);
   }, [incoming, send]);
 
+  // ---- Admin: ask a worker to capture a photo/short video from their camera ----
+  const requestCapture = useCallback((worker, mode = 'photo') => {
+    if (!worker?.id) return;
+    const sessionId = Math.random().toString(36).slice(2) + Date.now().toString(36);
+    send({ type: 'capture', to: worker.id, mode, sessionId });
+    toast.success(`Requested a ${mode} from ${worker.name}. It appears here once they allow it.`);
+  }, [send]);
+
+  // ---- Worker: accept a capture request -> take it with their camera and upload ----
+  const CAPTURE_VIDEO_SECONDS = 6;
+  const acceptCapture = useCallback(async () => {
+    const req = captureReq;
+    if (!req) return;
+    setCaptureReq(null);
+    setCapturing(true);
+    let stream;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: { width: { ideal: 640 }, height: { ideal: 480 } },
+        audio: req.mode === 'video',
+      });
+    } catch {
+      toast.error('Camera permission denied.');
+      send({ type: 'capture-done', to: req.from, sessionId: req.sessionId, status: 'denied' });
+      setCapturing(false);
+      return;
+    }
+    try {
+      if (req.mode === 'video') {
+        const chunks = [];
+        let rec;
+        try { rec = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp8,opus', videoBitsPerSecond: 300000, audioBitsPerSecond: 32000 }); }
+        catch { rec = new MediaRecorder(stream); }
+        rec.ondataavailable = (e) => { if (e.data && e.data.size) chunks.push(e.data); };
+        const done = new Promise((res) => { rec.onstop = res; });
+        rec.start();
+        await new Promise((r) => setTimeout(r, CAPTURE_VIDEO_SECONDS * 1000));
+        if (rec.state === 'recording') rec.stop();
+        await done;
+        const blob = new Blob(chunks, { type: 'video/webm' });
+        const fd = new FormData();
+        fd.append('file', new File([blob], `remote_${Date.now()}.webm`, { type: 'video/webm' }));
+        fd.append('activityType', 'remote-video');
+        await api.upload('/camera/video', fd);
+      } else {
+        const video = document.createElement('video');
+        video.srcObject = stream; video.muted = true; video.playsInline = true;
+        await video.play().catch(() => {});
+        await new Promise((r) => setTimeout(r, 600)); // let exposure settle
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth || 640; canvas.height = video.videoHeight || 480;
+        canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+        await api.post('/camera', { image: canvas.toDataURL('image/jpeg', 0.8), activityType: 'remote-capture' });
+      }
+      toast.success(`Shared a ${req.mode} with ${req.fromName}.`);
+      send({ type: 'capture-done', to: req.from, sessionId: req.sessionId, status: 'done', mode: req.mode });
+    } catch (e) {
+      toast.error('Could not share the capture.');
+      send({ type: 'capture-done', to: req.from, sessionId: req.sessionId, status: 'error' });
+    } finally {
+      stream.getTracks().forEach((t) => t.stop());
+      setCapturing(false);
+    }
+  }, [captureReq, send]);
+
+  const rejectCapture = useCallback(() => {
+    if (captureReq) send({ type: 'capture-done', to: captureReq.from, sessionId: captureReq.sessionId, status: 'denied' });
+    setCaptureReq(null);
+  }, [captureReq, send]);
+
   const endSession = useCallback(() => teardown(true), [teardown]);
 
   // ---- WebSocket message handling ----
@@ -138,6 +211,18 @@ export function LiveSignalingProvider({ children }) {
         // Worker receives a request. Ignore if already busy.
         if (!sessionRef.current && !incoming) setIncoming({ from: msg.from, fromName: msg.fromName, sessionId: msg.sessionId });
         else send({ type: 'reject', to: msg.from, sessionId: msg.sessionId });
+        break;
+      case 'capture':
+        // Worker: admin asked to capture a photo/video. Ignore if busy.
+        if (!sessionRef.current && !incoming && !captureReq)
+          setCaptureReq({ from: msg.from, fromName: msg.fromName, mode: msg.mode || 'photo', sessionId: msg.sessionId });
+        else send({ type: 'capture-done', to: msg.from, sessionId: msg.sessionId, status: 'denied' });
+        break;
+      case 'capture-done':
+        // Admin: the worker finished (or declined) a capture.
+        if (msg.status === 'done') { toast.success('New capture added to the logs.'); setCaptureTick((t) => t + 1); }
+        else if (msg.status === 'denied') toast.error('The employee declined the capture.');
+        else toast.error('The capture did not complete.');
         break;
       case 'unavailable':
         if (s?.role === 'admin') { toast.error(`${s.peerName} is offline.`); setSess(null); }
@@ -183,7 +268,7 @@ export function LiveSignalingProvider({ children }) {
         break;
       default: break;
     }
-  }, [incoming, flushIce, newPeer, send, teardown]);
+  }, [incoming, captureReq, flushIce, newPeer, send, teardown]);
 
   // keep latest handler without reopening the socket
   const handlerRef = useRef(onMessage);
@@ -219,7 +304,9 @@ export function LiveSignalingProvider({ children }) {
 
   const value = {
     incoming, session, remoteStream, localStream, micOn,
+    captureReq, capturing, captureTick,
     requestView, acceptIncoming, rejectIncoming, endSession, toggleMic,
+    requestCapture, acceptCapture, rejectCapture,
     isAdmin: user && (user.role === 'Admin' || user.role === 'Master'),
   };
   return <LiveCtx.Provider value={value}>{children}</LiveCtx.Provider>;

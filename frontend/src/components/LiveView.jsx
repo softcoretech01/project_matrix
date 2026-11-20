@@ -19,7 +19,8 @@ export default function LiveView() {
   const workerLive = live?.session?.role === 'worker';
   useEffect(() => { if (!workerLive) setMinimized(false); }, [workerLive]);
   if (!live) return null;
-  const { incoming, session, remoteStream, localStream, micOn, acceptIncoming, rejectIncoming, endSession, toggleMic } = live;
+  const { incoming, session, remoteStream, localStream, micOn, captureReq, capturing,
+    acceptIncoming, rejectIncoming, endSession, toggleMic, acceptCapture, rejectCapture } = live;
 
   return (
     <>
@@ -38,6 +39,39 @@ export default function LiveView() {
             </p>
           </div>
         </Modal>
+      )}
+
+      {/* ---- Worker: capture (photo/video) consent prompt ---- */}
+      {captureReq && (
+        <Modal title={`Camera ${captureReq.mode} request`} onClose={rejectCapture} size="sm"
+          footer={<>
+            <button className="btn btn-secondary" onClick={rejectCapture}>Deny</button>
+            <button className="btn btn-primary" onClick={acceptCapture}>
+              <i className={`ph ${captureReq.mode === 'video' ? 'ph-video-camera' : 'ph-camera'}`}></i> Allow
+            </button>
+          </>}>
+          <div style={{ textAlign: 'center', padding: '6px 4px' }}>
+            <i className={`ph ${captureReq.mode === 'video' ? 'ph-video-camera' : 'ph-camera'}`} style={{ fontSize: '2.4rem', color: '#059669' }}></i>
+            <p style={{ margin: '12px 0 4px', fontWeight: 600 }}>
+              {captureReq.fromName} is requesting a {captureReq.mode} from your camera.
+            </p>
+            <p className="text-secondary" style={{ fontSize: '0.85rem' }}>
+              {captureReq.mode === 'video'
+                ? 'A short clip will be recorded once and shared.'
+                : 'A single photo will be taken and shared.'}
+            </p>
+          </div>
+        </Modal>
+      )}
+
+      {/* ---- Worker: capture-in-progress indicator ---- */}
+      {capturing && (
+        <div style={{ position: 'fixed', right: 18, bottom: 18, zIndex: 4000, display: 'flex', alignItems: 'center', gap: 8,
+          background: '#0f172a', color: '#fff', borderRadius: 20, padding: '8px 14px',
+          boxShadow: '0 10px 30px rgba(0,0,0,.35)', fontSize: '0.8rem', fontWeight: 600 }}>
+          <span style={{ width: 9, height: 9, borderRadius: '50%', background: '#ef4444', animation: 'pulse 1s infinite' }}></span>
+          Capturing…
+        </div>
       )}
 
       {/* ---- Worker: persistent LIVE indicator while streaming ---- */}

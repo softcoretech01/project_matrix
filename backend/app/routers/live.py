@@ -26,8 +26,10 @@ _clients: Dict[str, dict] = {}
 
 INITIATOR_ROLES = {"Admin", "Master"}
 # Messages a worker (non-initiator) is allowed to send.
-RESPONDER_TYPES = {"accept", "reject", "offer", "answer", "ice", "end"}
-RELAY_TYPES = {"reject", "offer", "answer", "ice", "end"}
+RESPONDER_TYPES = {"accept", "reject", "offer", "answer", "ice", "end", "capture-done"}
+RELAY_TYPES = {"reject", "offer", "answer", "ice", "end", "capture-done"}
+# Admin/Master -> worker initiations (role-checked, relayed with sender identity).
+INITIATE_TYPES = {"request", "capture"}
 
 
 def _ice_servers():
@@ -103,16 +105,18 @@ async def live_ws(websocket: WebSocket, token: Optional[str] = None):
             mtype = msg.get("type")
             target = msg.get("to")
 
-            if mtype == "request":
+            if mtype in INITIATE_TYPES:
                 # Only Admin/Master may initiate, and only for a different user.
                 if role not in INITIATOR_ROLES or not target or target == uid:
                     await _send(uid, {"type": "error", "reason": "not-permitted"})
                     continue
                 session_id = msg.get("sessionId") or uuid.uuid4().hex
-                delivered = await _send(target, {
-                    "type": "incoming", "from": uid, "fromName": name,
-                    "fromRole": role, "sessionId": session_id,
-                })
+                out_type = "incoming" if mtype == "request" else "capture"
+                out = {"type": out_type, "from": uid, "fromName": name,
+                       "fromRole": role, "sessionId": session_id}
+                if mtype == "capture":
+                    out["mode"] = msg.get("mode", "photo")   # photo | video
+                delivered = await _send(target, out)
                 if not delivered:
                     await _send(uid, {"type": "unavailable", "to": target, "sessionId": session_id})
 

@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { api, assetUrl } from '../services/api';
 import { Spinner, EmptyState, SearchBox, Modal, ExportButton, toast, fmtDate, SortHeader, RowActions, DateCell, useSortable } from '../components/ui';
-import CameraCapture from '../components/CameraCapture';
 import { useLive } from '../components/useLiveSignaling';
 import { useAuth } from '../context/AuthContext';
 
@@ -28,19 +27,23 @@ export default function Camera() {
   const [empF, setEmpF] = useState('');
   const [dateF, setDateF] = useState('');
   const [preview, setPreview] = useState(null);
-  const [capturing, setCapturing] = useState(false);
-  const [livePick, setLivePick] = useState(false);
+  const [pickAction, setPickAction] = useState(null);  // null | 'live' | 'photo' | 'video'
   const live = useLive();
   const { user } = useAuth();
   const canLive = user && (user.role === 'Admin' || user.role === 'Master');
 
-  // If an employee is already filtered, request them directly; otherwise show the picker.
-  const openLive = () => {
-    const emp = employees.find((e) => String(e.id) === String(empF));
-    if (emp) live?.requestView(emp);
-    else setLivePick(true);
+  // Admin asks a worker for a live view / photo / video (the worker must allow).
+  const requestOf = (action, emp) => {
+    if (action === 'live') live?.requestView(emp);
+    else live?.requestCapture(emp, action);     // 'photo' | 'video'
   };
-  const pickLive = (emp) => { setLivePick(false); live?.requestView(emp); };
+  // If an employee is already filtered, request them directly; otherwise show the picker.
+  const openPick = (action) => {
+    const emp = employees.find((e) => String(e.id) === String(empF));
+    if (emp) requestOf(action, emp);
+    else setPickAction(action);
+  };
+  const pickEmp = (emp) => { const a = pickAction; setPickAction(null); requestOf(a, emp); };
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -54,23 +57,9 @@ export default function Camera() {
     finally { setLoading(false); }
   }, [search, empF, dateF]);
   useEffect(() => { const h = setTimeout(load, 250); return () => clearTimeout(h); }, [load]);
+  // Reload when a requested remote capture lands.
+  useEffect(() => { if (live?.captureTick) load(); }, [live?.captureTick]); // eslint-disable-line
   const { sorted, sort, toggle } = useSortable(logs);
-
-  const onCapture = async (payload) => {
-    try {
-      if (payload.kind === 'video') {
-        const fd = new FormData();
-        fd.append('file', new File([payload.blob], `capture_${Date.now()}.webm`, { type: 'video/webm' }));
-        fd.append('activityType', 'manual-video');
-        await api.upload('/camera/video', fd);
-        toast.success('Video recorded & logged');
-      } else {
-        await api.post('/camera', { image: payload.dataUrl, activityType: 'manual-capture' });
-        toast.success('Photo captured & logged');
-      }
-      load();
-    } catch (e) { toast.error(e.message); }
-  };
 
   return (
     <div>
@@ -83,13 +72,22 @@ export default function Camera() {
         <input type="date" className="form-control" style={{ width: 150 }} value={dateF} onChange={(e) => setDateF(e.target.value)} />
         <div style={{ flex: 1 }} />
         {canLive && (
-          <button className="btn btn-secondary" onClick={openLive}
-            title="Request a live camera view (the employee must allow it)">
-            <i className="ph ph-video-camera"></i> Live View
-          </button>
+          <>
+            <button className="btn btn-secondary" onClick={() => openPick('live')}
+              title="Request a live camera view (the employee must allow it)">
+              <i className="ph ph-video-camera"></i> Live View
+            </button>
+            <button className="btn btn-secondary" onClick={() => openPick('photo')}
+              title="Request a photo from an employee's camera (they must allow it)">
+              <i className="ph ph-camera"></i> Capture Photo
+            </button>
+            <button className="btn btn-primary" onClick={() => openPick('video')}
+              title="Request a short video from an employee's camera (they must allow it)">
+              <i className="ph ph-video-camera"></i> Record Video
+            </button>
+          </>
         )}
         <ExportButton path="/exports/camera" filename="Camera_Activity_Report.xlsx" />
-        <button className="btn btn-primary" onClick={() => setCapturing(true)}><i className="ph ph-camera"></i> Capture Photo</button>
       </div>
 
       {loading ? <Spinner /> : logs.length === 0 ? (
@@ -154,11 +152,14 @@ export default function Camera() {
         </div>
       )}
 
-      {livePick && (
-        <Modal title="Live view — choose an employee" onClose={() => setLivePick(false)} size="sm"
-          footer={<button className="btn btn-secondary" onClick={() => setLivePick(false)}>Cancel</button>}>
+      {pickAction && (
+        <Modal title={`${pickAction === 'live' ? 'Live view' : pickAction === 'video' ? 'Record video' : 'Capture photo'} — choose an employee`}
+          onClose={() => setPickAction(null)} size="sm"
+          footer={<button className="btn btn-secondary" onClick={() => setPickAction(null)}>Cancel</button>}>
           <p className="text-secondary" style={{ fontSize: '0.85rem', marginTop: 0 }}>
-            The employee gets a prompt and must allow it. Their live camera appears here once they accept.
+            {pickAction === 'live'
+              ? 'The employee gets a prompt and must allow it. Their live camera appears here once they accept.'
+              : `The employee gets a prompt and must allow it. The ${pickAction} is taken on their device and appears in the logs.`}
           </p>
           {employees.length === 0 ? (
             <p className="text-muted">No employees found.</p>
@@ -166,7 +167,7 @@ export default function Camera() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 340, overflowY: 'auto' }}>
               {employees.map((e) => (
                 <button key={e.id} className="btn btn-secondary" style={{ justifyContent: 'flex-start', textAlign: 'left' }}
-                  onClick={() => pickLive(e)}>
+                  onClick={() => pickEmp(e)}>
                   <i className="ph ph-user-circle" style={{ marginRight: 8, color: '#059669' }}></i>
                   {e.name} <span className="text-muted" style={{ marginLeft: 6, fontSize: '0.8rem' }}>{e.designation || 'Worker'}</span>
                 </button>
@@ -175,7 +176,6 @@ export default function Camera() {
           )}
         </Modal>
       )}
-      {capturing && <CameraCapture onCapture={onCapture} onClose={() => setCapturing(false)} />}
       {preview && (
         <Modal title={`${preview.mediaType === 'video' ? 'Video' : 'Capture'} — ${preview.employeeName}`} onClose={() => setPreview(null)} size="md">
           {preview.mediaType === 'video'
