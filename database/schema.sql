@@ -1,192 +1,376 @@
--- database/schema.sql
--- ProjectMatrix Database Initialization Script
+-- ProjectMatrix — Task Management schema (MariaDB / MySQL)
+-- Generated from the SQLAlchemy models. Safe to re-run.
 
-CREATE DATABASE IF NOT EXISTS `projectmatrix`;
+CREATE DATABASE IF NOT EXISTS `projectmatrix` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE `projectmatrix`;
 
--- 1. Employees Table
-DROP TABLE IF EXISTS `employees`;
-CREATE TABLE `employees` (
-  `id` VARCHAR(10) NOT NULL,
-  `code` VARCHAR(15) NOT NULL,
-  `name` VARCHAR(100) NOT NULL,
-  `email` VARCHAR(100) NOT NULL UNIQUE,
-  `mobile` VARCHAR(15) DEFAULT NULL,
-  `designation` VARCHAR(100) DEFAULT NULL,
-  `department` VARCHAR(100) DEFAULT NULL,
-  `managerId` VARCHAR(10) DEFAULT NULL,
-  `costPerHour` DECIMAL(10,2) NOT NULL DEFAULT 0.00,
-  `role` ENUM('Admin', 'PM', 'Team Lead', 'Employee', 'Management') NOT NULL DEFAULT 'Employee',
-  `status` ENUM('Active', 'Inactive') NOT NULL DEFAULT 'Active',
-  `password` VARCHAR(255) NOT NULL DEFAULT 'password123',
-  PRIMARY KEY (`id`)
+SET FOREIGN_KEY_CHECKS = 0;
+
+CREATE TABLE IF NOT EXISTS pm_clients (
+	id VARCHAR(50) NOT NULL, 
+	name VARCHAR(150) NOT NULL, 
+	email VARCHAR(150), 
+	status VARCHAR(30), 
+	PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 2. Clients Table
-DROP TABLE IF EXISTS `clients`;
-CREATE TABLE `clients` (
-  `id` VARCHAR(10) NOT NULL,
-  `name` VARCHAR(100) NOT NULL,
-  `contactPerson` VARCHAR(100) NOT NULL,
-  `email` VARCHAR(100) NOT NULL,
-  `phone` VARCHAR(20) DEFAULT NULL,
-  `country` VARCHAR(50) NOT NULL,
-  `status` ENUM('Active', 'Inactive') NOT NULL DEFAULT 'Active',
-  PRIMARY KEY (`id`)
+CREATE TABLE IF NOT EXISTS pm_departments (
+	id VARCHAR(50) NOT NULL, 
+	name VARCHAR(150) NOT NULL, 
+	status VARCHAR(30), 
+	PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 3. Projects Table
-DROP TABLE IF EXISTS `projects`;
-CREATE TABLE `projects` (
-  `id` VARCHAR(10) NOT NULL,
-  `code` VARCHAR(15) NOT NULL,
-  `name` VARCHAR(100) NOT NULL,
-  `clientId` VARCHAR(10) NOT NULL,
-  `pmId` VARCHAR(10) NOT NULL,
-  `startDate` DATE NOT NULL,
-  `endDate` DATE NOT NULL,
-  `estimatedHours` INT NOT NULL DEFAULT 0,
-  `budget` DECIMAL(15,2) NOT NULL DEFAULT 0.00,
-  `billable` BOOLEAN NOT NULL DEFAULT TRUE,
-  `status` ENUM('Active', 'Completed', 'Closed') NOT NULL DEFAULT 'Active',
-  PRIMARY KEY (`id`),
-  CONSTRAINT `fk_projects_clients` FOREIGN KEY (`clientId`) REFERENCES `clients` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_projects_pm` FOREIGN KEY (`pmId`) REFERENCES `employees` (`id`)
+CREATE TABLE IF NOT EXISTS pm_designations (
+	id VARCHAR(50) NOT NULL, 
+	name VARCHAR(150) NOT NULL, 
+	status VARCHAR(30), 
+	PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 4. Modules Table
-DROP TABLE IF EXISTS `modules`;
-CREATE TABLE `modules` (
-  `id` VARCHAR(10) NOT NULL,
-  `projectId` VARCHAR(10) NOT NULL,
-  `name` VARCHAR(100) NOT NULL,
-  `description` TEXT,
-  `priority` ENUM('High', 'Medium', 'Low') NOT NULL DEFAULT 'Medium',
-  `status` ENUM('Active', 'Inactive') NOT NULL DEFAULT 'Active',
-  PRIMARY KEY (`id`),
-  CONSTRAINT `fk_modules_projects` FOREIGN KEY (`projectId`) REFERENCES `projects` (`id`) ON DELETE CASCADE
+CREATE TABLE IF NOT EXISTS pm_labels (
+	id VARCHAR(50) NOT NULL, 
+	name VARCHAR(100) NOT NULL, 
+	color VARCHAR(20), 
+	status VARCHAR(30), 
+	PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 5. Task Types Table
-DROP TABLE IF EXISTS `task_types`;
-CREATE TABLE `task_types` (
-  `id` VARCHAR(10) NOT NULL,
-  `code` VARCHAR(20) NOT NULL,
-  `name` VARCHAR(50) NOT NULL,
-  `description` TEXT,
-  `status` ENUM('Active', 'Inactive') NOT NULL DEFAULT 'Active',
-  PRIMARY KEY (`id`)
+CREATE TABLE IF NOT EXISTS pm_resource_links (
+	id INTEGER NOT NULL AUTO_INCREMENT, 
+	parent_type VARCHAR(20), 
+	parent_id VARCHAR(50), 
+	url VARCHAR(1000), 
+	link_type VARCHAR(30), 
+	label VARCHAR(200), 
+	added_by VARCHAR(50), 
+	created_at DATETIME, 
+	PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 6. Holidays Table
-DROP TABLE IF EXISTS `holidays`;
-CREATE TABLE `holidays` (
-  `id` INT AUTO_INCREMENT NOT NULL,
-  `date` DATE NOT NULL UNIQUE,
-  `name` VARCHAR(100) NOT NULL,
-  `type` ENUM('Public', 'Company') NOT NULL DEFAULT 'Public',
-  PRIMARY KEY (`id`)
+CREATE TABLE IF NOT EXISTS pm_roles (
+	id INTEGER NOT NULL AUTO_INCREMENT, 
+	name VARCHAR(50) NOT NULL, 
+	description VARCHAR(255), 
+	PRIMARY KEY (id), 
+	UNIQUE (name)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 7. Allocations Table
-DROP TABLE IF EXISTS `allocations`;
-CREATE TABLE `allocations` (
-  `id` VARCHAR(10) NOT NULL,
-  `employeeId` VARCHAR(10) NOT NULL,
-  `projectId` VARCHAR(10) NOT NULL,
-  `role` VARCHAR(100) NOT NULL,
-  `allocation` INT NOT NULL DEFAULT 100,
-  `startDate` DATE NOT NULL,
-  `endDate` DATE NOT NULL,
-  `plannedHours` INT NOT NULL DEFAULT 0,
-  PRIMARY KEY (`id`),
-  CONSTRAINT `fk_allocations_employees` FOREIGN KEY (`employeeId`) REFERENCES `employees` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_allocations_projects` FOREIGN KEY (`projectId`) REFERENCES `projects` (`id`) ON DELETE CASCADE
+CREATE TABLE IF NOT EXISTS pm_settings (
+	id INTEGER NOT NULL AUTO_INCREMENT, 
+	`key` VARCHAR(100), 
+	value TEXT, 
+	updated_at DATETIME, 
+	PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 8. Tasks Table
-DROP TABLE IF EXISTS `tasks`;
-CREATE TABLE `tasks` (
-  `id` VARCHAR(10) NOT NULL,
-  `name` VARCHAR(150) NOT NULL,
-  `description` TEXT,
-  `projectId` VARCHAR(10) NOT NULL,
-  `moduleId` VARCHAR(10) NOT NULL,
-  `priority` ENUM('High', 'Medium', 'Low') NOT NULL DEFAULT 'Medium',
-  `estimatedHours` INT NOT NULL DEFAULT 0,
-  `startDate` DATE NOT NULL,
-  `endDate` DATE NOT NULL,
-  `assignedTo` VARCHAR(10) NOT NULL,
-  `reviewerId` VARCHAR(10) NOT NULL,
-  `status` ENUM('Open', 'Assigned', 'In Progress', 'Review', 'Completed', 'Closed') NOT NULL DEFAULT 'Open',
-  `progress` INT NOT NULL DEFAULT 0,
-  `loggedHours` DECIMAL(10,2) NOT NULL DEFAULT 0.00,
-  PRIMARY KEY (`id`),
-  CONSTRAINT `fk_tasks_projects` FOREIGN KEY (`projectId`) REFERENCES `projects` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_tasks_modules` FOREIGN KEY (`moduleId`) REFERENCES `modules` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_tasks_assigned` FOREIGN KEY (`assignedTo`) REFERENCES `employees` (`id`),
-  CONSTRAINT `fk_tasks_reviewer` FOREIGN KEY (`reviewerId`) REFERENCES `employees` (`id`)
+CREATE TABLE IF NOT EXISTS pm_users (
+	id VARCHAR(50) NOT NULL, 
+	code VARCHAR(50), 
+	name VARCHAR(150) NOT NULL, 
+	email VARCHAR(150) NOT NULL, 
+	password VARCHAR(255) NOT NULL, 
+	`role` VARCHAR(50), 
+	role_id INTEGER, 
+	designation VARCHAR(150), 
+	department VARCHAR(150), 
+	phone VARCHAR(50), 
+	avatar VARCHAR(255), 
+	status VARCHAR(30), 
+	last_login DATETIME, 
+	created_at DATETIME, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(role_id) REFERENCES pm_roles (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 9. Timesheets Table
-DROP TABLE IF EXISTS `timesheets`;
-CREATE TABLE `timesheets` (
-  `id` VARCHAR(10) NOT NULL,
-  `date` DATE NOT NULL,
-  `employeeId` VARCHAR(10) NOT NULL,
-  `projectId` VARCHAR(10) NOT NULL,
-  `moduleId` VARCHAR(10) NOT NULL,
-  `taskId` VARCHAR(10) NOT NULL,
-  `hours` DECIMAL(5,2) NOT NULL,
-  `description` TEXT NOT NULL,
-  `status` ENUM('Draft', 'Submitted', 'Approved', 'Rejected') NOT NULL DEFAULT 'Draft',
-  `comments` TEXT,
-  `submittedDate` DATE DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  CONSTRAINT `fk_timesheets_employees` FOREIGN KEY (`employeeId`) REFERENCES `employees` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_timesheets_projects` FOREIGN KEY (`projectId`) REFERENCES `projects` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_timesheets_modules` FOREIGN KEY (`moduleId`) REFERENCES `modules` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_timesheets_tasks` FOREIGN KEY (`taskId`) REFERENCES `tasks` (`id`) ON DELETE CASCADE
+CREATE TABLE IF NOT EXISTS pm_camera_logs (
+	id INTEGER NOT NULL AUTO_INCREMENT, 
+	user_id VARCHAR(50), 
+	project_id VARCHAR(50), 
+	task_id VARCHAR(50), 
+	timesheet_id VARCHAR(50), 
+	filename VARCHAR(255), 
+	filepath VARCHAR(500), 
+	activity_type VARCHAR(50), 
+	captured_at DATETIME, 
+	created_at DATETIME, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(user_id) REFERENCES pm_users (id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 10. Leaves Table
-DROP TABLE IF EXISTS `leaves`;
-CREATE TABLE `leaves` (
-  `id` VARCHAR(10) NOT NULL,
-  `employeeId` VARCHAR(10) NOT NULL,
-  `startDate` DATE NOT NULL,
-  `endDate` DATE NOT NULL,
-  `type` ENUM('Casual', 'Sick', 'Privilege') NOT NULL DEFAULT 'Casual',
-  `status` ENUM('Pending', 'Approved', 'Rejected') NOT NULL DEFAULT 'Pending',
-  `comments` TEXT,
-  PRIMARY KEY (`id`),
-  CONSTRAINT `fk_leaves_employees` FOREIGN KEY (`employeeId`) REFERENCES `employees` (`id`) ON DELETE CASCADE
+CREATE TABLE IF NOT EXISTS pm_idle_time_logs (
+	id INTEGER NOT NULL AUTO_INCREMENT, 
+	user_id VARCHAR(50), 
+	log_date VARCHAR(20), 
+	idle_start DATETIME, 
+	idle_end DATETIME, 
+	duration_seconds INTEGER, 
+	reason VARCHAR(50), 
+	notified BOOL, 
+	created_at DATETIME, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(user_id) REFERENCES pm_users (id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS pm_notifications (
+	id INTEGER NOT NULL AUTO_INCREMENT, 
+	user_id VARCHAR(50), 
+	type VARCHAR(50), 
+	title VARCHAR(200), 
+	message TEXT, 
+	link VARCHAR(255), 
+	task_id VARCHAR(50), 
+	is_read BOOL, 
+	created_at DATETIME, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(user_id) REFERENCES pm_users (id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ==================== SEED DATA INITIALIZATION ====================
+CREATE TABLE IF NOT EXISTS pm_password_reset_tokens (
+	id INTEGER NOT NULL AUTO_INCREMENT, 
+	user_id VARCHAR(50), 
+	token_hash VARCHAR(255), 
+	expires_at DATETIME, 
+	used BOOL, 
+	created_at DATETIME, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(user_id) REFERENCES pm_users (id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-INSERT INTO `employees` (`id`, `code`, `name`, `email`, `mobile`, `designation`, `department`, `managerId`, `costPerHour`, `role`, `status`, `password`) VALUES
-('E006', 'EMP006', 'Admin User', 'admin@projectmatrix.com', '9876543215', 'IT Director', 'Administration', NULL, 0.00, 'Admin', 'Active', 'admin');
+CREATE TABLE IF NOT EXISTS pm_profile_change_requests (
+	id INTEGER NOT NULL AUTO_INCREMENT, 
+	user_id VARCHAR(50), 
+	field VARCHAR(30), 
+	old_value VARCHAR(255), 
+	new_value VARCHAR(255), 
+	status VARCHAR(20), 
+	reason TEXT, 
+	reviewed_by VARCHAR(50), 
+	requested_at DATETIME, 
+	reviewed_at DATETIME, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(user_id) REFERENCES pm_users (id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-INSERT INTO `clients` (`id`, `name`, `contactPerson`, `email`, `phone`, `country`, `status`) VALUES
-('C001', 'Acme Corporation', 'John Doe', 'johndoe@acme.com', '123-456-7890', 'United States', 'Active'),
-('C002', 'Globex Industries', 'Jane Smith', 'janesmith@globex.com', '234-567-8901', 'Canada', 'Active'),
-('C003', 'TechStart Inc', 'Robert Lee', 'robert@techstart.io', '345-678-9012', 'United Kingdom', 'Active');
+CREATE TABLE IF NOT EXISTS pm_projects (
+	id VARCHAR(50) NOT NULL, 
+	code VARCHAR(50), 
+	name VARCHAR(200) NOT NULL, 
+	description TEXT, 
+	owner_id VARCHAR(50), 
+	priority VARCHAR(20), 
+	status VARCHAR(30), 
+	progress INTEGER, 
+	review_required BOOL, 
+	start_date VARCHAR(20), 
+	end_date VARCHAR(20), 
+	created_at DATETIME, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(owner_id) REFERENCES pm_users (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS pm_modules (
+	id VARCHAR(50) NOT NULL, 
+	project_id VARCHAR(50), 
+	name VARCHAR(150) NOT NULL, 
+	description TEXT, 
+	sort_order INTEGER, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(project_id) REFERENCES pm_projects (id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS pm_project_attachments (
+	id INTEGER NOT NULL AUTO_INCREMENT, 
+	project_id VARCHAR(50), 
+	filename VARCHAR(255), 
+	filepath VARCHAR(500), 
+	uploaded_by VARCHAR(50), 
+	uploaded_at DATETIME, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(project_id) REFERENCES pm_projects (id) ON DELETE CASCADE, 
+	FOREIGN KEY(uploaded_by) REFERENCES pm_users (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-INSERT INTO `task_types` (`id`, `code`, `name`, `description`, `status`) VALUES
-('TT1', 'TT-DEV', 'Development', 'Software development tasks', 'Active'),
-('TT2', 'TT-TEST', 'Testing', 'QA and testing tasks', 'Active'),
-('TT3', 'TT-DESIGN', 'Design', 'UI/UX design tasks', 'Active'),
-('TT4', 'TT-DOC', 'Documentation', 'Writing and reviewing docs', 'Active'),
-('TT5', 'TT-MEET', 'Meeting', 'Client or team meetings', 'Active'),
-('TT6', 'TT-SUPPORT', 'Support', 'Customer support', 'Active'),
-('TT7', 'TT-IDLE', 'Idle', 'No billable work', 'Active');
+CREATE TABLE IF NOT EXISTS pm_project_members (
+	id VARCHAR(50) NOT NULL, 
+	project_id VARCHAR(50), 
+	employee_id VARCHAR(50), 
+	`role` VARCHAR(50), 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(project_id) REFERENCES pm_projects (id) ON DELETE CASCADE, 
+	FOREIGN KEY(employee_id) REFERENCES pm_users (id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-INSERT INTO `holidays` (`date`, `name`, `type`) VALUES
-('2026-01-01', 'New Year\'s Day', 'Public'),
-('2026-07-04', 'Independence Day', 'Public'),
-('2026-11-26', 'Thanksgiving Day', 'Company'),
-('2026-12-25', 'Christmas Day', 'Public');
+CREATE TABLE IF NOT EXISTS pm_sections (
+	id VARCHAR(50) NOT NULL, 
+	project_id VARCHAR(50), 
+	name VARCHAR(150) NOT NULL, 
+	sort_order INTEGER, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(project_id) REFERENCES pm_projects (id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS pm_tasks (
+	id VARCHAR(50) NOT NULL, 
+	code VARCHAR(50), 
+	name VARCHAR(255) NOT NULL, 
+	description TEXT, 
+	project_id VARCHAR(50), 
+	section_id VARCHAR(50), 
+	module_id VARCHAR(50), 
+	priority VARCHAR(20), 
+	status VARCHAR(30), 
+	progress INTEGER, 
+	assigned_to VARCHAR(50), 
+	reviewer_id VARCHAR(50), 
+	start_date VARCHAR(20), 
+	end_date VARCHAR(20), 
+	estimated_hours FLOAT, 
+	label VARCHAR(100), 
+	category VARCHAR(40), 
+	custom_data TEXT, 
+	parent_task_id VARCHAR(50), 
+	created_by VARCHAR(50), 
+	completed_at DATETIME, 
+	created_at DATETIME, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(project_id) REFERENCES pm_projects (id) ON DELETE SET NULL, 
+	FOREIGN KEY(section_id) REFERENCES pm_sections (id) ON DELETE SET NULL, 
+	FOREIGN KEY(module_id) REFERENCES pm_modules (id) ON DELETE SET NULL, 
+	FOREIGN KEY(assigned_to) REFERENCES pm_users (id) ON DELETE SET NULL, 
+	FOREIGN KEY(reviewer_id) REFERENCES pm_users (id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS pm_comments (
+	id INTEGER NOT NULL AUTO_INCREMENT, 
+	task_id VARCHAR(50), 
+	user_id VARCHAR(50), 
+	user_name VARCHAR(150), 
+	text TEXT, 
+	created_at DATETIME, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(task_id) REFERENCES pm_tasks (id) ON DELETE CASCADE, 
+	FOREIGN KEY(user_id) REFERENCES pm_users (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS pm_leads (
+	id INTEGER NOT NULL AUTO_INCREMENT, 
+	task_id VARCHAR(50), 
+	name VARCHAR(150), 
+	email VARCHAR(150), 
+	phone VARCHAR(50), 
+	company VARCHAR(150), 
+	status VARCHAR(30), 
+	source VARCHAR(120), 
+	notes TEXT, 
+	created_at DATETIME, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(task_id) REFERENCES pm_tasks (id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS pm_subtasks (
+	id INTEGER NOT NULL AUTO_INCREMENT, 
+	task_id VARCHAR(50), 
+	title VARCHAR(255) NOT NULL, 
+	is_done BOOL, 
+	sort_order INTEGER, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(task_id) REFERENCES pm_tasks (id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS pm_task_attachments (
+	id INTEGER NOT NULL AUTO_INCREMENT, 
+	task_id VARCHAR(50), 
+	filename VARCHAR(255), 
+	filepath VARCHAR(500), 
+	original_name VARCHAR(255), 
+	uploaded_by VARCHAR(50), 
+	uploaded_at DATETIME, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(task_id) REFERENCES pm_tasks (id) ON DELETE CASCADE, 
+	FOREIGN KEY(uploaded_by) REFERENCES pm_users (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS pm_task_updates (
+	id INTEGER NOT NULL AUTO_INCREMENT, 
+	task_id VARCHAR(50), 
+	user_id VARCHAR(50), 
+	user_name VARCHAR(150), 
+	update_type VARCHAR(50), 
+	old_value VARCHAR(150), 
+	new_value VARCHAR(150), 
+	remark TEXT, 
+	created_at DATETIME, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(task_id) REFERENCES pm_tasks (id) ON DELETE CASCADE, 
+	FOREIGN KEY(user_id) REFERENCES pm_users (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS pm_timesheets (
+	id VARCHAR(50) NOT NULL, 
+	code VARCHAR(50), 
+	user_id VARCHAR(50), 
+	project_id VARCHAR(50), 
+	task_id VARCHAR(50), 
+	work_date VARCHAR(20), 
+	from_time VARCHAR(20), 
+	to_time VARCHAR(20), 
+	total_hours FLOAT, 
+	remarks TEXT, 
+	status VARCHAR(30), 
+	created_at DATETIME, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(user_id) REFERENCES pm_users (id) ON DELETE CASCADE, 
+	FOREIGN KEY(project_id) REFERENCES pm_projects (id) ON DELETE SET NULL, 
+	FOREIGN KEY(task_id) REFERENCES pm_tasks (id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS pm_timesheet_attachments (
+	id INTEGER NOT NULL AUTO_INCREMENT, 
+	timesheet_id VARCHAR(50), 
+	filename VARCHAR(255), 
+	filepath VARCHAR(500), 
+	original_name VARCHAR(255), 
+	source VARCHAR(20), 
+	uploaded_at DATETIME, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(timesheet_id) REFERENCES pm_timesheets (id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ---------- Base seed data ----------
+INSERT INTO `pm_roles` (`name`, `description`) VALUES
+ ('Admin', 'Full application access'),
+ ('Master', 'Operational oversight and monitoring'),
+ ('Worker', 'Assigned work, timesheets, personal performance');
+
+INSERT INTO `pm_users` (`id`, `code`, `name`, `email`, `password`, `role`, `role_id`, `designation`, `department`, `status`) VALUES
+ ('U-ADMIN', 'EMP-001', 'System Administrator', 'admin@taskmanagement.com', '$2b$12$NF2CowAyI5uzZYlvtJNaP.C2QcWm4gO6K6446Unwq7VxqtxDTGHa2', 'Admin', 1, 'System Administrator', 'Management', 'Active'),
+ ('U-MASTER', 'EMP-002', 'Priya Menon', 'master@taskmanagement.com', '$2b$12$B5EofQbUAOyZKQuVnUTG9ONlVxZadSO2NGaRNWvy.6YSXiH76JeWG', 'Master', 2, 'Operations Manager', 'Management', 'Active'),
+ ('U-W1', 'EMP-003', 'Ravi Kumar', 'ravi@taskmanagement.com', '$2b$12$C3JlicWDH5HciiS1pChlQuwMAXI4LEd87pr41CR0IWrcf1D8GJoCG', 'Worker', 3, 'Senior Engineer', 'Engineering', 'Active'),
+ ('U-W2', 'EMP-004', 'Anita Sharma', 'anita@taskmanagement.com', '$2b$12$C3JlicWDH5HciiS1pChlQuwMAXI4LEd87pr41CR0IWrcf1D8GJoCG', 'Worker', 3, 'Full Stack Engineer', 'Engineering', 'Active'),
+ ('U-W3', 'EMP-005', 'Sachin Verma', 'sachin@taskmanagement.com', '$2b$12$C3JlicWDH5HciiS1pChlQuwMAXI4LEd87pr41CR0IWrcf1D8GJoCG', 'Worker', 3, 'UI/UX Designer', 'Design', 'Active');
+
+INSERT INTO `pm_clients` (`id`, `name`, `email`, `status`) VALUES
+ ('CLI-01', 'Acme Corp', 'contact@acme.com', 'Active'),
+ ('CLI-02', 'Global Industries', 'info@global.com', 'Active');
+
+INSERT INTO `pm_departments` (`id`, `name`, `status`) VALUES
+ ('DEP-01', 'Engineering', 'Active'),
+ ('DEP-02', 'Design', 'Active'),
+ ('DEP-03', 'Management', 'Active');
+
+INSERT INTO `pm_designations` (`id`, `name`, `status`) VALUES
+ ('DSG-01', 'System Administrator', 'Active'),
+ ('DSG-02', 'Operations Manager', 'Active'),
+ ('DSG-03', 'Senior Engineer', 'Active'),
+ ('DSG-04', 'Full Stack Engineer', 'Active'),
+ ('DSG-05', 'UI/UX Designer', 'Active');
+
+INSERT INTO `pm_labels` (`id`, `name`, `color`) VALUES
+ ('LBL-01', 'Bug', '#ef4444'),
+ ('LBL-02', 'Feature', '#3b82f6'),
+ ('LBL-03', 'High Priority', '#f59e0b'),
+ ('LBL-04', 'Design', '#8b5cf6'),
+ ('LBL-05', 'Documentation', '#10b981');
+
+SET FOREIGN_KEY_CHECKS = 1;
